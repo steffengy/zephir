@@ -57,17 +57,17 @@ class ArrayIndex
             case 'uint':
             case 'long':
                 $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
-                $codePrinter->output('ZVAL_LONG(' . $symbolVariable->getName() . ', ' . $resolvedExpr->getCode() . ');');
+                $codePrinter->output('ZVAL_LONG(&' . $symbolVariable->getName() . ', ' . $resolvedExpr->getCode() . ');');
                 break;
 
             case 'char':
                 $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
-                $codePrinter->output('ZVAL_LONG(' . $symbolVariable->getName() . ', \'' . $resolvedExpr->getCode() . '\');');
+                $codePrinter->output('ZVAL_LONG(&' . $symbolVariable->getName() . ', \'' . $resolvedExpr->getCode() . '\');');
                 break;
 
             case 'double':
                 $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
-                $codePrinter->output('ZVAL_DOUBLE(' . $symbolVariable->getName() . ', ' . $resolvedExpr->getCode() . ');');
+                $codePrinter->output('ZVAL_DOUBLE(&' . $symbolVariable->getName() . ', ' . $resolvedExpr->getCode() . ');');
                 break;
 
             case 'bool':
@@ -85,7 +85,7 @@ class ArrayIndex
 
             case 'string':
                 $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
-                $codePrinter->output('ZVAL_STRING(' . $symbolVariable->getName() . ', "' . $resolvedExpr->getCode() . '", 1);');
+                $codePrinter->output('ZVAL_STRING(&' . $symbolVariable->getName() . ', "' . $resolvedExpr->getCode() . '");');
                 break;
 
             case 'array':
@@ -101,17 +101,17 @@ class ArrayIndex
                     case 'long':
                     case 'ulong':
                         $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
-                        $codePrinter->output('ZVAL_LONG(' . $symbolVariable->getName() . ', ' . $variableExpr->getName() . ');');
+                        $codePrinter->output('ZVAL_LONG(&' . $symbolVariable->getName() . ', ' . $variableExpr->getName() . ');');
                         break;
 
                     case 'double':
                         $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
-                        $codePrinter->output('ZVAL_DOUBLE(' . $symbolVariable->getName() . ', ' . $variableExpr->getName() . ');');
+                        $codePrinter->output('ZVAL_DOUBLE(&' . $symbolVariable->getName() . ', ' . $variableExpr->getName() . ');');
                         break;
 
                     case 'bool':
                         $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
-                        $codePrinter->output('ZVAL_BOOL(' . $symbolVariable->getName() . ', ' . $variableExpr->getName() . ');');
+                        $codePrinter->output('ZVAL_BOOL(&' . $symbolVariable->getName() . ', ' . $variableExpr->getName() . ');');
                         break;
 
                     case 'variable':

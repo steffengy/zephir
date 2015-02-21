@@ -73,7 +73,7 @@ class JsonEncodeOptimizer extends OptimizerAbstract
             $options = '0 ';
         }
 
-        $context->codePrinter->output('zephir_json_encode(' . $symbolVariable->getName() . ', &(' . $symbolVariable->getName() . '), ' . $resolvedParams[0] . ', '. $options .' TSRMLS_CC);');
+        $context->codePrinter->output('zephir_json_encode(&' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ', '. $options .');');
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }
 }

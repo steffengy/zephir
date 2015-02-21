@@ -63,6 +63,7 @@ class JsonDecodeOptimizer extends OptimizerAbstract
             $symbolVariable = $context->symbolTable->addTemp('variable', $context);
             $symbolVariable->initVariant($context);
         }
+        $symbolVariable->setDynamicTypes('object');
 
         $context->headersManager->add('kernel/string');
 
@@ -78,7 +79,7 @@ class JsonDecodeOptimizer extends OptimizerAbstract
             $options = '0 ';
         }
 
-        $context->codePrinter->output('zephir_json_decode(' . $symbolVariable->getName() . ', &(' . $symbolVariable->getName() . '), ' . $resolvedParams[0] . ', '. $options .' TSRMLS_CC);');
+        $context->codePrinter->output('zephir_json_decode(&' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ', '. $options .');');
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }
 }

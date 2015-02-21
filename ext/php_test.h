@@ -4,9 +4,10 @@
 #ifndef PHP_TEST_H
 #define PHP_TEST_H 1
 
-#ifdef PHP_WIN32
+/*TODO: Was this really needed? Should be overwritten/set by config.w32 #ifdef PHP_WIN32
 #define ZEPHIR_RELEASE 1
 #endif
+*/
 
 #include "kernel/globals.h"
 

@@ -139,7 +139,7 @@ class ObjectPropertyAppend
 
             case 'string':
                 $tempVariable = $compilationContext->symbolTable->getTempNonTrackedVariable('variable', $compilationContext, true);
-                $codePrinter->output('ZVAL_STRING(' . $tempVariable->getName() . ', "' . $resolvedExpr->getCode() . '", 1);');
+                $codePrinter->output('ZVAL_STRING(&' . $tempVariable->getName() . ', "' . $resolvedExpr->getCode() . '");');
                 $codePrinter->output('zephir_update_property_array_append(' . $symbolVariable->getName() . ', SL("' . $property . '"), ' . $tempVariable->getName() . ' TSRMLS_CC);');
                 if ($tempVariable->isTemporal()) {
                     $tempVariable->setIdle(true);

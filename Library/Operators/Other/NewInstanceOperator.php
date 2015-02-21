@@ -58,10 +58,6 @@ class NewInstanceOperator extends BaseOperator
             throw new CompilerException("Objects can only be instantiated into dynamic variables", $expression);
         }
 
-        if ($symbolVariable->isLocalOnly()) {
-            throw new CompilerException("Cannot use non-heap variable to store new instance", $expression);
-        }
-
         if ($symbolVariable->hasDifferentDynamicType(array('unknown', 'undefined', 'object', 'null'))) {
             $compilationContext->logger->warning('Possible attempt to use non-object in "new" operator', 'non-valid-new', $expression);
         }
@@ -112,7 +108,7 @@ class NewInstanceOperator extends BaseOperator
              * Classes inside the same extension
              */
             if ($classDefinition) {
-                $codePrinter->output('object_init_ex(' . $symbolVariable->getName() . ', ' . $classDefinition->getClassEntry($compilationContext) . ');');
+                $codePrinter->output('object_init_ex(&' . $symbolVariable->getName() . ', ' . $classDefinition->getClassEntry($compilationContext) . ');');
                 $symbolVariable->setClassTypes($className);
             } else {
 
@@ -176,7 +172,7 @@ class NewInstanceOperator extends BaseOperator
                     $symbolVariable->setClassTypes($className);
 
                 }
-                $codePrinter->output('object_init_ex(' . $symbolVariable->getName() . ', ' . $classEntry . ');');
+                $codePrinter->output('object_init_ex(&' . $symbolVariable->getName() . ', ' . $classEntry . ');');
             }
         }
 
@@ -252,7 +248,7 @@ class NewInstanceOperator extends BaseOperator
             $compilationContext->headersManager->add('kernel/fcall');
 
             /* @todo, generate the code using builders */
-            $codePrinter->output('if (zephir_has_constructor(' . $symbolVariable->getName() . ' TSRMLS_CC)) {');
+            $codePrinter->output('if (zephir_has_constructor(&' . $symbolVariable->getName() . ')) {');
             $codePrinter->increaseLevel();
 
             $methodCall = new MethodCall();

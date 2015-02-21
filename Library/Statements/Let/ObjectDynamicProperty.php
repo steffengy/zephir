@@ -110,7 +110,7 @@ class ObjectDynamicProperty
 
             case 'string':
                 $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                $codePrinter->output('ZVAL_STRING(' . $tempVariable->getName() . ', "' . $resolvedExpr->getCode() . '", 1);');
+                $codePrinter->output('ZVAL_STRING(&' . $tempVariable->getName() . ', "' . $resolvedExpr->getCode() . '");');
                 if ($variable == 'this') {
                     $codePrinter->output('zephir_update_property_zval(this_ptr, Z_STRVAL_P(' . $propertyVariableName->getName() . '), Z_STRLEN_P(' . $propertyVariableName->getName() . '), ' . $tempVariable->getName() . ' TSRMLS_CC);');
                 } else {

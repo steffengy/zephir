@@ -93,18 +93,18 @@ class NativeArray
             case 'uint':
             case 'long':
                 $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                $codePrinter->output('ZVAL_LONG(' . $tempVar->getName() . ', ' . $exprCompiled->getCode() . ');');
+                $codePrinter->output('ZVAL_LONG(&' . $tempVar->getName() . ', ' . $exprCompiled->getCode() . ');');
                 return $tempVar;
 
             case 'char':
             case 'uchar':
                 $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                $codePrinter->output('ZVAL_LONG(' . $tempVar->getName() . ', \'' . $exprCompiled->getCode() . '\');');
+                $codePrinter->output('ZVAL_LONG(&' . $tempVar->getName() . ', \'' . $exprCompiled->getCode() . '\');');
                 return $tempVar;
 
             case 'double':
                 $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                $codePrinter->output('ZVAL_DOUBLE(' . $tempVar->getName() . ', ' . $exprCompiled->getCode() . ');');
+                $codePrinter->output('ZVAL_DOUBLE(&' . $tempVar->getName() . ', ' . $exprCompiled->getCode() . ');');
                 return $tempVar;
 
             case 'bool':
@@ -125,7 +125,7 @@ class NativeArray
             case 'string':
             case 'ulong':
                 $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                $codePrinter->output('ZVAL_STRING(' . $tempVar->getName() . ', "' . $exprCompiled->getCode() . '", 1);');
+                $codePrinter->output('ZVAL_STRING(&' . $tempVar->getName() . ', "' . $exprCompiled->getCode() . '");');
                 return $tempVar;
 
             case 'array':
@@ -140,17 +140,17 @@ class NativeArray
                     case 'long':
                     case 'ulong':
                         $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                        $codePrinter->output('ZVAL_LONG(' . $tempVar->getName() . ', ' . $itemVariable->getName() . ');');
+                        $codePrinter->output('ZVAL_LONG(&' . $tempVar->getName() . ', ' . $itemVariable->getName() . ');');
                         return $tempVar;
 
                     case 'double':
                         $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                        $codePrinter->output('ZVAL_DOUBLE(' . $tempVar->getName() . ', ' . $itemVariable->getName() . ');');
+                        $codePrinter->output('ZVAL_DOUBLE(&' . $tempVar->getName() . ', ' . $itemVariable->getName() . ');');
                         return $tempVar;
 
                     case 'bool':
                         $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                        $codePrinter->output('ZVAL_BOOL(' . $tempVar->getName() . ', ' . $itemVariable->getName() . ');');
+                        $codePrinter->output('ZVAL_BOOL(&' . $tempVar->getName() . ', ' . $itemVariable->getName() . ');');
                         return $tempVar;
 
                     case 'string':
@@ -212,9 +212,9 @@ class NativeArray
          */
         $arrayLength = intval(count($expression['left']) * 1.25);
         if (!function_exists('gmp_nextprime')) {
-            $codePrinter->output('array_init_size(' . $symbolVariable->getName() . ', ' . ($arrayLength + 1) . ');');
+            $codePrinter->output('array_init_size(&' . $symbolVariable->getName() . ', ' . ($arrayLength + 1) . ');');
         } else {
-            $codePrinter->output('array_init_size(' . $symbolVariable->getName() . ', ' . gmp_strval(gmp_nextprime($arrayLength)) . ');');
+            $codePrinter->output('array_init_size(&' . $symbolVariable->getName() . ', ' . gmp_strval(gmp_nextprime($arrayLength)) . ');');
         }
 
         foreach ($expression['left'] as $item) {
@@ -253,7 +253,7 @@ class NativeArray
                                 break;
 
                             case 'string':
-                                $codePrinter->output('add_assoc_stringl_ex(' . $symbolVariable->getName() . ', SS("' . $resolvedExprKey->getCode() . '"), SL("' . $resolvedExpr->getCode() . '"), 1);');
+                                $codePrinter->output('add_assoc_stringl_ex(&' . $symbolVariable->getName() . ', SL("' . $resolvedExprKey->getCode() . '"), SL("' . $resolvedExpr->getCode() . '"));');
                                 break;
 
                             case 'null':
@@ -414,7 +414,7 @@ class NativeArray
                                         break;
 
                                     case 'string':
-                                        $codePrinter->output('add_assoc_stringl_ex(' . $symbolVariable->getName() . ', Z_STRVAL_P(' . $resolvedExprKey->getCode() . '), Z_STRLEN_P(' . $item['key']['value'] . ') + 1, SL("' . $resolvedExpr->getCode() . '"), 1);');
+                                        $codePrinter->output('add_assoc_stringl_ex(&' . $symbolVariable->getName() . ', Z_STRVAL_P(' . $resolvedExprKey->getCode() . '), Z_STRLEN_P(' . $item['key']['value'] . ') + 1, SL("' . $resolvedExpr->getCode() . '"));');
                                         break;
 
                                     case 'null':
@@ -477,7 +477,7 @@ class NativeArray
                 $resolvedExpr = $expr->compile($compilationContext);
                 $itemVariable = $this->getArrayValue($resolvedExpr, $compilationContext);
                 $compilationContext->headersManager->add('kernel/array');
-                $codePrinter->output('zephir_array_fast_append(' . $symbolVariable->getName() . ', ' . $itemVariable->getName() . ');');
+                $codePrinter->output('zephir_array_fast_append(&' . $symbolVariable->getName() . ', ' . $itemVariable->getName() . ');');
                 if ($itemVariable->isTemporal()) {
                     $itemVariable->setIdle(true);
                 }

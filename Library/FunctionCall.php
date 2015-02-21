@@ -171,7 +171,7 @@ class FunctionCall extends Call
                             $variable = $compilationContext->symbolTable->getVariable($parameters[$n - 1]);
                             if ($variable) {
                                 $variable->setDynamicTypes('undefined');
-                                $compilationContext->codePrinter->output('Z_SET_ISREF_P(' . $parameters[$n - 1] . ');');
+                                $compilationContext->codePrinter->output('ZVAL_MAKE_REF(&' . $parameters[$n - 1] . ');');
                                 $references[] = $parameters[$n - 1] ;
                                 return false;
                             }

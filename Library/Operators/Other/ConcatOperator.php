@@ -88,7 +88,7 @@ class ConcatOperator extends BaseOperator
 
                         case 'variable':
                             $key .= 'v';
-                            $concatParts[] = $variable->getName();
+                            $concatParts[] = "&" . $variable->getName();
                             $isFullString = false;
                             break;
 

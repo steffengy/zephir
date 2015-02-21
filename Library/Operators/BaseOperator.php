@@ -65,7 +65,7 @@ class BaseOperator
 
         if ($isExpecting) {
             if (is_object($symbolVariable)) {
-                if ($symbolVariable->getType() == 'variable' && !$symbolVariable->isLocalOnly()) {
+                if ($symbolVariable->getType() == 'variable') {
                     if (!$init) {
                         return $symbolVariable;
                     }

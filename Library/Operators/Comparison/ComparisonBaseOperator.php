@@ -417,7 +417,7 @@ class ComparisonBaseOperator extends BaseOperator
 
             case 'string':
                 $variableLeft = $compilationContext->symbolTable->getTempLocalVariableForWrite('variable', $compilationContext, $expression);
-                $compilationContext->codePrinter->output('ZVAL_STRING(&' . $variableLeft->getName() . ', "' . $left->getCode() . '", 0);');
+                $compilationContext->codePrinter->output('ZVAL_STRING(&' . $variableLeft->getName() . ', "' . $left->getCode() . '");');
 
                 switch ($right->getType()) {
 

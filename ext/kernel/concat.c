@@ -12,50 +12,45 @@
 #include "kernel/memory.h"
 #include "kernel/concat.h"
 
-void zephir_concat_ss(zval **result, const char *op1, zend_uint op1_len, const char *op2, zend_uint op2_len, int self_var TSRMLS_DC){
+void zephir_concat_ss(zval *result, const char *op1, uint32_t op1_len, const char *op2, uint32_t op2_len, int self_var){
 
 	zval result_copy;
 	int use_copy = 0;
+	zend_string *tmp_str;
 	uint offset = 0, length;
 
 	length = op1_len + op2_len;
 	if (self_var) {
-
-		if (Z_TYPE_PP(result) != IS_STRING) {
-			zend_make_printable_zval(*result, &result_copy, &use_copy);
+		if (Z_TYPE_P(result) != IS_STRING) {
+			use_copy = zend_make_printable_zval(result, &result_copy);
 			if (use_copy) {
-				ZEPHIR_CPY_WRT_CTOR(*result, (&result_copy));
+				ZEPHIR_CPY_WRT_CTOR(result, &result_copy);
 			}
-		}
-
-		offset = Z_STRLEN_PP(result);
-		length += offset;
-		Z_STRVAL_PP(result) = (char *) str_erealloc(Z_STRVAL_PP(result), length + 1);
-
-	} else {
-		Z_STRVAL_PP(result) = (char *) emalloc(length + 1);
+		} 
 	}
 
-	memcpy(Z_STRVAL_PP(result) + offset, op1, op1_len);
-	memcpy(Z_STRVAL_PP(result) + offset + op1_len, op2, op2_len);
-	Z_STRVAL_PP(result)[length] = 0;
-	Z_TYPE_PP(result) = IS_STRING;
-	Z_STRLEN_PP(result) = length;
-
+	if (self_var) {
+		tmp_str = strpprintf(length + Z_STRLEN_P(result), "%s%s%s", Z_STRVAL_P(result), op1, op2);
+	} else {
+		tmp_str = strpprintf(length, "%s%s", op1, op2);
+	}
+	ZVAL_NEW_STR(result, tmp_str);
+	zend_string_release(tmp_str);
 	if (use_copy) {
 	   zval_dtor(&result_copy);
 	}
 
 }
 
-void zephir_concat_sv(zval **result, const char *op1, zend_uint op1_len, zval *op2, int self_var TSRMLS_DC){
+void zephir_concat_sv(zval *result, const char *op1, uint32_t op1_len, zval *op2, int self_var){
 
 	zval result_copy, op2_copy;
 	int use_copy = 0, use_copy2 = 0;
+	zend_string *tmp_str;
 	uint offset = 0, length;
 
 	if (Z_TYPE_P(op2) != IS_STRING) {
-	   zend_make_printable_zval(op2, &op2_copy, &use_copy2);
+	   use_copy2 = zend_make_printable_zval(op2, &op2_copy);
 	   if (use_copy2) {
 	       op2 = &op2_copy;
 	   }
@@ -63,28 +58,21 @@ void zephir_concat_sv(zval **result, const char *op1, zend_uint op1_len, zval *o
 
 	length = op1_len + Z_STRLEN_P(op2);
 	if (self_var) {
-
-		if (Z_TYPE_PP(result) != IS_STRING) {
-			zend_make_printable_zval(*result, &result_copy, &use_copy);
+		if (Z_TYPE_P(result) != IS_STRING) {
+			use_copy = zend_make_printable_zval(result, &result_copy);
 			if (use_copy) {
-				ZEPHIR_CPY_WRT_CTOR(*result, (&result_copy));
+				ZEPHIR_CPY_WRT_CTOR(result, &result_copy);
 			}
-		}
-
-		offset = Z_STRLEN_PP(result);
-		length += offset;
-		Z_STRVAL_PP(result) = (char *) str_erealloc(Z_STRVAL_PP(result), length + 1);
-
-	} else {
-		Z_STRVAL_PP(result) = (char *) emalloc(length + 1);
+		} 
 	}
 
-	memcpy(Z_STRVAL_PP(result) + offset, op1, op1_len);
-	memcpy(Z_STRVAL_PP(result) + offset + op1_len, Z_STRVAL_P(op2), Z_STRLEN_P(op2));
-	Z_STRVAL_PP(result)[length] = 0;
-	Z_TYPE_PP(result) = IS_STRING;
-	Z_STRLEN_PP(result) = length;
-
+	if (self_var) {
+		tmp_str = strpprintf(length + Z_STRLEN_P(result), "%s%s%s", Z_STRVAL_P(result), op1, Z_STRVAL_P(op2));
+	} else {
+		tmp_str = strpprintf(length, "%s%s", op1, Z_STRVAL_P(op2));
+	}
+	ZVAL_NEW_STR(result, tmp_str);
+	zend_string_release(tmp_str);
 	if (use_copy2) {
 	   zval_dtor(op2);
 	}
@@ -95,14 +83,15 @@ void zephir_concat_sv(zval **result, const char *op1, zend_uint op1_len, zval *o
 
 }
 
-void zephir_concat_svs(zval **result, const char *op1, zend_uint op1_len, zval *op2, const char *op3, zend_uint op3_len, int self_var TSRMLS_DC){
+void zephir_concat_svs(zval *result, const char *op1, uint32_t op1_len, zval *op2, const char *op3, uint32_t op3_len, int self_var){
 
 	zval result_copy, op2_copy;
 	int use_copy = 0, use_copy2 = 0;
+	zend_string *tmp_str;
 	uint offset = 0, length;
 
 	if (Z_TYPE_P(op2) != IS_STRING) {
-	   zend_make_printable_zval(op2, &op2_copy, &use_copy2);
+	   use_copy2 = zend_make_printable_zval(op2, &op2_copy);
 	   if (use_copy2) {
 	       op2 = &op2_copy;
 	   }
@@ -110,29 +99,21 @@ void zephir_concat_svs(zval **result, const char *op1, zend_uint op1_len, zval *
 
 	length = op1_len + Z_STRLEN_P(op2) + op3_len;
 	if (self_var) {
-
-		if (Z_TYPE_PP(result) != IS_STRING) {
-			zend_make_printable_zval(*result, &result_copy, &use_copy);
+		if (Z_TYPE_P(result) != IS_STRING) {
+			use_copy = zend_make_printable_zval(result, &result_copy);
 			if (use_copy) {
-				ZEPHIR_CPY_WRT_CTOR(*result, (&result_copy));
+				ZEPHIR_CPY_WRT_CTOR(result, &result_copy);
 			}
-		}
-
-		offset = Z_STRLEN_PP(result);
-		length += offset;
-		Z_STRVAL_PP(result) = (char *) str_erealloc(Z_STRVAL_PP(result), length + 1);
-
-	} else {
-		Z_STRVAL_PP(result) = (char *) emalloc(length + 1);
+		} 
 	}
 
-	memcpy(Z_STRVAL_PP(result) + offset, op1, op1_len);
-	memcpy(Z_STRVAL_PP(result) + offset + op1_len, Z_STRVAL_P(op2), Z_STRLEN_P(op2));
-	memcpy(Z_STRVAL_PP(result) + offset + op1_len + Z_STRLEN_P(op2), op3, op3_len);
-	Z_STRVAL_PP(result)[length] = 0;
-	Z_TYPE_PP(result) = IS_STRING;
-	Z_STRLEN_PP(result) = length;
-
+	if (self_var) {
+		tmp_str = strpprintf(length + Z_STRLEN_P(result), "%s%s%s%s", Z_STRVAL_P(result), op1, Z_STRVAL_P(op2), op3);
+	} else {
+		tmp_str = strpprintf(length, "%s%s%s", op1, Z_STRVAL_P(op2), op3);
+	}
+	ZVAL_NEW_STR(result, tmp_str);
+	zend_string_release(tmp_str);
 	if (use_copy2) {
 	   zval_dtor(op2);
 	}
@@ -143,14 +124,15 @@ void zephir_concat_svs(zval **result, const char *op1, zend_uint op1_len, zval *
 
 }
 
-void zephir_concat_vs(zval **result, zval *op1, const char *op2, zend_uint op2_len, int self_var TSRMLS_DC){
+void zephir_concat_vs(zval *result, zval *op1, const char *op2, uint32_t op2_len, int self_var){
 
 	zval result_copy, op1_copy;
 	int use_copy = 0, use_copy1 = 0;
+	zend_string *tmp_str;
 	uint offset = 0, length;
 
 	if (Z_TYPE_P(op1) != IS_STRING) {
-	   zend_make_printable_zval(op1, &op1_copy, &use_copy1);
+	   use_copy1 = zend_make_printable_zval(op1, &op1_copy);
 	   if (use_copy1) {
 	       op1 = &op1_copy;
 	   }
@@ -158,28 +140,21 @@ void zephir_concat_vs(zval **result, zval *op1, const char *op2, zend_uint op2_l
 
 	length = Z_STRLEN_P(op1) + op2_len;
 	if (self_var) {
-
-		if (Z_TYPE_PP(result) != IS_STRING) {
-			zend_make_printable_zval(*result, &result_copy, &use_copy);
+		if (Z_TYPE_P(result) != IS_STRING) {
+			use_copy = zend_make_printable_zval(result, &result_copy);
 			if (use_copy) {
-				ZEPHIR_CPY_WRT_CTOR(*result, (&result_copy));
+				ZEPHIR_CPY_WRT_CTOR(result, &result_copy);
 			}
-		}
-
-		offset = Z_STRLEN_PP(result);
-		length += offset;
-		Z_STRVAL_PP(result) = (char *) str_erealloc(Z_STRVAL_PP(result), length + 1);
-
-	} else {
-		Z_STRVAL_PP(result) = (char *) emalloc(length + 1);
+		} 
 	}
 
-	memcpy(Z_STRVAL_PP(result) + offset, Z_STRVAL_P(op1), Z_STRLEN_P(op1));
-	memcpy(Z_STRVAL_PP(result) + offset + Z_STRLEN_P(op1), op2, op2_len);
-	Z_STRVAL_PP(result)[length] = 0;
-	Z_TYPE_PP(result) = IS_STRING;
-	Z_STRLEN_PP(result) = length;
-
+	if (self_var) {
+		tmp_str = strpprintf(length + Z_STRLEN_P(result), "%s%s%s", Z_STRVAL_P(result), Z_STRVAL_P(op1), op2);
+	} else {
+		tmp_str = strpprintf(length, "%s%s", Z_STRVAL_P(op1), op2);
+	}
+	ZVAL_NEW_STR(result, tmp_str);
+	zend_string_release(tmp_str);
 	if (use_copy1) {
 	   zval_dtor(op1);
 	}
@@ -190,21 +165,22 @@ void zephir_concat_vs(zval **result, zval *op1, const char *op2, zend_uint op2_l
 
 }
 
-void zephir_concat_vv(zval **result, zval *op1, zval *op2, int self_var TSRMLS_DC){
+void zephir_concat_vv(zval *result, zval *op1, zval *op2, int self_var){
 
 	zval result_copy, op1_copy, op2_copy;
 	int use_copy = 0, use_copy1 = 0, use_copy2 = 0;
+	zend_string *tmp_str;
 	uint offset = 0, length;
 
 	if (Z_TYPE_P(op1) != IS_STRING) {
-	   zend_make_printable_zval(op1, &op1_copy, &use_copy1);
+	   use_copy1 = zend_make_printable_zval(op1, &op1_copy);
 	   if (use_copy1) {
 	       op1 = &op1_copy;
 	   }
 	}
 
 	if (Z_TYPE_P(op2) != IS_STRING) {
-	   zend_make_printable_zval(op2, &op2_copy, &use_copy2);
+	   use_copy2 = zend_make_printable_zval(op2, &op2_copy);
 	   if (use_copy2) {
 	       op2 = &op2_copy;
 	   }
@@ -212,28 +188,21 @@ void zephir_concat_vv(zval **result, zval *op1, zval *op2, int self_var TSRMLS_D
 
 	length = Z_STRLEN_P(op1) + Z_STRLEN_P(op2);
 	if (self_var) {
-
-		if (Z_TYPE_PP(result) != IS_STRING) {
-			zend_make_printable_zval(*result, &result_copy, &use_copy);
+		if (Z_TYPE_P(result) != IS_STRING) {
+			use_copy = zend_make_printable_zval(result, &result_copy);
 			if (use_copy) {
-				ZEPHIR_CPY_WRT_CTOR(*result, (&result_copy));
+				ZEPHIR_CPY_WRT_CTOR(result, &result_copy);
 			}
-		}
-
-		offset = Z_STRLEN_PP(result);
-		length += offset;
-		Z_STRVAL_PP(result) = (char *) str_erealloc(Z_STRVAL_PP(result), length + 1);
-
-	} else {
-		Z_STRVAL_PP(result) = (char *) emalloc(length + 1);
+		} 
 	}
 
-	memcpy(Z_STRVAL_PP(result) + offset, Z_STRVAL_P(op1), Z_STRLEN_P(op1));
-	memcpy(Z_STRVAL_PP(result) + offset + Z_STRLEN_P(op1), Z_STRVAL_P(op2), Z_STRLEN_P(op2));
-	Z_STRVAL_PP(result)[length] = 0;
-	Z_TYPE_PP(result) = IS_STRING;
-	Z_STRLEN_PP(result) = length;
-
+	if (self_var) {
+		tmp_str = strpprintf(length + Z_STRLEN_P(result), "%s%s%s", Z_STRVAL_P(result), Z_STRVAL_P(op1), Z_STRVAL_P(op2));
+	} else {
+		tmp_str = strpprintf(length, "%s%s", Z_STRVAL_P(op1), Z_STRVAL_P(op2));
+	}
+	ZVAL_NEW_STR(result, tmp_str);
+	zend_string_release(tmp_str);
 	if (use_copy1) {
 	   zval_dtor(op1);
 	}
@@ -248,28 +217,29 @@ void zephir_concat_vv(zval **result, zval *op1, zval *op2, int self_var TSRMLS_D
 
 }
 
-void zephir_concat_vvv(zval **result, zval *op1, zval *op2, zval *op3, int self_var TSRMLS_DC){
+void zephir_concat_vvv(zval *result, zval *op1, zval *op2, zval *op3, int self_var){
 
 	zval result_copy, op1_copy, op2_copy, op3_copy;
 	int use_copy = 0, use_copy1 = 0, use_copy2 = 0, use_copy3 = 0;
+	zend_string *tmp_str;
 	uint offset = 0, length;
 
 	if (Z_TYPE_P(op1) != IS_STRING) {
-	   zend_make_printable_zval(op1, &op1_copy, &use_copy1);
+	   use_copy1 = zend_make_printable_zval(op1, &op1_copy);
 	   if (use_copy1) {
 	       op1 = &op1_copy;
 	   }
 	}
 
 	if (Z_TYPE_P(op2) != IS_STRING) {
-	   zend_make_printable_zval(op2, &op2_copy, &use_copy2);
+	   use_copy2 = zend_make_printable_zval(op2, &op2_copy);
 	   if (use_copy2) {
 	       op2 = &op2_copy;
 	   }
 	}
 
 	if (Z_TYPE_P(op3) != IS_STRING) {
-	   zend_make_printable_zval(op3, &op3_copy, &use_copy3);
+	   use_copy3 = zend_make_printable_zval(op3, &op3_copy);
 	   if (use_copy3) {
 	       op3 = &op3_copy;
 	   }
@@ -277,29 +247,21 @@ void zephir_concat_vvv(zval **result, zval *op1, zval *op2, zval *op3, int self_
 
 	length = Z_STRLEN_P(op1) + Z_STRLEN_P(op2) + Z_STRLEN_P(op3);
 	if (self_var) {
-
-		if (Z_TYPE_PP(result) != IS_STRING) {
-			zend_make_printable_zval(*result, &result_copy, &use_copy);
+		if (Z_TYPE_P(result) != IS_STRING) {
+			use_copy = zend_make_printable_zval(result, &result_copy);
 			if (use_copy) {
-				ZEPHIR_CPY_WRT_CTOR(*result, (&result_copy));
+				ZEPHIR_CPY_WRT_CTOR(result, &result_copy);
 			}
-		}
-
-		offset = Z_STRLEN_PP(result);
-		length += offset;
-		Z_STRVAL_PP(result) = (char *) str_erealloc(Z_STRVAL_PP(result), length + 1);
-
-	} else {
-		Z_STRVAL_PP(result) = (char *) emalloc(length + 1);
+		} 
 	}
 
-	memcpy(Z_STRVAL_PP(result) + offset, Z_STRVAL_P(op1), Z_STRLEN_P(op1));
-	memcpy(Z_STRVAL_PP(result) + offset + Z_STRLEN_P(op1), Z_STRVAL_P(op2), Z_STRLEN_P(op2));
-	memcpy(Z_STRVAL_PP(result) + offset + Z_STRLEN_P(op1) + Z_STRLEN_P(op2), Z_STRVAL_P(op3), Z_STRLEN_P(op3));
-	Z_STRVAL_PP(result)[length] = 0;
-	Z_TYPE_PP(result) = IS_STRING;
-	Z_STRLEN_PP(result) = length;
-
+	if (self_var) {
+		tmp_str = strpprintf(length + Z_STRLEN_P(result), "%s%s%s%s", Z_STRVAL_P(result), Z_STRVAL_P(op1), Z_STRVAL_P(op2), Z_STRVAL_P(op3));
+	} else {
+		tmp_str = strpprintf(length, "%s%s%s", Z_STRVAL_P(op1), Z_STRVAL_P(op2), Z_STRVAL_P(op3));
+	}
+	ZVAL_NEW_STR(result, tmp_str);
+	zend_string_release(tmp_str);
 	if (use_copy1) {
 	   zval_dtor(op1);
 	}
@@ -318,7 +280,7 @@ void zephir_concat_vvv(zval **result, zval *op1, zval *op2, zval *op3, int self_
 
 }
 
-void zephir_concat_function(zval *result, zval *op1, zval *op2 TSRMLS_DC) /* {{{ */
+void zephir_concat_function(zval *result, zval *op1, zval *op2) /* {{{ */
 {
 #if PHP_VERSION_ID < 50400
 	zval op1_copy, op2_copy;
@@ -352,7 +314,8 @@ void zephir_concat_function(zval *result, zval *op1, zval *op2 TSRMLS_DC) /* {{{
 			zend_error(E_ERROR, "String size overflow");
 		}
 
-		Z_STRVAL_P(result) = str_erealloc(Z_STRVAL_P(result), res_len+1);
+		//Z_STRVAL_P(result) = erealloc(Z_STRVAL_P(result), res_len+1);
+        zend_string_realloc(Z_STR_P(result), res_len + 1, 1);
 
 		memcpy(Z_STRVAL_P(result) + Z_STRLEN_P(result), Z_STRVAL_P(op2), Z_STRLEN_P(op2));
 		Z_STRVAL_P(result)[res_len] = 0;
@@ -373,6 +336,6 @@ void zephir_concat_function(zval *result, zval *op1, zval *op2 TSRMLS_DC) /* {{{
 		zval_dtor(op2);
 	}
 #else
-    concat_function(result, op1, op2 TSRMLS_CC);
+    concat_function(result, op1, op2);
 #endif
 }

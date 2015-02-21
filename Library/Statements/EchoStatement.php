@@ -100,7 +100,7 @@ class EchoStatement extends StatementAbstract
 
                         case 'string':
                         case 'variable':
-                            $compilationContext->codePrinter->output('zend_print_zval(' . $variable->getName() . ', 0);');
+                            $compilationContext->codePrinter->output('zend_print_zval(&' . $variable->getName() . ', 0);');
                             break;
 
                         case 'null':

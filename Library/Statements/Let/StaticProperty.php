@@ -142,9 +142,9 @@ class StaticProperty
                         $tempVariable->initVariant($compilationContext);
 
                         if ($resolvedExpr->getCode()) {
-                            $codePrinter->output('ZVAL_STRING(' . $tempVariable->getName() . ', "' . $resolvedExpr->getCode() . '", 1);');
+                            $codePrinter->output('ZVAL_STRING(&' . $tempVariable->getName() . ', "' . $resolvedExpr->getCode() . '");');
                         } else {
-                            $codePrinter->output('ZVAL_EMPTY_STRING(' . $tempVariable->getName() . ');');
+                            $codePrinter->output('ZVAL_EMPTY_STRING(&' . $tempVariable->getName() . ');');
                         }
 
                         if ($tempVariable->isTemporal()) {

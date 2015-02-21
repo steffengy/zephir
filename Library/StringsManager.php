@@ -23,6 +23,7 @@ namespace Zephir;
  * Class StringsManager
  *
  * Manages the concatenation keys for the extension and the interned strings
+ * TODO: Rewrite thís...
  */
 class StringsManager
 {
@@ -85,7 +86,7 @@ class StringsManager
                 $t = substr($key, $i, 1);
                 $sparams[] = 'op' . $n;
                 if ($t == 's') {
-                    $params[] = 'const char *op' . $n . ', zend_uint op' . $n . '_len';
+                    $params[] = 'const char *op' . $n . ', uint32_t op' . $n . '_len';
                     $lparams[] = 'op' . $n . ', sizeof(op' . $n . ')-1';
                     $lengths[] = 'op' . $n . '_len';
                     $svars[] = $n;
@@ -101,17 +102,17 @@ class StringsManager
                 }
             }
 
-            $macros[] = '#define ZEPHIR_CONCAT_' . strtoupper($key) . '(result, ' . join(', ', $sparams) . ') \\' . PHP_EOL . "\t" . ' zephir_concat_' . $key . '(&result, ' . join(', ', $lparams) . ', 0 TSRMLS_CC);';
-            $macros[] = '#define ZEPHIR_SCONCAT_' . strtoupper($key) . '(result, ' . join(', ', $sparams) . ') \\' . PHP_EOL . "\t" . ' zephir_concat_' . $key . '(&result, ' . join(', ', $lparams) . ', 1 TSRMLS_CC);';
+            $macros[] = '#define ZEPHIR_CONCAT_' . strtoupper($key) . '(result, ' . join(', ', $sparams) . ') \\' . PHP_EOL . "\t" . ' zephir_concat_' . $key . '(&result, ' . join(', ', $lparams) . ', 0);';
+            $macros[] = '#define ZEPHIR_SCONCAT_' . strtoupper($key) . '(result, ' . join(', ', $sparams) . ') \\' . PHP_EOL . "\t" . ' zephir_concat_' . $key . '(&result, ' . join(', ', $lparams) . ', 1);';
             $macros[] = '';
 
-            $proto = 'void zephir_concat_' . $key . '(zval **result, ' . join(', ', $params) . ', int self_var TSRMLS_DC)';
-            $proto = 'void zephir_concat_' . $key . '(zval **result, ' . join(', ', $params) . ', int self_var TSRMLS_DC)';
+            $proto = 'void zephir_concat_' . $key . '(zval *result, ' . join(', ', $params) . ', int self_var)';
+            $proto = 'void zephir_concat_' . $key . '(zval *result, ' . join(', ', $params) . ', int self_var)';
 
             $codeh.= '' . $proto . ';' . PHP_EOL;
 
             $code .= $proto . '{' . PHP_EOL . PHP_EOL;
-
+            
             if (count($zvalCopy)) {
                 $code .= "\t" . 'zval result_copy, ' . join(', ', $zvalCopy) . ';' . PHP_EOL;
                 $code .= "\t" . 'int use_copy = 0, ' . join(', ', $useCopy) . ';' . PHP_EOL;
@@ -119,11 +120,12 @@ class StringsManager
                 $code .= "\t" . 'zval result_copy;' . PHP_EOL;
                 $code .= "\t" . 'int use_copy = 0;' . PHP_EOL;
             }
+            $code .= "\t" . 'zend_string *tmp_str;' . PHP_EOL;
             $code .= "\t" . 'uint offset = 0, length;' . PHP_EOL . PHP_EOL;
 
             foreach ($zvars as $zvar) {
                 $code .= "\t" . 'if (Z_TYPE_P(op' . $zvar . ') != IS_STRING) {' . PHP_EOL;
-                $code .= "\t" . '   zend_make_printable_zval(op' . $zvar . ', &op' . $zvar . '_copy, &use_copy' . $zvar . ');' . PHP_EOL;
+                $code .= "\t" . '   use_copy' . $zvar . ' = zend_make_printable_zval(op' . $zvar . ', &op' . $zvar . '_copy);' . PHP_EOL;
                 $code .= "\t" . '   if (use_copy' . $zvar . ') {' . PHP_EOL;
                 $code .= "\t" . '       op' . $zvar . ' = &op' . $zvar . '_copy;' . PHP_EOL;
                 $code .= "\t" . '   }' . PHP_EOL;
@@ -131,36 +133,35 @@ class StringsManager
             }
 
             $code .= "\t" . 'length = ' . join(' + ', $lengths) . ';' . PHP_EOL;
+            
             $code .= "\t" . 'if (self_var) {' . PHP_EOL;
-            $code .= '' .PHP_EOL;
-            $code .= "\t\t" . 'if (Z_TYPE_PP(result) != IS_STRING) {' . PHP_EOL;
-            $code .= "\t\t\t" . 'zend_make_printable_zval(*result, &result_copy, &use_copy);' . PHP_EOL;
+            $code .= "\t\t" . 'if (Z_TYPE_P(result) != IS_STRING) {' . PHP_EOL;
+            $code .= "\t\t\t" . 'use_copy = zend_make_printable_zval(result, &result_copy);' . PHP_EOL;
             $code .= "\t\t\t" . 'if (use_copy) {' . PHP_EOL;
-            $code .= "\t\t\t\t" .'ZEPHIR_CPY_WRT_CTOR(*result, (&result_copy));' . PHP_EOL;
+            $code .= "\t\t\t\t" .'ZEPHIR_CPY_WRT_CTOR(result, &result_copy);' . PHP_EOL;
             $code .= "\t\t\t" .'}'. PHP_EOL;
-            $code .= "\t\t" . '}'. PHP_EOL . PHP_EOL;
-            $code .= "\t\t" . 'offset = Z_STRLEN_PP(result);' . PHP_EOL;
-            $code .= "\t\t" . 'length += offset;' . PHP_EOL;
-            $code .= "\t\t" . 'Z_STRVAL_PP(result) = (char *) str_erealloc(Z_STRVAL_PP(result), length + 1);' . PHP_EOL;
-            $code .= '' . PHP_EOL;
-            $code .= "\t" .'} else {' . PHP_EOL;
-            $code .= "\t\t" . 'Z_STRVAL_PP(result) = (char *) emalloc(length + 1);' . PHP_EOL;
+            $code .= "\t\t" . '} '. PHP_EOL;
             $code .= "\t" . '}' . PHP_EOL . PHP_EOL;
-
-            $position = '';
+            
+            $varTypes = array();
+            $varOps = array();
             foreach ($avars as $n => $type) {
                 if ($type == 's') {
-                    $code .= "\t" . 'memcpy(Z_STRVAL_PP(result) + offset' . $position . ', op' . $n . ', op' . $n . '_len);' . PHP_EOL;
-                    $position .= ' + op' . $n . '_len';
+                    $varTypes[] = '%s';
+                    $varOps[] = 'op' . $n;
                 } else {
-                    $code .= "\t" . 'memcpy(Z_STRVAL_PP(result) + offset' . $position . ', Z_STRVAL_P(op' . $n . '), Z_STRLEN_P(op' . $n . '));' . PHP_EOL;
-                    $position .= ' + Z_STRLEN_P(op' . $n . ')';
+                    $varTypes[] = '%s';
+                    $varOps[] = 'Z_STRVAL_P(op' . $n . ')';
                 }
             }
-
-            $code .= "\t" . 'Z_STRVAL_PP(result)[length] = 0;' . PHP_EOL;
-            $code .= "\t" . 'Z_TYPE_PP(result) = IS_STRING;' . PHP_EOL;
-            $code .= "\t" . 'Z_STRLEN_PP(result) = length;' . PHP_EOL . PHP_EOL;
+            
+            $code .= "\t" . 'if (self_var) {' . PHP_EOL;
+            $code .= "\t\t" . 'tmp_str = strpprintf(length + Z_STRLEN_P(result), "%s' . implode('', $varTypes) . '", Z_STRVAL_P(result), ' . implode(', ', $varOps) . ');' . PHP_EOL;
+            $code .= "\t" . '} else {' . PHP_EOL;
+            $code .= "\t\t" . 'tmp_str = strpprintf(length, "' . implode('', $varTypes) . '", ' . implode(', ', $varOps) . ');' . PHP_EOL;
+            $code .= "\t" . '}' . PHP_EOL;
+            $code .= "\t" . 'ZVAL_NEW_STR(result, tmp_str);' . PHP_EOL;
+            $code .= "\t" . 'zend_string_release(tmp_str);' . PHP_EOL;
 
             foreach ($zvars as $zvar) {
                 $code .= "\t" . 'if (use_copy' . $zvar . ') {' . PHP_EOL;
@@ -176,7 +177,7 @@ class StringsManager
         }
 
         $code .= <<<EOF
-void zephir_concat_function(zval *result, zval *op1, zval *op2 TSRMLS_DC) /* {{{ */
+void zephir_concat_function(zval *result, zval *op1, zval *op2) /* {{{ */
 {
 #if PHP_VERSION_ID < 50400
 	zval op1_copy, op2_copy;
@@ -210,7 +211,8 @@ void zephir_concat_function(zval *result, zval *op1, zval *op2 TSRMLS_DC) /* {{{
 			zend_error(E_ERROR, "String size overflow");
 		}
 
-		Z_STRVAL_P(result) = str_erealloc(Z_STRVAL_P(result), res_len+1);
+		//Z_STRVAL_P(result) = erealloc(Z_STRVAL_P(result), res_len+1);
+        zend_string_realloc(Z_STR_P(result), res_len + 1, 1);
 
 		memcpy(Z_STRVAL_P(result) + Z_STRLEN_P(result), Z_STRVAL_P(op2), Z_STRLEN_P(op2));
 		Z_STRVAL_P(result)[res_len] = 0;
@@ -231,12 +233,12 @@ void zephir_concat_function(zval *result, zval *op1, zval *op2 TSRMLS_DC) /* {{{
 		zval_dtor(op2);
 	}
 #else
-    concat_function(result, op1, op2 TSRMLS_CC);
+    concat_function(result, op1, op2);
 #endif
 }
 EOF;
 
-        $codeh .= "void zephir_concat_function(zval *result, zval *op1, zval *op2 TSRMLS_DC);";
+        $codeh .= "void zephir_concat_function(zval *result, zval *op1, zval *op2);";
         Utils::checkAndWriteIfNeeded(join(PHP_EOL, $macros) . PHP_EOL . PHP_EOL . $codeh, 'ext/kernel/concat.h');
         Utils::checkAndWriteIfNeeded($code, 'ext/kernel/concat.c');
     }

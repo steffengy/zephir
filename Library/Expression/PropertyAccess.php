@@ -299,13 +299,13 @@ class PropertyAccess
 
         $compilationContext->headersManager->add('kernel/object');
         if ($classDefinition == $currentClassDefinition) {
-            if ($this->_readOnly || $readOnly) {
+            /*TODO: if ($this->_readOnly || $readOnly) {
                 $codePrinter->output($symbolVariable->getName() . ' = zephir_fetch_nproperty_this(' . $variableVariable->getName() . ', SL("' . $property . '"), PH_NOISY_CC);');
-            } else {
-                $codePrinter->output('zephir_read_property_this(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', SL("' . $property . '"), PH_NOISY_CC);');
-            }
+            } else {*/
+                $codePrinter->output('zephir_read_property(&' . $symbolVariable->getName() . ', &' . $variableVariable->getName() . ', SL("' . $property . '"));');
+            //}
         } else {
-            $codePrinter->output('zephir_read_property(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', SL("' . $property . '"), PH_NOISY_CC);');
+            $codePrinter->output('zephir_read_property(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', SL("' . $property . '"));');
         }
 
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);

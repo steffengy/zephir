@@ -630,7 +630,7 @@ class ForStatement extends StatementAbstract
          */
         if ($expression->getType() == 'string') {
             $constantVariable = $compilationContext->symbolTable->getTempLocalVariableForWrite('variable', $compilationContext, $this->_statement);
-            $codePrinter->output('ZVAL_STRING(&' . $constantVariable->getName() . ', "' . Utils::addSlashes($expression->getCode()) . '", 0);');
+            $codePrinter->output('ZVAL_STRING(&' . $constantVariable->getName() . ', "' . Utils::addSlashes($expression->getCode()) . '");');
             $stringVariable = $constantVariable;
         } else {
             $stringVariable = $exprVariable;
@@ -699,6 +699,8 @@ class ForStatement extends StatementAbstract
     {
 
         $codePrinter = $compilationContext->codePrinter;
+        $keyVariable = null;
+        $variable = null;
 
         /**
          * Initialize 'key' variable
@@ -710,13 +712,10 @@ class ForStatement extends StatementAbstract
                 if ($keyVariable->getType() != 'variable') {
                     throw new CompilerException("Cannot use variable: " . $this->_statement['key'] . " type: " . $keyVariable->getType() . " as key in hash traversal", $this->_statement['expr']);
                 }
-            } else {
-                $keyVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
+                $keyVariable->setMustInitNull(true);
+                $keyVariable->setIsInitialized(true, $compilationContext, $this->_statement);
+                $keyVariable->setDynamicTypes('undefined');
             }
-
-            $keyVariable->setMustInitNull(true);
-            $keyVariable->setIsInitialized(true, $compilationContext, $this->_statement);
-            $keyVariable->setDynamicTypes('undefined');
         }
 
         /**
@@ -729,13 +728,10 @@ class ForStatement extends StatementAbstract
                 if ($variable->getType() != 'variable') {
                     throw new CompilerException("Cannot use variable: " . $this->_statement['value'] . " type: " . $variable->getType() . " as value in hash traversal", $this->_statement['expr']);
                 }
-            } else {
-                $variable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
+                $variable->setMustInitNull(true);
+                $variable->setIsInitialized(true, $compilationContext, $this->_statement);
+                $variable->setDynamicTypes('undefined');
             }
-
-            $variable->setMustInitNull(true);
-            $variable->setIsInitialized(true, $compilationContext, $this->_statement);
-            $variable->setDynamicTypes('undefined');
         }
 
         /**
@@ -744,18 +740,20 @@ class ForStatement extends StatementAbstract
         $compilationContext->insideCycle++;
 
         /**
-         * Create a hash table and hash pointer temporary variables
+         * Create temporary variables for key and value
          */
-        $arrayPointer = $compilationContext->symbolTable->addTemp('HashPosition', $compilationContext);
-        $arrayHash = $compilationContext->symbolTable->addTemp('HashTable', $compilationContext);
+        if (isset($keyVariable)) {
+            $arrayNumKey = $compilationContext->symbolTable->addTemp('zend_ulong', $compilationContext);
+            $arrayStrKey = $compilationContext->symbolTable->addTemp('zend_string', $compilationContext);
+        }
+        if (isset($variable)) {
+           $arrayVal = $compilationContext->symbolTable->addTemp('variableptr', $compilationContext);
+        }
 
         /**
          * Create a temporary zval to fetch the items from the hash
          */
-        $tempVariable = $compilationContext->symbolTable->addTemp('variable', $compilationContext);
-        $tempVariable->setIsDoublePointer(true);
-
-        $compilationContext->headersManager->add('kernel/hash');
+        //$tempVariable = $compilationContext->symbolTable->addTemp('variable', $compilationContext);
 
         $duplicateHash = '0';
         $duplicateKey = true;
@@ -779,7 +777,7 @@ class ForStatement extends StatementAbstract
              * Detect if the key is modified or passed to an external scope
              */
             if (isset($this->_statement['key'])) {
-                if (!$keyVariable->isTemporal()) {
+                if ($keyVariable && !$keyVariable->isTemporal()) {
                     $detector->setDetectionFlags(ForValueUseDetector::DETECT_ALL);
                     if ($detector->detect($keyVariable->getName(), $this->_statement['statements'])) {
                         $loopContext = $compilationContext->currentMethod->getLocalContextPass();
@@ -791,18 +789,33 @@ class ForStatement extends StatementAbstract
             }
         }
 
-        $codePrinter->output('zephir_is_iterable(' . $expression->getCode() . ', &' . $arrayHash->getName() . ', &' . $arrayPointer ->getName() . ', ' . $duplicateHash . ', ' . $this->_statement['reverse'] . ', "' . Compiler::getShortUserPath($this->_statement['file']) . '", ' . $this->_statement['line'] . ');');
+        $codePrinter->output('zephir_is_iterable(&' . $expression->getCode() . ', ' . $duplicateHash . ', ' . $this->_statement['reverse'] . ', "' . Compiler::getShortUserPath($this->_statement['file']) . '", ' . $this->_statement['line'] . ');');
 
-        $codePrinter->output('for (');
-        $codePrinter->output('  ; zephir_hash_get_current_data_ex(' . $arrayHash->getName() . ', (void**) &' . $tempVariable->getName() . ', &' . $arrayPointer ->getName() . ') == SUCCESS');
-        if ($this->_statement['reverse']) {
-            $codePrinter->output('  ; zephir_hash_move_backwards_ex(' . $arrayHash->getName() . ', &' . $arrayPointer ->getName() . ')');
-        } else {
-            $codePrinter->output('  ; zephir_hash_move_forward_ex(' . $arrayHash->getName() . ', &' . $arrayPointer ->getName() . ')');
+        /* TODO: duplicate stuff`? */
+        
+        $macro = null;
+        $reverse = $this->_statement['reverse'] ? 'REVERSE_' : '';
+        if (isset($keyVariable)) {
+            if (!isset($variable)) {
+                $macro = 'ZEND_HASH_'. $reverse . 'FOREACH_KEY';
+            }
+        } else if (isset($variable)) {
+            $macro = 'ZEND_HASH_' . $reverse . 'FOREACH_VAL';
         }
-        $codePrinter->output(') {');
+        
+        if (!isset($macro)) {
+            $macro = 'ZEND_HASH_' . $reverse . 'FOREACH_KEY_VAL'; // (ht, h, key, val)
+            $codePrinter->output($macro . '(Z_ARRVAL(' . $expression->getCode() . '), ' . $arrayNumKey->getName() . ', ' . $arrayStrKey->getName() . ', ' . $arrayVal->getName() . ') {');
+        }
+        else if ($macro == 'ZEND_HASH_' . $reverse . 'FOREACH_VAL') { //(ht, val)
+            $codePrinter->output($macro . '(Z_ARRVAL(' . $expression->getCode() . '), ' . $arrayVal->getName() . ') {');
+        }
+        else if ($macro == 'ZEND_HASH_' . $reverse . 'FOREACH_KEY') { //(ht, h, key)
+            $codePrinter->output($macro . '(Z_ARRVAL(' . $expression->getCode() . '), ' . $arrayNumKey->getName() . ', ' . $arrayStrKey->getName() . ') {');
+        }
+        else throw new \Exception("Not supported yet! ForStatement ".$macro);
 
-        if (isset($this->_statement['key'])) {
+        /*if (isset($this->_statement['key'])) {
             if ($duplicateKey) {
                 $compilationContext->symbolTable->mustGrownStack(true);
                 $codePrinter->output("\t" . 'ZEPHIR_GET_HMKEY(' . $keyVariable->getName() . ', ' . $arrayHash->getName() . ', ' . $arrayPointer ->getName() . ');');
@@ -810,12 +823,18 @@ class ForStatement extends StatementAbstract
                 $codePrinter->output("\t" . 'ZEPHIR_GET_HKEY(' . $keyVariable->getName() . ', ' . $arrayHash->getName() . ', ' . $arrayPointer ->getName() . ');');
             }
         }
-
         if (isset($this->_statement['value'])) {
             $compilationContext->symbolTable->mustGrownStack(true);
             $codePrinter->output("\t" . 'ZEPHIR_GET_HVALUE(' . $variable->getName() . ', ' . $tempVariable->getName() . ');');
+        }*/
+        
+        if (isset($keyVariable)) {
+            $codePrinter->output("\t" . 'ZVAL_STR(&' . $keyVariable->getName() . ', ' . $arrayStrKey->getName() . ');');
         }
-
+        if (isset($variable)) {
+            $codePrinter->output("\t" . 'ZVAL_COPY_VALUE(&' . $variable->getName() . ', ' . $arrayVal->getName() . ');');
+        }
+        
         /**
          * Compile statements in the 'for' block
          */
@@ -833,7 +852,8 @@ class ForStatement extends StatementAbstract
          */
         $compilationContext->insideCycle--;
 
-        $codePrinter->output('}');
+        //$codePrinter->output('}');
+        $codePrinter->output('} ZEND_HASH_FOREACH_END();');
     }
 
     /**

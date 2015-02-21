@@ -27,10 +27,10 @@
 typedef struct _zephir_memory_entry {
 	size_t pointer;
 	size_t capacity;
-	zval ***addresses;
+	zval **addresses;
 	size_t hash_pointer;
 	size_t hash_capacity;
-	zval ***hash_addresses;
+	zval **hash_addresses;
 	struct _zephir_memory_entry *prev;
 	struct _zephir_memory_entry *next;
 #ifndef ZEPHIR_RELEASE
@@ -51,11 +51,8 @@ typedef struct _zephir_function_cache {
 	zend_function *func;
 } zephir_function_cache;
 
-#if PHP_VERSION_ID >= 50400
-	#define ZEPHIR_INIT_FUNCS(class_functions) static const zend_function_entry class_functions[] =
-#else
-	#define ZEPHIR_INIT_FUNCS(class_functions) static const function_entry class_functions[] =
-#endif
+#define ZEPHIR_INIT_FUNCS(class_functions) static const zend_function_entry class_functions[] =
+
 
 #ifndef PHP_FE_END
 	#define PHP_FE_END { NULL, NULL, NULL, 0, 0 }
@@ -77,24 +74,6 @@ typedef struct _zephir_function_cache {
 	if (zephir_ ##name## _init(INIT_FUNC_ARGS_PASSTHRU) == FAILURE) { \
 		return FAILURE; \
 	}
-
-/* Compatibility macros for PHP 5.3 */
-#ifndef PHP_FE_END
-#define PHP_FE_END { NULL, NULL, NULL, 0, 0 }
-#endif
-
-#ifndef INIT_PZVAL_COPY
-#define INIT_PZVAL_COPY(z, v) \
-	ZVAL_COPY_VALUE(z, v); \
-	Z_SET_REFCOUNT_P(z, 1); \
-	Z_UNSET_ISREF_P(z);
-#endif
-
-#ifndef ZVAL_COPY_VALUE
-#define ZVAL_COPY_VALUE(z, v) \
-	(z)->value = (v)->value; \
-	Z_TYPE_P(z) = Z_TYPE_P(v);
-#endif
 
 #ifndef HASH_KEY_NON_EXISTENT
 # define HASH_KEY_NON_EXISTENT HASH_KEY_NON_EXISTANT

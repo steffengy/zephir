@@ -57,6 +57,8 @@ class SymbolTable
         $thisVar->setLowName('this_ptr');
         $thisVar->setDynamicTypes('object');
         $this->variables['this'] = $thisVar;
+        /* TODO: fixme below */
+        $compilationContext->codePrinter->output("\t".'zval *this_ptr = getThis();'."\n");
 
         $returnValue = new Variable('variable', 'return_value', $compilationContext->currentBranch);
         $returnValue->setIsInitialized(true, $compilationContext, array());
@@ -102,16 +104,6 @@ class SymbolTable
     public function addVariable($type, $name, CompilationContext $compilationContext, $defaultValue = null)
     {
         $variable = new Variable($type, $name, $compilationContext->currentBranch, $defaultValue);
-        if ($type == 'variable') {
-            if ($this->localContext) {
-                /**
-                 * Checks whether a variable can be optimized to be static or not
-                 */
-                if ($this->localContext->shouldBeLocal($name)) {
-                    $variable->setLocalOnly(true);
-                }
-            }
-        }
         $this->variables[$name] = $variable;
         return $variable;
     }
@@ -243,10 +235,8 @@ class SymbolTable
                             case 'variable':
                             case 'string':
                             case 'array':
-                                if (!$variable->isLocalOnly()) {
-                                    $variable->setMustInitNull(true);
-                                    $compilationContext->codePrinter->output('ZEPHIR_CHECK_POINTER(' . $variable->getName() . ');');
-                                }
+                                $variable->setMustInitNull(true);
+                                $compilationContext->codePrinter->output('ZEPHIR_CHECK_POINTER(' . $variable->getName() . ');');
                                 break;
                         }
                     }
@@ -526,11 +516,9 @@ class SymbolTable
     {
         if (isset($this->tempVariables[$location][$type])) {
             foreach ($this->tempVariables[$location][$type] as $variable) {
-                if (!$variable->isDoublePointer()) {
-                    if ($variable->isIdle()) {
-                        $variable->setIdle(false);
-                        return $variable;
-                    }
+                if ($variable->isIdle()) {
+                    $variable->setIdle(false);
+                    return $variable;
                 }
             }
         }
@@ -701,7 +689,6 @@ class SymbolTable
         if (is_object($variable)) {
             $variable->increaseUses();
             $variable->increaseMutates();
-            $variable->setLocalOnly(true);
             if ($type == 'variable' || $type == 'string' || $type == 'array') {
                 $variable->initVariant($context);
             }
@@ -713,7 +700,6 @@ class SymbolTable
         $variable->setIsInitialized(true, $context, array());
         $variable->increaseUses();
         $variable->increaseMutates();
-        $variable->setLocalOnly(true);
         $variable->setTemporal(true);
         if ($type == 'variable' || $type == 'string' || $type == 'array') {
             $variable->initVariant($context);

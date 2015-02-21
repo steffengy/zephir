@@ -97,11 +97,7 @@ class Variable
 
     protected $readOnly = false;
 
-    protected $localOnly = false;
-
     protected $memoryTracked = true;
-
-    protected $doublePointer = false;
 
     protected $defaultInitValue;
 
@@ -193,43 +189,6 @@ class Variable
         return $this->type;
     }
 
-    /**
-     * Sets if the variable is local-only scoped
-     *
-     * @param boolean $localOnly
-     */
-    public function setLocalOnly($localOnly)
-    {
-        $this->localOnly = $localOnly;
-    }
-
-    /**
-     * Checks if the variable is local-only scoped
-     *
-     * @return boolean
-     */
-    public function isLocalOnly()
-    {
-        return $this->localOnly;
-    }
-
-    /**
-     * Marks the variable to be defined as a double pointer
-     *
-     * @param boolean $doublePointer
-     */
-    public function setIsDoublePointer($doublePointer)
-    {
-        $this->doublePointer = $doublePointer;
-    }
-
-    /**
-     * Returns the variable
-     */
-    public function isDoublePointer()
-    {
-        return $this->doublePointer;
-    }
 
     /**
      * Returns variable's real name
@@ -252,6 +211,15 @@ class Variable
             return $this->lowName;
         }
         return $this->name;
+    }
+    
+    public function getPointeredName()
+    {   
+        $name = $this->getName();
+        if ($name == 'this_ptr') {
+            return $name;
+        }
+        return '&' . $name;
     }
 
     /**
@@ -679,7 +647,6 @@ class Variable
                 $this->defaultInitValue = null;
                 $this->setDynamicTypes('null');
                 $this->setMustInitNull(true);
-                $this->setLocalOnly(false);
                 break;
 
             default:
@@ -773,32 +740,22 @@ class Variable
 
             $compilationContext->headersManager->add('kernel/memory');
 
-            if (!$this->isLocalOnly()) {
-                $compilationContext->symbolTable->mustGrownStack(true);
-                if ($compilationContext->insideCycle) {
-                    $this->mustInitNull = true;
-                    $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(' . $this->getName() . ');');
-                } else {
-                    if ($this->variantInits > 0) {
-                        if ($this->initBranch === 0) {
-                            $compilationContext->codePrinter->output('ZEPHIR_INIT_BNVAR(' . $this->getName() . ');');
-                        } else {
-                            $this->mustInitNull = true;
-                            $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(' . $this->getName() . ');');
-                        }
-                    } else {
-                        $compilationContext->codePrinter->output('ZEPHIR_INIT_VAR(' . $this->getName() . ');');
-                    }
-                }
+            $compilationContext->symbolTable->mustGrownStack(true);
+            if ($compilationContext->insideCycle) {
+                $this->mustInitNull = true;
+                $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(' . $this->getName() . ');');
             } else {
-                if ($this->variantInits > 0 || $compilationContext->insideCycle) {
-                    $this->mustInitNull = true;
-                    $compilationContext->codePrinter->output('ZEPHIR_SINIT_NVAR(' . $this->getName() . ');');
+                if ($this->variantInits > 0) {
+                    if ($this->initBranch === 0) {
+                        $compilationContext->codePrinter->output('ZEPHIR_INIT_BNVAR(' . $this->getName() . ');');
+                    } else {
+                        $this->mustInitNull = true;
+                        $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(' . $this->getName() . ');');
+                    }
                 } else {
-                    $compilationContext->codePrinter->output('ZEPHIR_SINIT_VAR(' . $this->getName() . ');');
+                    $compilationContext->codePrinter->output('ZEPHIR_INIT_VAR(' . $this->getName() . ');');
                 }
             }
-
             $this->variantInits++;
         }
     }
@@ -826,20 +783,14 @@ class Variable
                 $this->initBranch = $compilationContext->currentBranch;
             }
 
-            if (!$this->isLocalOnly()) {
-                $compilationContext->symbolTable->mustGrownStack(true);
-                if ($compilationContext->insideCycle) {
-                    $this->mustInitNull = true;
-                } else {
-                    if ($this->variantInits > 0) {
-                        if ($this->initBranch !== 1) {
-                            $this->mustInitNull = true;
-                        }
-                    }
-                }
+            $compilationContext->symbolTable->mustGrownStack(true);
+            if ($compilationContext->insideCycle) {
+                $this->mustInitNull = true;
             } else {
-                if ($this->variantInits > 0 || $compilationContext->insideCycle) {
-                    $this->mustInitNull = true;
+                if ($this->variantInits > 0) {
+                    if ($this->initBranch !== 1) {
+                        $this->mustInitNull = true;
+                    }
                 }
             }
 
@@ -867,21 +818,12 @@ class Variable
             }
 
             $compilationContext->headersManager->add('kernel/memory');
-            if (!$this->isLocalOnly()) {
-                $compilationContext->symbolTable->mustGrownStack(true);
-                if ($this->variantInits > 0 || $compilationContext->insideCycle) {
-                    $this->mustInitNull = true;
-                    $compilationContext->codePrinter->output('ZEPHIR_INIT_LNVAR(' . $this->getName() . ');');
-                } else {
-                    $compilationContext->codePrinter->output('ZEPHIR_INIT_VAR(' . $this->getName() . ');');
-                }
+            $compilationContext->symbolTable->mustGrownStack(true);
+            if ($this->variantInits > 0 || $compilationContext->insideCycle) {
+                $this->mustInitNull = true;
+                $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(' . $this->getName() . ');');
             } else {
-                if ($this->variantInits > 0 || $compilationContext->insideCycle) {
-                    $this->mustInitNull = true;
-                    $compilationContext->codePrinter->output('ZEPHIR_SINIT_LNVAR(' . $this->getName() . ');');
-                } else {
-                    $compilationContext->codePrinter->output('ZEPHIR_SINIT_VAR(' . $this->getName() . ');');
-                }
+                $compilationContext->codePrinter->output('ZEPHIR_INIT_VAR(' . $this->getName() . ');');
             }
             $this->variantInits++;
         }
@@ -944,9 +886,9 @@ class Variable
             $compilationContext->symbolTable->mustGrownStack(true);
             if ($this->variantInits > 0 || $compilationContext->insideCycle) {
                 $this->mustInitNull = true;
-                //$compilationContext->codePrinter->output('ZEPHIR_OBS_NVAR(' . $this->getName() . ');');
+                $compilationContext->codePrinter->output('ZEPHIR_OBS_NVAR(' . $this->getName() . ');');
             } else {
-                //$compilationContext->codePrinter->output('ZEPHIR_OBS_VAR(' . $this->getName() . ');');
+                $compilationContext->codePrinter->output('ZEPHIR_OBS_VAR(' . $this->getName() . ');');
             }
             $this->variantInits++;
 

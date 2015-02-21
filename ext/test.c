@@ -317,8 +317,7 @@ static PHP_MINIT_FUNCTION(test)
 static PHP_MSHUTDOWN_FUNCTION(test)
 {
 
-	zephir_deinitialize_memory(TSRMLS_C);
-
+	zephir_deinitialize_memory();
 	return SUCCESS;
 }
 #endif
@@ -368,7 +367,6 @@ static PHP_RSHUTDOWN_FUNCTION(test)
 {
 
 	
-
 	zephir_deinitialize_memory(TSRMLS_C);
 	return SUCCESS;
 }

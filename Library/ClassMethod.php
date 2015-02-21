@@ -1025,12 +1025,12 @@ class ClassMethod
 
                     case 'null':
                         $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
-                        $code .= "\t\t" . 'ZVAL_EMPTY_STRING(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZVAL_EMPTY_STRING(&' . $parameter['name'] . ');' . PHP_EOL;
                         break;
 
                     case 'string':
                         $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
-                        $code .= "\t\t" . 'ZVAL_STRING(' . $parameter['name'] . ', "' . Utils::addSlashes($parameter['default']['value'], true) . '", 1);' . PHP_EOL;
+                        $code .= "\t\t" . 'ZVAL_STRING(&' . $parameter['name'] . ', "' . Utils::addSlashes($parameter['default']['value'], true) . '");' . PHP_EOL;
                         break;
 
                     default:
@@ -1045,13 +1045,13 @@ class ClassMethod
 
                     case 'null':
                         $code .= "\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
-                        $code .= "\t" . 'array_init(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t" . 'array_init(&' . $parameter['name'] . ');' . PHP_EOL;
                         break;
 
                     case 'empty-array':
                     case 'array':
                         $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
-                        $code .= "\t\t" . 'array_init(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'array_init(&' . $parameter['name'] . ');' . PHP_EOL;
                         break;
 
                     default:
@@ -1085,7 +1085,7 @@ class ClassMethod
                         $compilationContext->symbolTable->mustGrownStack(true);
                         $compilationContext->headersManager->add('kernel/memory');
                         $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
-                        $code .= "\t\t" . 'ZVAL_LONG(' . $parameter['name'] . ', ' . $parameter['default']['value'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZVAL_LONG(&' . $parameter['name'] . ', ' . $parameter['default']['value'] . ');' . PHP_EOL;
                         break;
 
                     case 'double':
@@ -1099,7 +1099,7 @@ class ClassMethod
                         $compilationContext->symbolTable->mustGrownStack(true);
                         $compilationContext->headersManager->add('kernel/memory');
                         $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
-                        $code .= "\t\t" . 'ZVAL_STRING(' . $parameter['name'] . ', "' . Utils::addSlashes($parameter['default']['value'], true) . '", 1);' . PHP_EOL;
+                        $code .= "\t\t" . 'ZVAL_STRING(&' . $parameter['name'] . ', "' . Utils::addSlashes($parameter['default']['value'], true) . '");' . PHP_EOL;
                         break;
 
                     case 'bool':
@@ -1114,9 +1114,9 @@ class ClassMethod
                             $compilationContext->symbolTable->mustGrownStack(true);
                             $compilationContext->headersManager->add('kernel/memory');
                             if ($parameter['default']['value'] == 'true') {
-                                $code .= "\t\t" . 'ZEPHIR_CPY_WRT(' . $parameter['name'] . ', ZEPHIR_GLOBAL(global_true));' . PHP_EOL;
+                                $code .= "\t\t" . 'ZEPHIR_CPY_WRT(&' . $parameter['name'] . ', ZEPHIR_GLOBAL(global_true));' . PHP_EOL;
                             } else {
-                                $code .= "\t\t" . 'ZEPHIR_CPY_WRT(' . $parameter['name'] . ', ZEPHIR_GLOBAL(global_false));' . PHP_EOL;
+                                $code .= "\t\t" . 'ZEPHIR_CPY_WRT(&' . $parameter['name'] . ', ZEPHIR_GLOBAL(global_false));' . PHP_EOL;
                             }
                         }
                         break;
@@ -1128,7 +1128,7 @@ class ClassMethod
                         } else {
                             $compilationContext->symbolTable->mustGrownStack(true);
                             $compilationContext->headersManager->add('kernel/memory');
-                            $code .= "\t\t" . 'ZEPHIR_CPY_WRT(' . $parameter['name'] . ', ZEPHIR_GLOBAL(global_null));' . PHP_EOL;
+                            $code .= "\t\t" . 'ZEPHIR_CPY_WRT(&' . $parameter['name'] . ', ZEPHIR_GLOBAL(global_null));' . PHP_EOL;
                         }
                         break;
 
@@ -1136,7 +1136,7 @@ class ClassMethod
                         $compilationContext->symbolTable->mustGrownStack(true);
                         $compilationContext->headersManager->add('kernel/memory');
                         $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
-                        $code .= "\t\t" . 'array_init(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'array_init(&' . $parameter['name'] . ');' . PHP_EOL;
                         break;
 
                     default:
@@ -1216,7 +1216,7 @@ class ClassMethod
                 $code .= "\t\tzephir_get_strval(" . $parameter['name'] . ', ' . $parameter['name'] . '_param);' . PHP_EOL;
                 $code .= "\t" . '} else {' . PHP_EOL;
                 $code .= "\t\tZEPHIR_INIT_VAR(" . $parameter['name'] . ');' . PHP_EOL;
-                $code .= "\t\tZVAL_EMPTY_STRING(" . $parameter['name'] . ');' . PHP_EOL;
+                $code .= "\t\tZVAL_EMPTY_STRING(&" . $parameter['name'] . ');' . PHP_EOL;
                 $code .= "\t" . '}' . PHP_EOL;
                 return $code;
 
@@ -1664,7 +1664,7 @@ class ClassMethod
                                 case 'uint':
                                 case 'long':
                                     $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                    $initVarCode .= "\t" . 'ZVAL_LONG(' . $variable->getName() . ', ' . $defaultValue['value'] . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZVAL_LONG(&' . $variable->getName() . ', ' . $defaultValue['value'] . ');' . PHP_EOL;
                                     break;
 
                                 case 'char':
@@ -1677,7 +1677,7 @@ class ClassMethod
                                         }
                                     }
                                     $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                    $initVarCode .= "\t" . 'ZVAL_LONG(' . $variable->getName() . ', \'' . $defaultValue['value'] . '\');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZVAL_LONG(&' . $variable->getName() . ', \'' . $defaultValue['value'] . '\');' . PHP_EOL;
                                     break;
 
                                 case 'null':
@@ -1692,13 +1692,13 @@ class ClassMethod
 
                                 case 'string':
                                     $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                    $initVarCode .= "\t" . 'ZVAL_STRING(' . $variable->getName() . ', "' . Utils::addSlashes($defaultValue['value'], true) . '", 1);' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZVAL_STRING(&' . $variable->getName() . ', "' . Utils::addSlashes($defaultValue['value'], true) . '");' . PHP_EOL;
                                     break;
 
                                 case 'array':
                                 case 'empty-array':
                                     $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                    $initVarCode .= "\t" . 'array_init(' . $variable->getName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'array_init(&' . $variable->getName() . ');' . PHP_EOL;
                                     break;
 
                                 default:
@@ -1722,12 +1722,12 @@ class ClassMethod
 
                             case 'string':
                                 $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                $initVarCode .= "\t" . 'ZVAL_STRING(' . $variable->getName() . ', "' . Utils::addSlashes($defaultValue['value'], true) . '", 1);' . PHP_EOL;
+                                $initVarCode .= "\t" . 'ZVAL_STRING(&' . $variable->getName() . ', "' . Utils::addSlashes($defaultValue['value'], true) . '");' . PHP_EOL;
                                 break;
 
                             case 'null':
                                 $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                $initVarCode .= "\t" . 'ZVAL_EMPTY_STRING(' . $variable->getName() . ');' . PHP_EOL;
+                                $initVarCode .= "\t" . 'ZVAL_EMPTY_STRING(&' . $variable->getName() . ');' . PHP_EOL;
                                 break;
 
                             default:
@@ -1756,7 +1756,7 @@ class ClassMethod
                             case 'array':
                             case 'empty-array':
                                 $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                $initVarCode .= "\t" . 'array_init(' . $variable->getName() . ');' . PHP_EOL;
+                                $initVarCode .= "\t" . 'array_init(&' . $variable->getName() . ');' . PHP_EOL;
                                 break;
 
                             default:
@@ -2075,6 +2075,11 @@ class ClassMethod
                     $pointer = '*';
                     $code = 'zval ';
                     break;
+                    
+                case 'variableptr':
+                    $pointer = '*';
+                    $code = 'zval ';
+                    break;
 
                 case 'HashTable':
                     $pointer = '*';
@@ -2104,6 +2109,16 @@ class ClassMethod
                     $pointer = '*';
                     $code = 'zend_property_info ';
                     break;
+                    
+                case 'zend_ulong':
+                    $pointer = '';
+                    $code = 'zend_ulong ';
+                    break;
+
+                case 'zend_string':
+                    $pointer = '*';
+                    $code = 'zend_string ';
+                    break;
 
                 case 'zephir_fcall_cache_entry':
                     $pointer = '*';
@@ -2129,41 +2144,25 @@ class ClassMethod
             }
 
             $groupVariables = array();
-            $defaultValues = array();
+            $otherInits = array();
 
+           
             /**
              * @var $variables Variable[]
              */
             foreach ($variables as $variable) {
-
                 $isComplex = ($type == 'variable' || $type == 'string' || $type == 'array' || $type == 'resource' || $type == 'callable' || $type == 'object');
                 if ($isComplex && $variable->mustInitNull()) {
-                    if ($variable->isLocalOnly()) {
-                        $groupVariables[] = $variable->getName() . ' = zval_used_for_init';
-                    } else {
-                        if ($variable->isDoublePointer()) {
-                            $groupVariables[] = $pointer . $pointer . $variable->getName() . ' = NULL';
-                        } else {
-                            $groupVariables[] = $pointer . $variable->getName() . ' = NULL';
-                        }
-                    }
+                    $groupVariables[] = $variable->getName();
+                    $otherInits[] = "ZVAL_UNDEF(&" . $variable->getName() . ");";
                     continue;
                 }
 
-                if ($variable->isLocalOnly()) {
+                if ($isComplex) {
                     $groupVariables[] = $variable->getName();
                     continue;
                 }
-
-                if ($variable->isDoublePointer()) {
-                    if ($variable->mustInitNull()) {
-                        $groupVariables[] = $pointer . $pointer . $variable->getName() . ' = NULL';
-                    } else {
-                        $groupVariables[] = $pointer . $pointer . $variable->getName();
-                    }
-                    continue;
-                }
-
+                
                 $defaultValue = $variable->getDefaultInitValue();
                 if ($defaultValue !== null) {
 
@@ -2204,7 +2203,7 @@ class ClassMethod
                 $groupVariables[] = $pointer . $variable->getName();
             }
 
-            $codePrinter->preOutput("\t" . $code . join(', ', $groupVariables) . ';');
+            $codePrinter->preOutput("\t" . $code . join(', ', $groupVariables) . ';' . "\n\t".join("\n\t", $otherInits));
         }
 
         /**

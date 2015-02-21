@@ -99,12 +99,12 @@ class ObjectPropertyArrayIndex extends ArrayIndex
             case 'uint':
             case 'long':
                 $indexVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                $codePrinter->output('ZVAL_LONG(' . $indexVariable->getName() . ', ' . $resolvedIndex->getCode() . ');');
+                $codePrinter->output('ZVAL_LONG(&' . $indexVariable->getName() . ', ' . $resolvedIndex->getCode() . ');');
                 break;
 
             case 'string':
                 $indexVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                $codePrinter->output('ZVAL_STRING(' . $indexVariable->getName() . ', "' . $resolvedIndex->getCode() . '", 1);');
+                $codePrinter->output('ZVAL_STRING(&' . $indexVariable->getName() . ', "' . $resolvedIndex->getCode() . '");');
                 break;
 
             case 'variable':
@@ -115,7 +115,7 @@ class ObjectPropertyArrayIndex extends ArrayIndex
                     case 'uint':
                     case 'long':
                         $indexVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                        $codePrinter->output('ZVAL_LONG(' . $indexVariable->getName() . ', ' . $variableIndex->getName() . ');');
+                        $codePrinter->output('ZVAL_LONG(&' . $indexVariable->getName() . ', ' . $variableIndex->getName() . ');');
                         break;
 
                 }
@@ -187,13 +187,13 @@ class ObjectPropertyArrayIndex extends ArrayIndex
                     case 'long':
                     case 'uint':
                         $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                        $codePrinter->output('ZVAL_LONG(' . $tempVariable->getName() . ', ' . $resolvedExpr->getCode() . ');');
+                        $codePrinter->output('ZVAL_LONG(&' . $tempVariable->getName() . ', ' . $resolvedExpr->getCode() . ');');
                         $codePrinter->output('zephir_update_property_array(' . $symbolVariable->getName() . ', SL("' . $property . '"), ' . $indexVariable->getName() . ', ' . $tempVariable->getName() . ' TSRMLS_CC);');
                         break;
 
                     case 'char':
                         $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                        $codePrinter->output('ZVAL_LONG(' . $tempVariable->getName() . ', \'' . $resolvedExpr->getCode() . '\');');
+                        $codePrinter->output('ZVAL_LONG(&' . $tempVariable->getName() . ', \'' . $resolvedExpr->getCode() . '\');');
                         $codePrinter->output('zephir_update_property_array(' . $symbolVariable->getName() . ', SL("' . $property . '"), ' . $indexVariable->getName() . ', ' . $tempVariable->getName() . ' TSRMLS_CC);');
                         break;
 
@@ -205,7 +205,7 @@ class ObjectPropertyArrayIndex extends ArrayIndex
 
                     case 'string':
                         $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                        $codePrinter->output('ZVAL_STRING(' . $tempVariable->getName() . ', "' . $resolvedExpr->getCode() . '", 1);');
+                        $codePrinter->output('ZVAL_STRING(&' . $tempVariable->getName() . ', "' . $resolvedExpr->getCode() . '");');
                         $codePrinter->output('zephir_update_property_array(' . $symbolVariable->getName() . ', SL("' . $property . '"), ' . $indexVariable->getName() . ', ' . $tempVariable->getName() . ' TSRMLS_CC);');
                         break;
 
@@ -227,7 +227,7 @@ class ObjectPropertyArrayIndex extends ArrayIndex
                             case 'int':
                             case 'long':
                                 $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                                $codePrinter->output('ZVAL_LONG(' . $tempVariable->getName() . ', ' . $variableExpr->getName() . ');');
+                                $codePrinter->output('ZVAL_LONG(&' . $tempVariable->getName() . ', ' . $variableExpr->getName() . ');');
                                 $codePrinter->output('zephir_update_property_array(' . $symbolVariable->getName() . ', SL("' . $property . '"), ' . $indexVariable->getName() . ', ' . $tempVariable->getName() . ' TSRMLS_CC);');
                                 break;
 
