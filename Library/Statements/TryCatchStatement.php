@@ -83,7 +83,7 @@ class TryCatchStatement extends StatementAbstract
                     $variable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $compilationContext);
                 }
 
-                $codePrinter->output('ZEPHIR_CPY_WRT(' . $variable->getName() . ', EG(exception));');
+                $codePrinter->output('ZVAL_OBJ(' . $variable->getPointeredName() . ', EG(exception));');
 
                 /**
                  * @TODO, use a builder here

@@ -82,7 +82,7 @@ class StrposOptimizer extends OptimizerAbstract
 
         $symbolVariable->setDynamicTypes('int');
 
-        $context->codePrinter->output('zephir_fast_strpos(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ', ' . $offset .');');
+        $context->codePrinter->output('zephir_fast_strpos(' . $symbolVariable->getPointeredName() . ', ' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ', ' . $offset .');');
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }
 }

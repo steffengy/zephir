@@ -99,7 +99,6 @@ class IssetOperator extends BaseOperator
 
                     case 'variable':
                         $indexVariable = $compilationContext->symbolTable->getVariableForRead($resolvedExpr->getCode(), $compilationContext, $left['right']);
-                        $indexVariable->setLocalOnly(false);
 
                         switch ($indexVariable->getType()) {
 
@@ -109,7 +108,7 @@ class IssetOperator extends BaseOperator
 
                             case 'variable':
                             case 'string':
-                                return new CompiledExpression('bool', 'zephir_array_isset(' . $variable->getName() . ', ' . $indexVariable->getName() . ')', $left['right']);
+                                return new CompiledExpression('bool', 'zephir_array_isset(' . $variable->getPointeredName() . ', ' . $indexVariable->getPointeredName() . ')', $left['right']);
 
                             default:
                                 throw new CompilerException('[' . $indexVariable->getType() . ']', $expression);

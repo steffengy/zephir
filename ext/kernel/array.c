@@ -44,6 +44,176 @@ zval *zephir_array_update_string(zval *arr, const char *index, size_t index_leng
 	return zend_symtable_str_update(Z_ARRVAL_P(arr), index, index_length, value);
 }
 
+int ZEPHIR_FASTCALL zephir_array_unset(zval *arr, zval *index, int flags) {
+
+	HashTable *ht;
+
+	if (Z_TYPE_P(arr) != IS_ARRAY) {
+		return FAILURE;
+	}
+
+	if ((flags & PH_SEPARATE) == PH_SEPARATE) {
+		SEPARATE_ZVAL_IF_NOT_REF(arr);
+	}
+
+	ht = Z_ARRVAL_P(arr);
+
+	switch (Z_TYPE_P(index)) {
+		//case IS_NULL:
+		//	return (zend_hash_del(ht, "", 1) == SUCCESS);
+
+		case IS_DOUBLE:
+			return (zend_hash_index_del(ht, (ulong)Z_DVAL_P(index)) == SUCCESS);
+
+		case IS_TRUE:
+		case IS_FALSE:
+			return (zend_hash_index_del(ht, Z_TYPE_P(index) == IS_TRUE ? 1 : 0) == SUCCESS);
+
+		case IS_LONG:
+		case IS_RESOURCE:
+			return (zend_hash_index_del(ht, Z_LVAL_P(index)) == SUCCESS);
+
+		case IS_STRING:
+			return (zend_symtable_del(ht, Z_STR_P(index)) == SUCCESS);
+
+		default:
+			zend_error(E_WARNING, "Illegal offset type");
+			return 0;
+	}
+}
+
+int ZEPHIR_FASTCALL zephir_array_unset_long(zval *arr, unsigned long index, int flags) {
+
+	if (Z_TYPE_P(arr) != IS_ARRAY) {
+		return 0;
+	}
+
+	if ((flags & PH_SEPARATE) == PH_SEPARATE) {
+		SEPARATE_ZVAL_IF_NOT_REF(arr);
+	}
+
+	return zend_hash_index_del(Z_ARRVAL_P(arr), index);
+}
+
+int zephir_array_fetch(zval *return_value, zval *arr, zval *index, int flags ZEPHIR_DEBUG_PARAMS) {
+
+	zval *zv;
+	HashTable *ht;
+	int result;
+	ulong uidx = 0;
+
+	if (Z_TYPE_P(arr) == IS_ARRAY) {
+		ht = Z_ARRVAL_P(arr);
+		switch (Z_TYPE_P(index)) {
+			/* TODO case IS_NULL:
+				result = zephir_hash_find(ht, SS(""), (void**) &zv);
+				sidx   = "";
+				break;*/
+
+			case IS_DOUBLE:
+				uidx   = (zend_ulong) Z_DVAL_P(index);
+				zv = zend_hash_index_find(ht, uidx);
+				result = zv != NULL ? SUCCESS : FAILURE;
+				break;
+
+			case IS_TRUE:
+			case IS_FALSE:
+				zv = zend_hash_index_find(ht, Z_TYPE_P(arr) == IS_TRUE ? 1 : 0);
+				result = zv != NULL ? SUCCESS : FAILURE;
+				break;
+
+			case IS_LONG:
+			case IS_RESOURCE:
+				uidx   = Z_LVAL_P(index);
+				zv = zend_hash_index_find(ht, uidx);
+				result = zv != NULL ? SUCCESS : FAILURE;
+				break;
+
+			case IS_STRING:
+				zv = zend_symtable_find(ht, Z_STR_P(index));
+				result = zv != NULL ? SUCCESS : FAILURE;
+				break;
+
+			default:
+				//if ((flags & PH_NOISY) == PH_NOISY) {
+				zend_error(E_WARNING, "Illegal offset type in %s on line %d", file, line);
+				//}
+				result = FAILURE;
+				break;
+		}
+
+		if (result != FAILURE) {
+			ZVAL_COPY_VALUE(return_value, zv);
+			if ((flags & PH_READONLY) != PH_READONLY) {
+				Z_ADDREF_P(return_value);
+			}
+			return SUCCESS;
+		}
+	}
+	ZVAL_NULL(return_value);
+	return FAILURE;
+}
+
+int zephir_array_fetch_long(zval *return_value, zval *arr, unsigned long index, int flags ZEPHIR_DEBUG_PARAMS)
+{
+	zval *zv;
+
+	if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
+		if ((zv = zend_hash_index_find(Z_ARRVAL_P(arr), index)) != NULL) {
+			ZVAL_COPY_VALUE(return_value, zv);
+			if ((flags & PH_READONLY) != PH_READONLY) {
+				Z_ADDREF_P(return_value);
+			}
+			return SUCCESS;
+		}
+
+		if ((flags & PH_NOISY) == PH_NOISY) {
+			zend_error(E_NOTICE, "Undefined index: %lu in %s on line %d", index, file, line);
+		}
+	}
+	else {
+		if ((flags & PH_NOISY) == PH_NOISY) {
+			zend_error(E_NOTICE, "Cannot use a scalar value as an array in %s on line %d", file, line);
+		}
+	}
+
+	ZVAL_NULL(return_value);
+	if ((flags & PH_READONLY) != PH_READONLY) {
+		Z_ADDREF_P(return_value);
+	}
+	return FAILURE;
+}
+
+int zephir_array_fetch_string(zval *return_value, zval *arr, char *index, size_t length, int flags ZEPHIR_DEBUG_PARAMS)
+{
+	zval *zv;
+
+	if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
+		if ((zv = zend_symtable_str_find(Z_ARRVAL_P(arr), index, length)) != NULL) {
+			ZVAL_COPY_VALUE(return_value, zv);
+			if ((flags & PH_READONLY) != PH_READONLY) {
+				Z_ADDREF_P(return_value);
+			}
+			return SUCCESS;
+		}
+
+		if ((flags & PH_NOISY) == PH_NOISY) {
+			zend_error(E_NOTICE, "Undefined index: %lu in %s on line %d", index, file, line);
+		}
+	}
+	else {
+		if ((flags & PH_NOISY) == PH_NOISY) {
+			zend_error(E_NOTICE, "Cannot use a scalar value as an array in %s on line %d", file, line);
+		}
+	}
+
+	ZVAL_NULL(return_value);
+	if ((flags & PH_READONLY) != PH_READONLY) {
+		Z_ADDREF_P(return_value);
+	}
+	return FAILURE;
+}
+
 int zephir_array_append(zval *arr, zval *value, int flags) {
 
 	if (Z_TYPE_P(arr) != IS_ARRAY) {
@@ -62,9 +232,8 @@ int zephir_array_append(zval *arr, zval *value, int flags) {
 /**
  * Multiple array-offset update
  */
-int zephir_array_update_multi(zval *arr, zval *value, const char *types, int types_length, int types_count, ...)
+int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int types_length, int types_count, va_list ap)
 {
-	va_list ap;
 	zval *fetched = NULL;
 	zval *p = arr;
 	int i;
@@ -72,7 +241,6 @@ int zephir_array_update_multi(zval *arr, zval *value, const char *types, int typ
 
 	SEPARATE_ZVAL_IF_NOT_REF(arr);
 
-	va_start(ap, types_count);
 	for (i = 0; i < types_length; ++i)
 	{
 		char *arg = NULL;
@@ -117,7 +285,130 @@ int zephir_array_update_multi(zval *arr, zval *value, const char *types, int typ
 		}
 		if (must_free) efree(arg);
 	}
+	return 0;
+}
+
+int zephir_array_update_multi(zval *arr, zval *value, const char *types, int types_length, int types_count, ...)
+{
+	va_list ap;
+
+	va_start(ap, types_count);
+	zephir_array_update_multi_ex(arr, value, types, types_length, types_count, ap);
 	va_end(ap);
 	return 0;
 }
 
+int ZEPHIR_FASTCALL zephir_array_isset(const zval *arr, zval *index) {
+
+	HashTable *h;
+
+	if (Z_TYPE_P(arr) != IS_ARRAY) {
+		return 0;
+	}
+
+	h = Z_ARRVAL_P(arr);
+	switch (Z_TYPE_P(index)) {
+		//case IS_NULL:
+			//TODO: return zephir_hash_exists(h, SS(""));
+
+		case IS_DOUBLE:
+			return zend_hash_index_exists(h, (ulong)Z_DVAL_P(index));
+
+		case IS_TRUE:
+		case IS_FALSE:
+			return zend_hash_index_exists(h, Z_TYPE_P(index) == IS_TRUE ? 1 : 0);
+
+		case IS_LONG:
+		case IS_RESOURCE:
+			return zend_hash_index_exists(h, Z_LVAL_P(index));
+
+		case IS_STRING:
+			return zend_symtable_exists(h, Z_STR_P(index));
+
+		default:
+			zend_error(E_WARNING, "Illegal offset type");
+			return 0;
+	}
+}
+
+/* wrapper of array_merge */
+void zephir_fast_array_merge(zval *return_value, zval *array1, zval *array2)
+{
+	int init_size, num;
+
+	if (Z_TYPE_P(array1) != IS_ARRAY) {
+		zend_error(E_WARNING, "First argument is not an array");
+		RETURN_NULL();
+	}
+
+	if (Z_TYPE_P(array2) != IS_ARRAY) {
+		zend_error(E_WARNING, "Second argument is not an array");
+		RETURN_NULL();
+	}
+
+	init_size = zend_hash_num_elements(Z_ARRVAL_P(array1));
+	num = zend_hash_num_elements(Z_ARRVAL_P(array2));
+	if (num > init_size) {
+		init_size = num;
+	}
+
+	array_init_size(return_value, init_size);
+	php_array_merge(Z_ARRVAL_P(return_value), Z_ARRVAL_P(array1));
+	php_array_merge(Z_ARRVAL_P(return_value), Z_ARRVAL_P(array2));
+}
+
+void zephir_array_keys(zval *return_value, zval *input)
+{
+	zval
+		 *search_value = NULL,	/* Value to search for */
+		 *entry,				/* An entry in the input array */
+		   res,					/* Result of comparison */
+		   new_val;				/* New value */
+	zend_bool strict = 0;		/* do strict comparison */
+	zend_ulong num_idx;
+	zend_string *str_idx;
+
+	/* Initialize return array */
+	if (search_value != NULL) {
+		array_init(return_value);
+
+		if (strict) {
+			ZEND_HASH_FOREACH_KEY_VAL_IND(Z_ARRVAL_P(input), num_idx, str_idx, entry) {
+				fast_is_identical_function(&res, search_value, entry);
+				if (Z_TYPE(res) == IS_TRUE) {
+					if (str_idx) {
+						ZVAL_STR_COPY(&new_val, str_idx);
+					} else {
+						ZVAL_LONG(&new_val, num_idx);
+					}
+					zend_hash_next_index_insert_new(Z_ARRVAL_P(return_value), &new_val);
+				}
+			} ZEND_HASH_FOREACH_END();
+		} else {
+			ZEND_HASH_FOREACH_KEY_VAL_IND(Z_ARRVAL_P(input), num_idx, str_idx, entry) {
+				if (fast_equal_check_function(search_value, entry)) {
+					if (str_idx) {
+						ZVAL_STR_COPY(&new_val, str_idx);
+					} else {
+						ZVAL_LONG(&new_val, num_idx);
+					}
+					zend_hash_next_index_insert_new(Z_ARRVAL_P(return_value), &new_val);
+				}
+			} ZEND_HASH_FOREACH_END();
+		}
+	} else {
+		array_init_size(return_value, zend_hash_num_elements(Z_ARRVAL_P(input)));
+		zend_hash_real_init(Z_ARRVAL_P(return_value), 1);
+		ZEND_HASH_FILL_PACKED(Z_ARRVAL_P(return_value)) {
+			/* Go through input array and add keys to the return array */
+			ZEND_HASH_FOREACH_KEY_VAL_IND(Z_ARRVAL_P(input), num_idx, str_idx, entry) {
+				if (str_idx) {
+					ZVAL_STR_COPY(&new_val, str_idx);
+				} else {
+					ZVAL_LONG(&new_val, num_idx);
+				}
+				ZEND_HASH_FILL_ADD(&new_val);
+			} ZEND_HASH_FOREACH_END();
+		} ZEND_HASH_FILL_END();
+	}
+}

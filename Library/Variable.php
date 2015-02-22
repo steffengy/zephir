@@ -216,7 +216,7 @@ class Variable
     public function getPointeredName()
     {   
         $name = $this->getName();
-        if ($name == 'this_ptr') {
+        if ($name == 'this_ptr' || $name == 'return_value') {
             return $name;
         }
         return '&' . $name;
@@ -704,7 +704,7 @@ class Variable
     public function initNonReferenced(CompilationContext $compilationContext)
     {
         $compilationContext->headersManager->add('kernel/memory');
-        $compilationContext->codePrinter->output('ZEPHIR_INIT_ZVAL_NREF(' . $this->name . ');');
+        $compilationContext->codePrinter->output('ZEPHIR_INIT_ZVAL_NREF(&' . $this->name . ');');
     }
 
     /**
@@ -743,17 +743,17 @@ class Variable
             $compilationContext->symbolTable->mustGrownStack(true);
             if ($compilationContext->insideCycle) {
                 $this->mustInitNull = true;
-                $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(' . $this->getName() . ');');
+                $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(&' . $this->getName() . ');');
             } else {
                 if ($this->variantInits > 0) {
                     if ($this->initBranch === 0) {
-                        $compilationContext->codePrinter->output('ZEPHIR_INIT_BNVAR(' . $this->getName() . ');');
+                        $compilationContext->codePrinter->output('ZEPHIR_INIT_BNVAR(&' . $this->getName() . ');');
                     } else {
                         $this->mustInitNull = true;
-                        $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(' . $this->getName() . ');');
+                        $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(&' . $this->getName() . ');');
                     }
                 } else {
-                    $compilationContext->codePrinter->output('ZEPHIR_INIT_VAR(' . $this->getName() . ');');
+                    $compilationContext->codePrinter->output('ZEPHIR_INIT_VAR(&' . $this->getName() . ');');
                 }
             }
             $this->variantInits++;
@@ -821,9 +821,9 @@ class Variable
             $compilationContext->symbolTable->mustGrownStack(true);
             if ($this->variantInits > 0 || $compilationContext->insideCycle) {
                 $this->mustInitNull = true;
-                $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(' . $this->getName() . ');');
+                $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(&' . $this->getName() . ');');
             } else {
-                $compilationContext->codePrinter->output('ZEPHIR_INIT_VAR(' . $this->getName() . ');');
+                $compilationContext->codePrinter->output('ZEPHIR_INIT_VAR(&' . $this->getName() . ');');
             }
             $this->variantInits++;
         }
@@ -853,9 +853,9 @@ class Variable
             $compilationContext->symbolTable->mustGrownStack(true);
             if ($this->variantInits > 0 || $compilationContext->insideCycle) {
                 $this->mustInitNull = true;
-                $compilationContext->codePrinter->output('ZEPHIR_OBS_NVAR(' . $this->getName() . ');');
+                $compilationContext->codePrinter->output('ZEPHIR_OBS_NVAR(' . $this->getPointeredName() . ');');
             } else {
-                $compilationContext->codePrinter->output('ZEPHIR_OBS_VAR(' . $this->getName() . ');');
+                $compilationContext->codePrinter->output('ZEPHIR_OBS_VAR(' . $this->getPointeredName() . ');');
             }
             $this->variantInits++;
         }
@@ -886,9 +886,9 @@ class Variable
             $compilationContext->symbolTable->mustGrownStack(true);
             if ($this->variantInits > 0 || $compilationContext->insideCycle) {
                 $this->mustInitNull = true;
-                $compilationContext->codePrinter->output('ZEPHIR_OBS_NVAR(' . $this->getName() . ');');
+                $compilationContext->codePrinter->output('ZEPHIR_OBS_NVAR(' . $this->getPointeredName() . ');');
             } else {
-                $compilationContext->codePrinter->output('ZEPHIR_OBS_VAR(' . $this->getName() . ');');
+                $compilationContext->codePrinter->output('ZEPHIR_OBS_VAR(' . $this->getPointeredName() . ');');
             }
             $this->variantInits++;
 

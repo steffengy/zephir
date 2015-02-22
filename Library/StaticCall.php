@@ -97,7 +97,7 @@ class StaticCall extends Call
          * Temporary variables must be copied if they have more than one reference
          */
         foreach ($this->getMustCheckForCopyVariables() as $checkVariable) {
-            $codePrinter->output('zephir_check_temp_parameter(' . $checkVariable . ');');
+            $codePrinter->output('zephir_check_temp_parameter(&' . $checkVariable . ');');
         }
 
         $this->addCallStatusOrJump($compilationContext);
@@ -171,7 +171,7 @@ class StaticCall extends Call
          * Temporary variables must be copied if they have more than one reference
          */
         foreach ($this->getMustCheckForCopyVariables() as $checkVariable) {
-            $codePrinter->output('zephir_check_temp_parameter(' . $checkVariable . ');');
+            $codePrinter->output('zephir_check_temp_parameter(&' . $checkVariable . ');');
         }
 
         $this->addCallStatusOrJump($compilationContext);
@@ -198,7 +198,8 @@ class StaticCall extends Call
 
             if (!$compilationContext->symbolTable->hasVariable($variableName)) {
                 $classEntryVariable = $compilationContext->symbolTable->addVariable('zend_class_entry', $variableName, $compilationContext);
-                $codePrinter->output($classEntryVariable->getName().' = zend_fetch_class(SL("\\\\'.str_replace('\\', '\\\\', $classDefinition->getName()).'"), ZEND_FETCH_CLASS_AUTO TSRMLS_CC);');
+                $compilationContext->headersManager->add('kernel/object');
+                $codePrinter->output($classEntryVariable->getName().' = zephir_fetch_class_str(SL("\\\\'.str_replace('\\', '\\\\', $classDefinition->getName()).'"), ZEND_FETCH_CLASS_AUTO);');
             }
 
             $classEntryVariable = $compilationContext->symbolTable->getVariableForWrite($variableName, $compilationContext, $expression);
@@ -255,7 +256,7 @@ class StaticCall extends Call
          * Temporary variables must be copied if they have more than one reference
          */
         foreach ($this->getMustCheckForCopyVariables() as $checkVariable) {
-            $codePrinter->output('zephir_check_temp_parameter(' . $checkVariable . ');');
+            $codePrinter->output('zephir_check_temp_parameter(&' . $checkVariable . ');');
         }
 
         $this->addCallStatusOrJump($compilationContext);
@@ -302,7 +303,8 @@ class StaticCall extends Call
         }
 
         $classEntryVariable = $compilationContext->symbolTable->addTemp('zend_class_entry', $compilationContext);
-        $codePrinter->output($classEntryVariable->getName() . ' = zend_fetch_class(Z_STRVAL_P(' . $classNameVariable->getName() . '), Z_STRLEN_P(' . $classNameVariable->getName() . '), ZEND_FETCH_CLASS_AUTO TSRMLS_CC);');
+        $compilationContext->headersManager->add('kernel/object');
+        $codePrinter->output($classEntryVariable->getName() . ' = zephir_fetch_class(Z_STR_P(' . $classNameVariable->getName() . '), ZEND_FETCH_CLASS_AUTO);');
         $classEntry = $classEntryVariable->getName();
 
         if (!count($params)) {
@@ -331,7 +333,7 @@ class StaticCall extends Call
          * Temporary variables must be copied if they have more than one reference
          */
         foreach ($this->getMustCheckForCopyVariables() as $checkVariable) {
-            $codePrinter->output('zephir_check_temp_parameter(' . $checkVariable . ');');
+            $codePrinter->output('zephir_check_temp_parameter(&' . $checkVariable . ');');
         }
 
         $this->addCallStatusOrJump($compilationContext);
@@ -380,7 +382,8 @@ class StaticCall extends Call
          * @todo Validate if the variable is really a string!
          */
         $classEntryVariable = $compilationContext->symbolTable->addTemp('zend_class_entry', $compilationContext);
-        $codePrinter->output($classEntryVariable->getName() . ' = zend_fetch_class(Z_STRVAL_P(' . $classNameVariable->getName() . '), Z_STRLEN_P(' . $classNameVariable->getName() . '), ZEND_FETCH_CLASS_AUTO TSRMLS_CC);');
+        $compilationContext->headersManager->add('kernel/object');
+        $codePrinter->output($classEntryVariable->getName() . ' = zephir_fetch_class(Z_STR_P(' . $classNameVariable->getName() . '), ZEND_FETCH_CLASS_AUTO);');
         $classEntry = $classEntryVariable->getName();
 
 
@@ -423,7 +426,7 @@ class StaticCall extends Call
          * Temporary variables must be copied if they have more than one reference
          */
         foreach ($this->getMustCheckForCopyVariables() as $checkVariable) {
-            $codePrinter->output('zephir_check_temp_parameter(' . $checkVariable . ');');
+            $codePrinter->output('zephir_check_temp_parameter(&' . $checkVariable . ');');
         }
 
         $this->addCallStatusOrJump($compilationContext);

@@ -29,6 +29,7 @@ use Zephir\Optimizers\OptimizerAbstract;
  * GlobalsGetOptimizer
  *
  * Reads values from extensions globals
+ * TODO
  */
 class GlobalsGetOptimizer extends OptimizerAbstract
 {

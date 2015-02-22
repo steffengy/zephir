@@ -174,7 +174,7 @@ class ObjectPropertyArrayIndexAppend extends ArrayIndex
             }
         }
 
-        $codePrinter->output('zephir_update_property_array_multi(' . $symbolVariable->getName() . ', SL("' . $property . '"), &' . $variableExpr->getName() . ' TSRMLS_CC, SL("' . $keys . 'a"), ' . $numberParams . ', ' . join(', ', $offsetItems) . ');');
+        $codePrinter->output('zephir_update_property_array_multi(&' . $symbolVariable->getName() . ', SL("' . $property . '"), &' . $variableExpr->getName() . ', SL("' . $keys . 'a"), ' . $numberParams . ', ' . join(', ', $offsetItems) . ');');
     }
 
     /**

@@ -76,11 +76,11 @@ class JoinOptimizer extends OptimizerAbstract
         $symbolVariable->setDynamicTypes('string');
 
         if (isset($str)) {
-            $context->codePrinter->output('zephir_fast_join_str(' . $symbolVariable->getName() . ', SL("' . $str . '"), ' . $resolvedParams[0] . ' TSRMLS_CC);');
+            $context->codePrinter->output('zephir_fast_join_str(' . $symbolVariable->getPointeredName() . ', SL("' . $str . '"), ' . $resolvedParams[0] . ');');
             return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
         }
 
-        $context->codePrinter->output('zephir_fast_join(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ' TSRMLS_CC);');
+        $context->codePrinter->output('zephir_fast_join(' . $symbolVariable->getPointeredName() . ', ' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ');');
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }
 }

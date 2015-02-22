@@ -156,12 +156,12 @@ class StaticPropertyAccess
 
         if ($classDefinition == $compilationContext->classDefinition) {
             if ($this->_readOnly) {
-                $compilationContext->codePrinter->output($symbolVariable->getName() . ' = zephir_fetch_static_property_ce(' . $classDefinition->getClassEntry() . ', SL("' . $property . '") TSRMLS_CC);');
+                $compilationContext->codePrinter->output('zephir_read_static_property_ce(' . $symbolVariable->getPointeredName() . ', ' . $classDefinition->getClassEntry() . ', SL("' . $property . '"));');
             } else {
                 if ($symbolVariable->getName() != 'return_value') {
                     $symbolVariable->observeVariant($compilationContext);
                 }
-                $compilationContext->codePrinter->output('zephir_read_static_property_ce(&' . $symbolVariable->getName() . ', ' . $classDefinition->getClassEntry() . ', SL("' . $property . '") TSRMLS_CC);');
+                $compilationContext->codePrinter->output('zephir_read_static_property_ce(' . $symbolVariable->getPointeredName() . ', ' . $classDefinition->getClassEntry() . ', SL("' . $property . '"));');
             }
         } else {
             if ($symbolVariable->getName() != 'return_value') {

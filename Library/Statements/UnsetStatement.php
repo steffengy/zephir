@@ -64,7 +64,7 @@ class UnsetStatement extends StatementAbstract
                 if ($exprVar->getCode() == 'this') {
                     $compilationContext->codePrinter->output('zephir_unset_property(this_ptr, "' . $expression['right']['value'] . '" TSRMLS_CC);');
                 } else {
-                    $compilationContext->codePrinter->output('zephir_unset_property(' . $exprVar->getCode() . ', "' . $expression['right']['value'] . '" TSRMLS_CC);');
+                    $compilationContext->codePrinter->output('zephir_unset_property(&' . $exprVar->getCode() . ', "' . $expression['right']['value'] . '" TSRMLS_CC);');
                 }
                 return true;
 
@@ -90,11 +90,11 @@ class UnsetStatement extends StatementAbstract
             case 'uint':
             case 'long':
                 $compilationContext->headersManager->add('kernel/array');
-                $compilationContext->codePrinter->output('zephir_array_unset_long(&' . $variable->getName() . ', ' . $exprIndex->getCode() . ', ' . $flags . ');');
+                $compilationContext->codePrinter->output('zephir_array_unset_long(' . $variable->getPointeredName() . ', ' . $exprIndex->getCode() . ', ' . $flags . ');');
                 break;
 
             case 'string':
-                $compilationContext->codePrinter->output('zephir_array_unset_string(&' . $variable->getName() . ', SS("' . $exprIndex->getCode() . '"), ' . $flags . ');');
+                $compilationContext->codePrinter->output('zephir_array_unset_string(' . $variable->getPointeredName() . ', SS("' . $exprIndex->getCode() . '"), ' . $flags . ');');
                 break;
 
             case 'variable':
@@ -105,13 +105,13 @@ class UnsetStatement extends StatementAbstract
                     case 'uint':
                     case 'long':
                         $compilationContext->headersManager->add('kernel/array');
-                        $compilationContext->codePrinter->output('zephir_array_unset_long(&' . $variable->getName() . ', ' . $variableIndex->getName() . ', ' . $flags . ');');
+                        $compilationContext->codePrinter->output('zephir_array_unset_long(' . $variable->getPointeredName() . ', ' . $variableIndex->getPointeredName() . ', ' . $flags . ');');
                         break;
 
                     case 'string':
                     case 'variable':
                         $compilationContext->headersManager->add('kernel/array');
-                        $compilationContext->codePrinter->output('zephir_array_unset(&' . $variable->getName() . ', ' . $variableIndex->getName() . ', ' . $flags . ');');
+                        $compilationContext->codePrinter->output('zephir_array_unset(' . $variable->getPointeredName() . ', ' . $variableIndex->getPointeredName() . ', ' . $flags . ');');
                         break;
 
                     default:

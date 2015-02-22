@@ -20,29 +20,31 @@ typedef zend_function zephir_fcall_cache_entry;
 
 #define ZEPHIR_ZEND_CALL_FUNCTION_WRAPPER zend_call_function
 
-//#ifdef _MSC_VER
+#ifdef _MSC_VER
 	#define ZEPHIR_PASS_CALL_PARAMS(x) x
 	#define ZEPHIR_PARAM_OFFSET 1
 	#define ZEPHIR_CALL_NUM_PARAMS(x) sizeof(x) / sizeof(x[0]) - ZEPHIR_PARAM_OFFSET
 	#define ZEPHIR_CALL_ARR_PARAMS(x) max(1, ZEPHIR_CALL_NUM_PARAMS(x))
 	#define ZEPHIR_FETCH_VA_ARGS NULL,
 
-/*#else
+#else
 	#define ZEPHIR_PASS_CALL_PARAMS(x) x
 	#define ZEPHIR_CALL_NUM_PARAMS(x) sizeof(x)/sizeof(zval)
 	#define ZEPHIR_CALL_ARR_PARAMS(x) ZEPHIR_CALL_NUM_PARAMS(x)
 	#define ZEPHIR_FETCH_VA_ARGS
 	#define ZEPHIR_PARAM_OFFSET 0
-#endif*/
+#endif
+
+#define zephir_return_call_function     zephir_call_func_aparams
+#define zephir_return_call_class_method zephir_call_class_method_aparams
 
 #define ZEPHIR_GET_ZVAL_PARAMS(args) \
 	int c_ = 0; \
 	zval *params_p[] = { ZEPHIR_FETCH_VA_ARGS args }; \
 	zval params_[ZEPHIR_CALL_ARR_PARAMS(params_p)] = { 0 }; \
 	for (c_ = ZEPHIR_PARAM_OFFSET; c_ < (ZEPHIR_CALL_NUM_PARAMS(params_p)) + ZEPHIR_PARAM_OFFSET; ++c_) { \
-		/* TODO: better way? this is ugly.. */ \
+		/* TODO: better way? this is ugly.. memleak secure? */ \
 		/* params_[c_] = *(params_p[c_ + ZEPHIR_PARAM_OFFSET]); */ \
-		ZEPHIR_OBS_VAR(params_[c_ - ZEPHIR_PARAM_OFFSET]); \
 		if (params_p[c_]) { \
 			ZVAL_COPY_VALUE(&params_[c_ - ZEPHIR_PARAM_OFFSET], params_p[c_]); \
 		} else  { ZVAL_NULL(&params_[c_ - ZEPHIR_PARAM_OFFSET]); } \
@@ -74,6 +76,52 @@ typedef zend_function zephir_fcall_cache_entry;
 		} \
 	} while (0)
 
+#define ZEPHIR_CALL_SELF(return_value_ptr, method, cache, ...) \
+	do { \
+		ZEPHIR_GET_ZVAL_PARAMS(__VA_ARGS__); \
+		ZEPHIR_OBSERVE_OR_NULLIFY_ZVAL(return_value_ptr); \
+		if (__builtin_constant_p(method)) { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_class_method_aparams(return_value_ptr, NULL, zephir_fcall_self, NULL, method, sizeof(method)-1, cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+		else { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_class_method_aparams(return_value_ptr, NULL, zephir_fcall_self, NULL, method, strlen(method), cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+	} while (0)
+
+#define ZEPHIR_CALL_CE_STATIC(return_value_ptr, class_entry, method, cache, ...) \
+	do { \
+		ZEPHIR_GET_ZVAL_PARAMS(__VA_ARGS__); \
+		ZEPHIR_OBSERVE_OR_NULLIFY_ZVAL(return_value_ptr); \
+		if (__builtin_constant_p(method)) { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_class_method_aparams(return_value_ptr, class_entry, zephir_fcall_ce, NULL, method, sizeof(method)-1, cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+		else { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_class_method_aparams(return_value_ptr, class_entry, zephir_fcall_ce, NULL, method, strlen(method), cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+	} while (0)
+
+#define ZEPHIR_RETURN_CALL_FUNCTION(func_name, cache, ...) \
+	do { \
+		ZEPHIR_GET_ZVAL_PARAMS(__VA_ARGS__); \
+		if (__builtin_constant_p(func_name)) { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_return_call_function(return_value, func_name, sizeof(func_name)-1, cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+		else { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_return_call_function(return_value, func_name, strlen(func_name), cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+	} while (0)
+
+#define ZEPHIR_RETURN_CALL_METHOD(object, method, cache, ...) \
+	do { \
+		ZEPHIR_GET_ZVAL_PARAMS(__VA_ARGS__); \
+		if (__builtin_constant_p(method)) { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_return_call_class_method(return_value, Z_TYPE_P(object) == IS_OBJECT ? Z_OBJCE_P(object) : NULL, zephir_fcall_method, object, method, sizeof(method)-1, cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+		else { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_return_call_class_method(return_value, Z_TYPE_P(object) == IS_OBJECT ? Z_OBJCE_P(object) : NULL, zephir_fcall_method, object, method, strlen(method), cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+	} while (0)
+
 #define zephir_check_call_status() \
 	do \
 		if (ZEPHIR_LAST_CALL_STATUS == FAILURE) { \
@@ -81,6 +129,24 @@ typedef zend_function zephir_fcall_cache_entry;
 			return; \
 	} \
 	while(0)
+
+#ifdef ZEPHIR_RELEASE
+	#define ZEPHIR_TEMP_PARAM_COPY 0
+	#define zephir_check_temp_parameter(param) do { if (Z_REFCOUNTED_P(param) && Z_REFCOUNT_P(param) > 1) zval_copy_ctor(param); else ZVAL_NULL(param); } while(0)
+#else
+	#define ZEPHIR_TEMP_PARAM_COPY 1
+	#define zephir_check_temp_parameter(param)
+#endif
+
+#define zephir_check_call_status_or_jump(label) \
+	if (ZEPHIR_LAST_CALL_STATUS == FAILURE) { \
+		if (EG(exception)) { \
+			goto label; \
+		} else { \
+			ZEPHIR_MM_RESTORE(); \
+			return; \
+		} \
+	}
 
 /**
  * @brief Checks if the class defines a constructor

@@ -302,10 +302,10 @@ class PropertyAccess
             /*TODO: if ($this->_readOnly || $readOnly) {
                 $codePrinter->output($symbolVariable->getName() . ' = zephir_fetch_nproperty_this(' . $variableVariable->getName() . ', SL("' . $property . '"), PH_NOISY_CC);');
             } else {*/
-                $codePrinter->output('zephir_read_property(&' . $symbolVariable->getName() . ', &' . $variableVariable->getName() . ', SL("' . $property . '"));');
+                $codePrinter->output('zephir_read_property(' . $symbolVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ', SL("' . $property . '"));');
             //}
         } else {
-            $codePrinter->output('zephir_read_property(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', SL("' . $property . '"));');
+            $codePrinter->output('zephir_read_property(' . $symbolVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ', SL("' . $property . '"));');
         }
 
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);

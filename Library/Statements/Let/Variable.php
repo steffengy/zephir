@@ -272,19 +272,19 @@ class Variable
                                 switch ($statement['operator']) {
 
                                     case 'assign':
-                                        $codePrinter->output($variable . ' = zephir_get_numberval(' . $resolvedExpr->resolve(null, $compilationContext) . ');');
+                                        $codePrinter->output($variable . ' = zephir_get_numberval(&' . $resolvedExpr->resolve(null, $compilationContext) . ');');
                                         break;
 
                                     case 'add-assign':
-                                        $codePrinter->output($variable . ' += zephir_get_numberval(' . $resolvedExpr->resolve(null, $compilationContext) . ');');
+                                        $codePrinter->output($variable . ' += zephir_get_numberval(&' . $resolvedExpr->resolve(null, $compilationContext) . ');');
                                         break;
 
                                     case 'sub-assign':
-                                        $codePrinter->output($variable . ' -= zephir_get_numberval(' . $resolvedExpr->resolve(null, $compilationContext) . ');');
+                                        $codePrinter->output($variable . ' -= zephir_get_numberval(&' . $resolvedExpr->resolve(null, $compilationContext) . ');');
                                         break;
 
                                     case 'mul-assign':
-                                        $codePrinter->output($variable . ' *= zephir_get_numberval(' . $resolvedExpr->resolve(null, $compilationContext) . ');');
+                                        $codePrinter->output($variable . ' *= zephir_get_numberval(&' . $resolvedExpr->resolve(null, $compilationContext) . ');');
                                         break;
 
                                     default:
@@ -433,16 +433,16 @@ class Variable
                                 $compilationContext->headersManager->add('kernel/operators');
                                 switch ($statement['operator']) {
                                     case 'assign':
-                                        $codePrinter->output($variable . ' = zephir_get_numberval(' . $itemVariable->getName() . ');');
+                                        $codePrinter->output($variable . ' = zephir_get_numberval(' . $itemVariable->getPointeredName() . ');');
                                         break;
                                     case 'add-assign':
-                                        $codePrinter->output($variable . ' += zephir_get_numberval(' . $itemVariable->getName() . ');');
+                                        $codePrinter->output($variable . ' += zephir_get_numberval(' . $itemVariable->getPointeredName() . ');');
                                         break;
                                     case 'sub-assign':
-                                        $codePrinter->output($variable . ' -= zephir_get_numberval(' . $itemVariable->getName() . ');');
+                                        $codePrinter->output($variable . ' -= zephir_get_numberval(' . $itemVariable->getPointeredName() . ');');
                                         break;
                                     case 'mul-assign':
-                                        $codePrinter->output($variable . ' *= zephir_get_numberval(' . $itemVariable->getName() . ');');
+                                        $codePrinter->output($variable . ' *= zephir_get_numberval(' . $itemVariable->getPointeredName() . ');');
                                         break;
                                     default:
                                         throw new CompilerException("Operator '" . $statement['operator'] . "' is not supported for variable type: double", $statement);
@@ -475,7 +475,7 @@ class Variable
                                     $symbolVariable->setDynamicTypes('array');
                                     $symbolVariable->increaseVariantIfNull();
 
-                                    $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', ' . $resolvedExpr->getCode() . ');');
+                                    $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', &' . $resolvedExpr->getCode() . ');');
                                 }
                                 break;
 
@@ -618,12 +618,12 @@ class Variable
                                         $symbolVariable->setMustInitNull(true);
                                         $compilationContext->symbolTable->mustGrownStack(true);
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        $codePrinter->output('zephir_get_strval(' . $variable . ', ' . $itemVariable->getName() . ');');
+                                        $codePrinter->output('zephir_get_strval(&' . $variable . ', ' . $itemVariable->getPointeredName() . ');');
                                         break;
 
                                     case 'concat-assign':
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        $codePrinter->output('zephir_concat_self(&' . $variable . ', ' . $itemVariable->getName() . ' TSRMLS_CC);');
+                                        $codePrinter->output('zephir_concat_self(&' . $variable . ', ' . $itemVariable->getPointeredName() . ');');
                                         break;
 
                                     default:
@@ -720,7 +720,7 @@ class Variable
                             case 'array':
                                 switch ($statement['operator']) {
                                     case 'assign':
-                                        $codePrinter->output($variable . ' = zephir_is_true(' . $itemVariable->getName() . ');');
+                                        $codePrinter->output($variable . ' = zephir_is_true(' . $itemVariable->getPointeredName() . ');');
                                         break;
                                     default:
                                         throw new CompilerException("Operator '" . $statement['operator'] . "' is not supported for variable type: " . $itemVariable->getType(), $statement);
@@ -792,10 +792,10 @@ class Variable
                                     $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('int', $compilationContext);
                                     $codePrinter->output($tempVariable->getName() . ' = ' . $resolvedExpr->getCode() . ';');
                                     $symbolVariable->initVariant($compilationContext);
-                                    $codePrinter->output('ZVAL_LONG(&' . $symbol . ', ' . $tempVariable->getName() . ');');
+                                    $codePrinter->output('ZVAL_LONG(' . $symbol . ', ' . $tempVariable->getName() . ');');
                                 } else {
                                     $symbolVariable->initVariant($compilationContext);
-                                    $codePrinter->output('ZVAL_LONG(&' . $symbol . ', ' . $resolvedExpr->getCode() . ');');
+                                    $codePrinter->output('ZVAL_LONG(' . $symbol . ', ' . $resolvedExpr->getCode() . ');');
                                 }
                                 break;
 
@@ -829,10 +829,10 @@ class Variable
                                     $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('char', $compilationContext);
                                     $codePrinter->output($tempVariable->getName() . ' = ' . $resolvedExpr->getCode() . ';');
                                     $symbolVariable->initVariant($compilationContext);
-                                    $codePrinter->output('ZVAL_LONG(&' . $symbol . ', ' . $tempVariable->getName() . ');');
+                                    $codePrinter->output('ZVAL_LONG(' . $symbol . ', ' . $tempVariable->getName() . ');');
                                 } else {
                                     $symbolVariable->initVariant($compilationContext);
-                                    $codePrinter->output('ZVAL_LONG(&' . $symbol . ', \'' . $resolvedExpr->getCode() . '\');');
+                                    $codePrinter->output('ZVAL_LONG(' . $symbol . ', \'' . $resolvedExpr->getCode() . '\');');
                                 }
                                 break;
                             default:
@@ -922,7 +922,7 @@ class Variable
                                     $symbolVariable->setDynamicTypes('array');
                                     $symbolVariable->increaseVariantIfNull();
 
-                                    $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', ' . $resolvedExpr->getCode() . ');');
+                                    $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', &' . $resolvedExpr->getCode() . ');');
                                 }
                                 break;
 
@@ -1010,7 +1010,7 @@ class Variable
                                             $symbolVariable->setDynamicTypes('array');
                                             $symbolVariable->increaseVariantIfNull();
 
-                                            $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', ' . $resolvedExpr->getCode() . ');');
+                                            $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', &' . $resolvedExpr->getCode() . ');');
                                         }
                                         break;
 

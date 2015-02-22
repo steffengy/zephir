@@ -50,7 +50,8 @@ class ArrayIndex
         switch ($resolvedExpr->getType()) {
 
             case 'null':
-                $symbolVariable = new GlobalConstant('ZEPHIR_GLOBAL(global_null)');
+                $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
+                $codePrinter->output('ZVAL_NULL(&' . $symbolVariable->getName() . ');');
                 break;
 
             case 'int':
@@ -71,16 +72,8 @@ class ArrayIndex
                 break;
 
             case 'bool':
-                if ($resolvedExpr->getBooleanCode() == '1') {
-                    $symbolVariable = new GlobalConstant('ZEPHIR_GLOBAL(global_true)');
-                } else {
-                    if ($resolvedExpr->getBooleanCode() == '0') {
-                        $symbolVariable = new GlobalConstant('ZEPHIR_GLOBAL(global_false)');
-                    } else {
-                        $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
-                        $codePrinter->output('ZVAL_BOOL(' . $symbolVariable->getName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
-                    }
-                }
+                $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $resolvedExpr->getOriginal());
+                $codePrinter->output('ZVAL_BOOL(&' . $symbolVariable->getName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
                 break;
 
             case 'string':
@@ -330,24 +323,12 @@ class ArrayIndex
      */
     public function assign($variable, ZephirVariable $symbolVariable, CompiledExpression $resolvedExpr, CompilationContext $compilationContext, $statement)
     {
-
-        /**
-         * Arrays must be stored in the HEAP
-         */
-        if ($symbolVariable->isLocalOnly()) {
-            throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is local only", $statement);
-        }
-
         if (!$symbolVariable->isInitialized()) {
             throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is not initialized", $statement);
         }
 
         if ($symbolVariable->isReadOnly()) {
             throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is read only", $statement);
-        }
-
-        if ($symbolVariable->isLocalOnly()) {
-            throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is local only", $statement);
         }
 
         /**

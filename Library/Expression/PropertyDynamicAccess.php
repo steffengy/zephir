@@ -163,7 +163,7 @@ class PropertyDynamicAccess
         $symbolVariable->setDynamicTypes('undefined');
 
         $compilationContext->headersManager->add('kernel/object');
-        $codePrinter->output('zephir_read_property_zval(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', ' . $propertyVariable->getName() . ', PH_NOISY_CC);');
+        $codePrinter->output('zephir_read_property_zval(' . $symbolVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ', ' . $propertyVariable->getPointeredName() . ', PH_NOISY_CC);');
 
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }

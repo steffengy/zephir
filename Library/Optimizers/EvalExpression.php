@@ -224,11 +224,7 @@ class EvalExpression
 
                     case 'variable':
                         $compilationContext->headersManager->add('kernel/operators');
-                        if ($variableRight->isLocalOnly()) {
-                            return 'zephir_is_true(&' . $variableRight->getName() . ')';
-                        } else {
-                            return 'zephir_is_true(' . $variableRight->getName() . ')';
-                        }
+                        return 'zephir_is_true(&' . $variableRight->getName() . ')';
                         break;
 
                     default:

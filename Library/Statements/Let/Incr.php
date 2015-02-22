@@ -80,12 +80,8 @@ class Incr
                 }
 
                 $compilationContext->headersManager->add('kernel/operators');
-                if ($symbolVariable->isLocalOnly()) {
-                    $codePrinter->output('zephir_increment(&' . $variable . ');');
-                } else {
-                    $symbolVariable->separate($compilationContext);
-                    $codePrinter->output('zephir_increment(' . $variable . ');');
-                }
+                //$symbolVariable->separate($compilationContext);
+                $codePrinter->output('zephir_increment(&' . $variable . ');');
                 break;
 
             default:

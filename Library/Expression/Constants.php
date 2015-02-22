@@ -203,7 +203,6 @@ class Constants
         if ($this->_expecting && $this->_expectingVariable) {
             $symbolVariable = $this->_expectingVariable;
 
-            $symbolVariable->setLocalOnly(false);
             $symbolVariable->setMustInitNull(true);
             $symbolVariable->initVariant($compilationContext);
         } else {

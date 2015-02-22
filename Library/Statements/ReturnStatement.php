@@ -192,12 +192,12 @@ class ReturnStatement extends StatementAbstract
                     break;
 
                 case 'string':
-                    $codePrinter->output('RETURN_MM_STRING("' . Utils::addSlashes($resolvedExpr->getCode()) . '", 1);');
+                    $codePrinter->output('RETURN_MM_STRING("' . Utils::addSlashes($resolvedExpr->getCode()) . '");');
                     break;
 
                 case 'array':
                     if ($resolvedExpr->getCode() != 'return_value') {
-                        $codePrinter->output('RETURN_CTOR(' . $resolvedExpr->getCode() . ');');
+                        $codePrinter->output('RETURN_CTOR(&' . $resolvedExpr->getCode() . ');');
                     } else {
                         $codePrinter->output('RETURN_MM();');
                     }
@@ -224,7 +224,7 @@ class ReturnStatement extends StatementAbstract
 
                         case 'string':
                         case 'array':
-                            $codePrinter->output('RETURN_CTOR(' . $resolvedExpr->getCode() . ');');
+                            $codePrinter->output('RETURN_CTOR(&' . $resolvedExpr->getCode() . ');');
                             break;
 
                         case 'bool':
@@ -237,17 +237,13 @@ class ReturnStatement extends StatementAbstract
                             } else {
                                 if ($symbolVariable->getName() != 'return_value') {
                                     if (!$symbolVariable->isExternal()) {
-                                        if ($symbolVariable->isLocalOnly()) {
-                                            $codePrinter->output('RETURN_LCTOR(' . $symbolVariable->getName() . ');');
+                                        if (!$symbolVariable->isMemoryTracked()) {
+                                            $codePrinter->output('RETURN_CTOR(' . $symbolVariable->getPointeredName() . ');');
                                         } else {
-                                            if (!$symbolVariable->isMemoryTracked()) {
-                                                $codePrinter->output('RETURN_CTOR(' . $symbolVariable->getName() . ');');
-                                            } else {
-                                                $codePrinter->output('RETURN_CCTOR(' . $symbolVariable->getName() . ');');
-                                            }
+                                            $codePrinter->output('RETURN_CCTOR(' . $symbolVariable->getPointeredName() . ');');
                                         }
                                     } else {
-                                        $codePrinter->output('RETVAL_ZVAL(' . $symbolVariable->getName() . ', 1, 0);');
+                                        $codePrinter->output('RETVAL_ZVAL(' . $symbolVariable->getPointeredName() . ', 1, 0);');
                                         $codePrinter->output('RETURN_MM();');
                                     }
                                 } else {

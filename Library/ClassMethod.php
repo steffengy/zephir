@@ -1024,12 +1024,12 @@ class ClassMethod
                         break;
 
                     case 'null':
-                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
                         $code .= "\t\t" . 'ZVAL_EMPTY_STRING(&' . $parameter['name'] . ');' . PHP_EOL;
                         break;
 
                     case 'string':
-                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
                         $code .= "\t\t" . 'ZVAL_STRING(&' . $parameter['name'] . ', "' . Utils::addSlashes($parameter['default']['value'], true) . '");' . PHP_EOL;
                         break;
 
@@ -1044,13 +1044,13 @@ class ClassMethod
                 switch ($parameter['default']['type']) {
 
                     case 'null':
-                        $code .= "\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
                         $code .= "\t" . 'array_init(&' . $parameter['name'] . ');' . PHP_EOL;
                         break;
 
                     case 'empty-array':
                     case 'array':
-                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
                         $code .= "\t\t" . 'array_init(&' . $parameter['name'] . ');' . PHP_EOL;
                         break;
 
@@ -1084,58 +1084,41 @@ class ClassMethod
                     case 'ulong':
                         $compilationContext->symbolTable->mustGrownStack(true);
                         $compilationContext->headersManager->add('kernel/memory');
-                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
                         $code .= "\t\t" . 'ZVAL_LONG(&' . $parameter['name'] . ', ' . $parameter['default']['value'] . ');' . PHP_EOL;
                         break;
 
                     case 'double':
                         $compilationContext->symbolTable->mustGrownStack(true);
                         $compilationContext->headersManager->add('kernel/memory');
-                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
                         $code .= "\t\t" . 'ZVAL_DOUBLE(' . $parameter['name'] . ', ' . $parameter['default']['value'] . ');' . PHP_EOL;
                         break;
 
                     case 'string':
                         $compilationContext->symbolTable->mustGrownStack(true);
                         $compilationContext->headersManager->add('kernel/memory');
-                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
                         $code .= "\t\t" . 'ZVAL_STRING(&' . $parameter['name'] . ', "' . Utils::addSlashes($parameter['default']['value'], true) . '");' . PHP_EOL;
                         break;
 
                     case 'bool':
-                        $expectedMutations = $compilationContext->symbolTable->getExpectedMutations($parameter['name']);
-                        if ($expectedMutations < 2) {
-                            if ($parameter['default']['value'] == 'true') {
-                                $code .= "\t\t" . $parameter['name'] . ' = ZEPHIR_GLOBAL(global_true);' . PHP_EOL;
-                            } else {
-                                $code .= "\t\t" . $parameter['name'] . ' = ZEPHIR_GLOBAL(global_false);' . PHP_EOL;
-                            }
-                        } else {
-                            $compilationContext->symbolTable->mustGrownStack(true);
-                            $compilationContext->headersManager->add('kernel/memory');
-                            if ($parameter['default']['value'] == 'true') {
-                                $code .= "\t\t" . 'ZEPHIR_CPY_WRT(&' . $parameter['name'] . ', ZEPHIR_GLOBAL(global_true));' . PHP_EOL;
-                            } else {
-                                $code .= "\t\t" . 'ZEPHIR_CPY_WRT(&' . $parameter['name'] . ', ZEPHIR_GLOBAL(global_false));' . PHP_EOL;
-                            }
-                        }
+                        $compilationContext->symbolTable->mustGrownStack(true);
+                        $compilationContext->headersManager->add('kernel/memory');
+                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZVAL_BOOL(&' . $parameter['name'] . ', ' . ($parameter['default']['value'] == 'true' ? '1' : '0') . ');' . PHP_EOL;
                         break;
 
                     case 'null':
-                        $expectedMutations = $compilationContext->symbolTable->getExpectedMutations($parameter['name']);
-                        if ($expectedMutations < 2) {
-                            $code .= "\t\t" . $parameter['name'] . ' = ZEPHIR_GLOBAL(global_null);' . PHP_EOL;
-                        } else {
-                            $compilationContext->symbolTable->mustGrownStack(true);
-                            $compilationContext->headersManager->add('kernel/memory');
-                            $code .= "\t\t" . 'ZEPHIR_CPY_WRT(&' . $parameter['name'] . ', ZEPHIR_GLOBAL(global_null));' . PHP_EOL;
-                        }
+                        $compilationContext->symbolTable->mustGrownStack(true);
+                        $compilationContext->headersManager->add('kernel/memory');
+                        $code .= "\t\t" . 'ZVAL_NULL(&' . $parameter['name'] . ');' . PHP_EOL;
                         break;
 
                     case 'empty-array':
                         $compilationContext->symbolTable->mustGrownStack(true);
                         $compilationContext->headersManager->add('kernel/memory');
-                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(' . $parameter['name'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
                         $code .= "\t\t" . 'array_init(&' . $parameter['name'] . ');' . PHP_EOL;
                         break;
 
@@ -1177,45 +1160,45 @@ class ClassMethod
             case 'int':
             case 'uint':
             case 'long':
-                $code  = "\tif (unlikely(Z_TYPE_P(" . $parameter['name'] . '_param) != IS_LONG)) {' . PHP_EOL;
+                $code  = "\tif (unlikely(Z_TYPE(" . $parameter['name'] . '_param) != IS_LONG)) {' . PHP_EOL;
                 $code .= "\t\t" . 'zephir_throw_exception_string(spl_ce_InvalidArgumentException, SL("Parameter \'' . $parameter['name'] . '\' must be a long/integer") TSRMLS_CC);' . PHP_EOL;
                 $code .= "\t\t" . 'RETURN_MM_NULL();' . PHP_EOL;
                 $code .= "\t" . '}' . PHP_EOL;
                 $code .= PHP_EOL;
-                $code .= "\t" . $parameter['name'] . ' = Z_LVAL_P(' . $parameter['name'] . '_param);' . PHP_EOL;
+                $code .= "\t" . $parameter['name'] . ' = Z_LVAL_P(&' . $parameter['name'] . '_param);' . PHP_EOL;
                 return $code;
 
             case 'bool':
-                $code  = "\tif (unlikely(Z_TYPE_P(" . $parameter['name'] . '_param) != IS_BOOL)) {' . PHP_EOL;
-                $code .= "\t\t" . 'zephir_throw_exception_string(spl_ce_InvalidArgumentException, SL("Parameter \'' . $parameter['name'] . '\' must be a bool") TSRMLS_CC);' . PHP_EOL;
+                $code  = "\t" . 'if (unlikely(Z_TYPE(' . $parameter['name'] . '_param) != IS_TRUE && Z_TYPE(' . $parameter['name'] . '_param) != IS_FALSE)) {' . PHP_EOL;
+                $code .= "\t\t" . 'zephir_throw_exception_string(spl_ce_InvalidArgumentException, SL("Parameter \'' . $parameter['name'] . '\' must be a bool"));' . PHP_EOL;
                 $code .= "\t\t" . 'RETURN_MM_NULL();' . PHP_EOL;
                 $code .= "\t" . '}' . PHP_EOL;
                 $code .= PHP_EOL;
-                $code .= "\t" . $parameter['name'] . ' = Z_BVAL_P(' . $parameter['name'] . '_param);' . PHP_EOL;
+                $code .= "\t" . $parameter['name'] . ' = Z_TYPE(' . $parameter['name'] . '_param) == IS_TRUE;' . PHP_EOL;
                 return $code;
 
             case 'double':
-                $code  = "\tif (unlikely(Z_TYPE_P(" . $parameter['name'] . '_param) != IS_DOUBLE)) {' . PHP_EOL;
+                $code  = "\tif (unlikely(Z_TYPE(" . $parameter['name'] . '_param) != IS_DOUBLE)) {' . PHP_EOL;
                 $code .= "\t\t" . 'zephir_throw_exception_string(spl_ce_InvalidArgumentException, SL("Parameter \'' . $parameter['name'] . '\' must be a double") TSRMLS_CC);' . PHP_EOL;
                 $code .= "\t\t" . 'RETURN_MM_NULL();' . PHP_EOL;
                 $code .= "\t" . '}' . PHP_EOL;
                 $code .= PHP_EOL;
-                $code .= "\t" . $parameter['name'] . ' = Z_DVAL_P(' . $parameter['name'] . '_param);' . PHP_EOL;
+                $code .= "\t" . $parameter['name'] . ' = Z_DVAL_P(&' . $parameter['name'] . '_param);' . PHP_EOL;
                 return $code;
 
             case 'string':
             case 'ulong':
                 $compilationContext->headersManager->add('kernel/operators');
                 $compilationContext->symbolTable->mustGrownStack(true);
-                $code  = "\tif (unlikely(Z_TYPE_P(" . $parameter['name'] . '_param) != IS_STRING && Z_TYPE_P(' . $parameter['name'] . '_param) != IS_NULL)) {' . PHP_EOL;
+                $code  = "\tif (unlikely(Z_TYPE(" . $parameter['name'] . '_param) != IS_STRING && Z_TYPE(' . $parameter['name'] . '_param) != IS_NULL)) {' . PHP_EOL;
                 $code .= "\t\t" . 'zephir_throw_exception_string(spl_ce_InvalidArgumentException, SL("Parameter \'' . $parameter['name'] . '\' must be a string") TSRMLS_CC);' . PHP_EOL;
                 $code .= "\t\t" . 'RETURN_MM_NULL();' . PHP_EOL;
                 $code .= "\t" . '}' . PHP_EOL;
                 $code .= PHP_EOL;
-                $code .= "\tif (likely(Z_TYPE_P(" . $parameter['name'] . '_param) == IS_STRING)) {' . PHP_EOL;
-                $code .= "\t\tzephir_get_strval(" . $parameter['name'] . ', ' . $parameter['name'] . '_param);' . PHP_EOL;
+                $code .= "\tif (likely(Z_TYPE(" . $parameter['name'] . '_param) == IS_STRING)) {' . PHP_EOL;
+                $code .= "\t\tzephir_get_strval(&" . $parameter['name'] . ', &' . $parameter['name'] . '_param);' . PHP_EOL;
                 $code .= "\t" . '} else {' . PHP_EOL;
-                $code .= "\t\tZEPHIR_INIT_VAR(" . $parameter['name'] . ');' . PHP_EOL;
+                $code .= "\t\tZEPHIR_INIT_VAR(&" . $parameter['name'] . ');' . PHP_EOL;
                 $code .= "\t\tZVAL_EMPTY_STRING(&" . $parameter['name'] . ');' . PHP_EOL;
                 $code .= "\t" . '}' . PHP_EOL;
                 return $code;
@@ -1231,7 +1214,7 @@ class ClassMethod
 
             case 'object':
             case 'resource':
-                $code  = "\tif (unlikely(Z_TYPE_P(" . $parameter['name'] . ') != IS_' . strtoupper($dataType) . ')) {' . PHP_EOL;
+                $code  = "\tif (unlikely(Z_TYPE(" . $parameter['name'] . ') != IS_' . strtoupper($dataType) . ')) {' . PHP_EOL;
                 $code .= "\t\t" . 'zephir_throw_exception_string(spl_ce_InvalidArgumentException, SL("Parameter \'' . $parameter['name'] . '\' must be an ' . $dataType . '") TSRMLS_CC);' . PHP_EOL;
                 $code .= "\t\t" . 'RETURN_MM_NULL();' . PHP_EOL;
                 $code .= "\t" . '}' . PHP_EOL;
@@ -1274,21 +1257,21 @@ class ClassMethod
             case 'uint':
             case 'long':
             case 'ulong':
-                return "\t" . $parameter['name'] . ' = zephir_get_intval(' . $parameter['name'] . '_param);' . PHP_EOL;
+                return "\t" . $parameter['name'] . ' = zephir_get_intval(&' . $parameter['name'] . '_param);' . PHP_EOL;
 
             case 'bool':
-                return "\t" . $parameter['name'] . ' = zephir_get_boolval(' . $parameter['name'] . '_param);' . PHP_EOL;
+                return "\t" . $parameter['name'] . ' = zephir_get_boolval(&' . $parameter['name'] . '_param);' . PHP_EOL;
 
             case 'double':
-                return "\t" . $parameter['name'] . ' = zephir_get_doubleval(' . $parameter['name'] . '_param);' . PHP_EOL;
+                return "\t" . $parameter['name'] . ' = zephir_get_doubleval(&' . $parameter['name'] . '_param);' . PHP_EOL;
 
             case 'string':
                 $compilationContext->symbolTable->mustGrownStack(true);
-                return "\t" . 'zephir_get_strval(' . $parameter['name'] . ', ' . $parameter['name'] . '_param);' . PHP_EOL;
+                return "\t" . 'zephir_get_strval(&' . $parameter['name'] . ', &' . $parameter['name'] . '_param);' . PHP_EOL;
 
             case 'array':
                 $compilationContext->symbolTable->mustGrownStack(true);
-                return "\t" . 'zephir_get_arrval(' . $parameter['name'] . ', ' . $parameter['name'] . '_param);' . PHP_EOL;
+                return "\t" . 'zephir_get_arrval(&' . $parameter['name'] . ', &' . $parameter['name'] . '_param);' . PHP_EOL;
 
             case 'variable':
             case 'callable':
@@ -1663,7 +1646,7 @@ class ClassMethod
                                 case 'int':
                                 case 'uint':
                                 case 'long':
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(&' . $variable->getName() . ');' . PHP_EOL;
                                     $initVarCode .= "\t" . 'ZVAL_LONG(&' . $variable->getName() . ', ' . $defaultValue['value'] . ');' . PHP_EOL;
                                     break;
 
@@ -1676,28 +1659,28 @@ class ClassMethod
                                             throw new CompilerException("Invalid char literal: '" . $defaultValue['value'] . "'", $defaultValue);
                                         }
                                     }
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(&' . $variable->getName() . ');' . PHP_EOL;
                                     $initVarCode .= "\t" . 'ZVAL_LONG(&' . $variable->getName() . ', \'' . $defaultValue['value'] . '\');' . PHP_EOL;
                                     break;
 
                                 case 'null':
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                    $initVarCode .= "\t" . 'ZVAL_NULL(' . $variable->getName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getPointeredName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZVAL_NULL(' . $variable->getPointeredName() . ');' . PHP_EOL;
                                     break;
 
                                 case 'double':
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(&' . $variable->getName() . ');' . PHP_EOL;
                                     $initVarCode .= "\t" . 'ZVAL_DOUBLE(' . $variable->getName() . ', ' . $defaultValue['value'] . ');' . PHP_EOL;
                                     break;
 
                                 case 'string':
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(&' . $variable->getName() . ');' . PHP_EOL;
                                     $initVarCode .= "\t" . 'ZVAL_STRING(&' . $variable->getName() . ', "' . Utils::addSlashes($defaultValue['value'], true) . '");' . PHP_EOL;
                                     break;
 
                                 case 'array':
                                 case 'empty-array':
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(&' . $variable->getName() . ');' . PHP_EOL;
                                     $initVarCode .= "\t" . 'array_init(&' . $variable->getName() . ');' . PHP_EOL;
                                     break;
 
@@ -1749,8 +1732,8 @@ class ClassMethod
                         switch ($defaultValue['type']) {
 
                             case 'null':
-                                $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                $initVarCode .= "\t" . 'ZVAL_NULL(' . $variable->getName() . ');' . PHP_EOL;
+                                $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getPointeredName() . ');' . PHP_EOL;
+                                $initVarCode .= "\t" . 'ZVAL_NULL(' . $variable->getPointeredName() . ');' . PHP_EOL;
                                 break;
 
                             case 'array':
@@ -1894,7 +1877,7 @@ class ClassMethod
                     case 'callable':
                         if (isset($parametersToSeparate[$parameter['name']])) {
                             $symbolTable->mustGrownStack(true);
-                            $initCode .= "\t" . "ZEPHIR_SEPARATE_PARAM(" . $parameter['name'] . ");" . PHP_EOL;
+                            $initCode .= "\t" . "ZEPHIR_SEPARATE_PARAM(&" . $parameter['name'] . ");" . PHP_EOL;
                         }
                         break;
                 }
@@ -1934,13 +1917,13 @@ class ClassMethod
                 /**
                  * Assign the default value according to the variable's type
                  */
-                $initCode .= "\t" . 'if (!' . $name . ') {' . PHP_EOL;
+                $initCode .= "\t" . 'if (Z_TYPE(' . $name . ') == IS_UNDEF) {' . PHP_EOL;
                 $initCode .= $this->assignDefaultValue($parameter, $compilationContext);
 
                 if (isset($parametersToSeparate[$name]) || $dataType != 'variable') {
                     $initCode .= "\t" . '} else {' . PHP_EOL;
                     if (isset($parametersToSeparate[$name])) {
-                        $initCode .= "\t\t" . "ZEPHIR_SEPARATE_PARAM(" . $name . ");" . PHP_EOL;
+                        $initCode .= "\t\t" . "ZEPHIR_SEPARATE_PARAM(&" . $name . ");" . PHP_EOL;
                     } else {
                         if ($mandatory) {
                             $initCode .= $this->checkStrictType($parameter, $compilationContext, $mandatory);
@@ -1953,10 +1936,18 @@ class ClassMethod
             }
 
             /**
-             * Fetch the parameters to zval pointers
+             * Fetch the parameters to zval's
              */
             $codePrinter->preOutputBlankLine();
             $compilationContext->headersManager->add('kernel/memory');
+            
+            /**
+             * Make sure the zval's are valid (and have a valid type)
+             */
+            foreach ($params as $param) {
+                $code .= "\t" . 'ZVAL_UNDEF(' . $param . ');' . PHP_EOL;
+            }
+            
             if ($symbolTable->getMustGrownStack()) {
                 $code .= "\t" . 'zephir_fetch_params(1, ' . $numberRequiredParams . ', ' . $numberOptionalParams . ', ' . join(', ', $params) . ');' . PHP_EOL;
             } else {
@@ -2144,7 +2135,6 @@ class ClassMethod
             }
 
             $groupVariables = array();
-            $otherInits = array();
 
            
             /**
@@ -2154,7 +2144,6 @@ class ClassMethod
                 $isComplex = ($type == 'variable' || $type == 'string' || $type == 'array' || $type == 'resource' || $type == 'callable' || $type == 'object');
                 if ($isComplex && $variable->mustInitNull()) {
                     $groupVariables[] = $variable->getName();
-                    $otherInits[] = "ZVAL_UNDEF(&" . $variable->getName() . ");";
                     continue;
                 }
 
@@ -2203,7 +2192,7 @@ class ClassMethod
                 $groupVariables[] = $pointer . $variable->getName();
             }
 
-            $codePrinter->preOutput("\t" . $code . join(', ', $groupVariables) . ';' . "\n\t".join("\n\t", $otherInits));
+            $codePrinter->preOutput("\t" . $code . join(', ', $groupVariables) . ';');
         }
 
         /**

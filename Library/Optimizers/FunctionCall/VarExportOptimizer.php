@@ -117,7 +117,7 @@ class VarExportOptimizer extends OptimizerAbstract
          * let a = var_export(val);
          */
         if ($symbolVariable) {
-            $context->codePrinter->output('zephir_var_export_ex(' . $symbolVariable->getName() . ', &(' . $variable->getName() . ') TSRMLS_CC);');
+            $context->codePrinter->output('zephir_var_export_ex(&' . $symbolVariable->getName() . ', &(' . $variable->getName() . ') TSRMLS_CC);');
             return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
         }
 

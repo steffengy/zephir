@@ -51,17 +51,6 @@ class ObjectPropertyDecr
         }
 
         /**
-         * Arrays must be stored in the HEAP
-         */
-        if ($symbolVariable->isLocalOnly()) {
-            throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is local only", $statement);
-        }
-
-        if (!$symbolVariable->isInitialized()) {
-            throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is not initialized", $statement);
-        }
-
-        /**
          * Only dynamic variables can be used as arrays
          */
         if (!$symbolVariable->isVariable()) {

@@ -94,10 +94,12 @@ class ObjectProperty
         switch ($resolvedExpr->getType()) {
 
             case 'null':
+                $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
+                $codePrinter->output('ZVAL_NULL(&' . $tempVariable->getName() . ');');
                 if ($variable == 'this') {
-                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ZEPHIR_GLOBAL(global_null));');
+                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ZEPHIR_GLOBAL(global_null));');
+                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 }
                 break;
 
@@ -138,9 +140,9 @@ class ObjectProperty
                 }
 
                 if ($variable == 'this') {
-                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 }
                 $tempVariable->setIdle(true);
                 break;
@@ -162,7 +164,7 @@ class ObjectProperty
                 if ($variable == 'this') {
                     $codePrinter->output('zephir_update_property_this(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 }
                 $tempVariable->setIdle(true);
                 break;
@@ -201,9 +203,9 @@ class ObjectProperty
                 }
 
                 if ($variable == 'this') {
-                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 }
                 $tempVariable->setIdle(true);
                 break;
@@ -222,26 +224,30 @@ class ObjectProperty
                 }
 
                 if ($variable == 'this') {
-                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 }
                 $tempVariable->setIdle(true);
                 break;
 
             case 'array':
                 if ($variable == 'this') {
-                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $resolvedExpr->getCode() . ');');
+                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), &' . $resolvedExpr->getCode() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $resolvedExpr->getCode() . ');');
+                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), &' . $resolvedExpr->getCode() . ');');
                 }
                 break;
 
             case 'bool':
+                $boolVal = $resolvedExpr->getBooleanCode() == '1';
+                if ($boolVal != '1' && $boolVal != '0') throw new Exception("Unknown Boolean Value " . $boolVal);
+                $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
+                $codePrinter->output('ZVAL_BOOL(&' . $tempVariable->getName() . ', "' . $boolVal . '");');
                 if ($variable == 'this') {
-                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), (' . $resolvedExpr->getBooleanCode() . ') ? ZEPHIR_GLOBAL(global_true) : ZEPHIR_GLOBAL(global_false));');
+                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), (' . $resolvedExpr->getBooleanCode() . ') ? ZEPHIR_GLOBAL(global_true) : ZEPHIR_GLOBAL(global_false) TSRMLS_CC);');
+                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 }
                 break;
 
@@ -250,9 +256,9 @@ class ObjectProperty
 
                 $codePrinter->output('array_init(&' . $tempVariable->getName() . ');');
                 if ($variable == 'this') {
-                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 }
                 $tempVariable->setIdle(true);
                 break;
@@ -269,29 +275,31 @@ class ObjectProperty
                         $tempVariable = $compilationContext->symbolTable->getTempNonTrackedVariable('variable', $compilationContext, true);
                         $codePrinter->output('ZVAL_LONG(&' . $tempVariable->getName() . ', ' . $variableVariable->getName() . ');');
                         if ($variable == 'this') {
-                            $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                            $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                         } else {
-                            $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                            $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                         }
                         $tempVariable->setIdle(true);
                         break;
 
                     case 'double':
                         $tempVariable = $compilationContext->symbolTable->getTempNonTrackedVariable('variable', $compilationContext, true);
-                        $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getName() . ', ' . $variableVariable->getName() . ');');
+                        $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ');');
                         if ($variable == 'this') {
-                            $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                            $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                         } else {
-                            $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                            $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                         }
                         $tempVariable->setIdle(true);
                         break;
 
                     case 'bool':
+                        $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
+                        $codePrinter->output('ZVAL_BOOL(&' . $tempVariable->getName() . ', &' . $variableVariable->getName() . ');');
                         if ($variable == 'this') {
-                            $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $variableVariable->getName() . ' ? ZEPHIR_GLOBAL(global_true) : ZEPHIR_GLOBAL(global_false));');
+                            $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                         } else {
-                            $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $variableVariable->getName() . ' ? ZEPHIR_GLOBAL(global_true) : ZEPHIR_GLOBAL(global_false));');
+                            $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', SL("' . $propertyName . '"), ' . $variableVariable->getPointeredName() . ');');
                         }
                         break;
 
@@ -299,9 +307,9 @@ class ObjectProperty
                     case 'string':
                     case 'variable':
                         if ($variable == 'this') {
-                            $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $variableVariable->getName() . ');');
+                            $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $variableVariable->getPointeredName() . ');');
                         } else {
-                            $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $variableVariable->getName() . ');');
+                            $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', SL("' . $propertyName . '"), ' . $variableVariable->getPointeredName() . ');');
                         }
                         if ($symbolVariable->isTemporal()) {
                             $symbolVariable->setIdle(true);

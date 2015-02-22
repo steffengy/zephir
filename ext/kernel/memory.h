@@ -18,23 +18,37 @@
 		} \
 	} while (0)
 
-#define ZEPHIR_OBS_VAR(z)  zephir_memory_observe(&z)
-#define ZEPHIR_INIT_VAR(z) zephir_memory_alloc(&z)
+#define ZEPHIR_OBS_VAR(z)  zephir_memory_observe(z)
 
-/* Initialize a var without tracking */
-#define ZEPHIR_INIT_ZVAL_NREF(z) ZVAL_NULL(&z);
+#define ZEPHIR_OBS_NVAR(z)\
+	if (z) { \
+		if (Z_REFCOUNTED_P(z) && Z_REFCOUNT_P(z) > 1) { \
+			Z_DELREF_P(z); \
+		} else {\
+			zval_ptr_dtor(z); \
+			ZVAL_NULL(z); \
+		} \
+	} else { \
+		zephir_memory_observe(z); \
+	}
+
+/* ZVAL_UNDEF to prevent errors in zend engine (dtor calls method for a specific type since junk data in memory...) */
+#define ZEPHIR_INIT_VAR(z) ZVAL_UNDEF(z); zephir_memory_alloc(z)
+
+/* Even a not referenced variable can hold values on the stack! */
+#define ZEPHIR_INIT_ZVAL_NREF(z) ZEPHIR_INIT_VAR(z)
 
 #define ZEPHIR_INIT_NVAR(z)	\
-    if (&z) { \
-		if (Z_REFCOUNTED(z)) { \
-			zval_ptr_dtor(&z); \
-			if (Z_ISREF(z) && Z_REFCOUNT(z) > 1) { \
-				ZVAL_UNREF(&z); \
+    if (z) { \
+		if (Z_REFCOUNTED_P(z)) { \
+			zval_ptr_dtor(z); \
+			if (Z_ISREF_P(z) && Z_REFCOUNT_P(z) > 1) { \
+				ZVAL_UNREF(z); \
 			} \
 		} \
-		ZVAL_NULL(&z); \
+		ZVAL_NULL(z); \
 	} else { \
-		zephir_memory_alloc(&z); \
+		zephir_memory_alloc(z); \
 	}
 
 #define ZEPHIR_CPY_WRT(d, v) \
@@ -58,6 +72,15 @@
 	} \
 	ZVAL_NULL(d); \
 	ZVAL_DUP(d, v); \
+
+#define ZEPHIR_SEPARATE_PARAM(z) \
+	do { \
+		zval *orig_ptr = z; \
+		zephir_memory_observe(z TSRMLS_CC); \
+		ZVAL_NULL(z); \
+		zval_copy_ctor(z); \
+		ZVAL_UNREF(z); \
+	} while (0)
 
 void zephir_initialize_memory(zend_zephir_globals_def *zephir_globals_ptr);
 void zephir_deinitialize_memory();

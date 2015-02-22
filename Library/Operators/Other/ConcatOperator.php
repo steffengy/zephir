@@ -88,13 +88,13 @@ class ConcatOperator extends BaseOperator
 
                         case 'variable':
                             $key .= 'v';
-                            $concatParts[] = "&" . $variable->getName();
+                            $concatParts[] = $variable->getPointeredName();
                             $isFullString = false;
                             break;
 
                         case 'string':
                             $key .= 'v';
-                            $concatParts[] = $variable->getName();
+                            $concatParts[] = $variable->getPointeredName();
                             break;
 
                         case 'int':
@@ -102,7 +102,7 @@ class ConcatOperator extends BaseOperator
                             $key .= 'v';
                             $tempVariable = $compilationContext->symbolTable->getTempLocalVariableForWrite('variable', $compilationContext, $originalExpr);
                             $compilationContext->codePrinter->output('ZVAL_LONG(&' . $tempVariable->getName() . ', ' . $compiledExpr->getCode() . ');');
-                            $concatParts[] = '&' . $tempVariable->getName();
+                            $concatParts[] = $tempVariable->getPointeredName();
                             break;
 
                         default:
@@ -157,7 +157,7 @@ class ConcatOperator extends BaseOperator
             }
 
             $expected->setDynamicTypes('string');
-            $compilationContext->codePrinter->output('ZEPHIR_CONCAT_' . strtoupper($optimized[0]) . '(' . $expected->getName() . ', ' . $optimized[1] . ');');
+            $compilationContext->codePrinter->output('ZEPHIR_CONCAT_' . strtoupper($optimized[0]) . '(' . $expected->getPointeredName() . ', ' . $optimized[1] . ');');
             return new CompiledExpression('variable', $expected->getName(), $expression);
         }
 
@@ -203,15 +203,15 @@ class ConcatOperator extends BaseOperator
         $expected = $this->getExpectedComplexLiteral($compilationContext, $expression);
 
         if ($left->getType() == 'string' && $right->getType() == 'variable') {
-            $compilationContext->codePrinter->output('ZEPHIR_CONCAT_SV(' . $expected->getName() . ', "' . $left->getCode() . '", ' . $right->getCode() . ');');
+            $compilationContext->codePrinter->output('ZEPHIR_CONCAT_SV(' . $expected->getPointeredName() . ', "' . $left->getCode() . '", ' . $right->getCode() . ');');
         }
 
         if ($left->getType() == 'variable' && $right->getType() == 'string') {
-            $compilationContext->codePrinter->output('ZEPHIR_CONCAT_VS(' . $expected->getName() . ', ' . $left->getCode() . ', "' . $right->getCode() . '");');
+            $compilationContext->codePrinter->output('ZEPHIR_CONCAT_VS(' . $expected->getPointeredName() . ', ' . $left->getCode() . ', "' . $right->getCode() . '");');
         }
 
         if ($left->getType() == 'variable' && $right->getType() == 'variable') {
-            $compilationContext->codePrinter->output('zephir_concat_function(' . $expected->getName() . ', ' . $left->getCode() . ', ' . $right->getCode() . ' TSRMLS_CC);');
+            $compilationContext->codePrinter->output('zephir_concat_function(' . $expected->getPointeredName() . ', ' . $left->getCode() . ', ' . $right->getCode() . ');');
         }
 
         $expected->setDynamicTypes('string');

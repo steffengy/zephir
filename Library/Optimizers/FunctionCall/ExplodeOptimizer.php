@@ -92,11 +92,11 @@ class ExplodeOptimizer extends OptimizerAbstract
         $symbolVariable->setDynamicTypes('array');
 
         if (isset($str)) {
-            $context->codePrinter->output('zephir_fast_explode_str(' . $symbolVariable->getName() . ', SL("' . $str . '"), ' . $resolvedParams[0] . ', ' . $limit . ' TSRMLS_CC);');
+            $context->codePrinter->output('zephir_fast_explode_str(' . $symbolVariable->getPointeredName() . ', SL("' . $str . '"), ' . $resolvedParams[0] . ', ' . $limit . ');');
             return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
         }
 
-        $context->codePrinter->output('zephir_fast_explode(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ', ' . $limit . ' TSRMLS_CC);');
+        $context->codePrinter->output('zephir_fast_explode(' . $symbolVariable->getPointeredName() . ', ' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ', ' . $limit . ');');
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }
 }

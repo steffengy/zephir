@@ -11,7 +11,7 @@
 #include "kernel/main.h"
 #include "kernel/memory.h"
 #include "kernel/fcall.h"
-//#include "kernel/operators.h"
+#include "kernel/operators.h"
 
 #include "Zend/zend_exceptions.h"
 
@@ -85,4 +85,32 @@ void zephir_throw_exception_format(zend_class_entry *ce, const char *format, ...
 	zend_throw_exception_object(&object);
 
 	zval_ptr_dtor(&msg);
+}
+
+/**
+ * Throws a zval object as exception
+ */
+void zephir_throw_exception_debug(zval *object, const char *file, uint32_t line) {
+
+	zend_class_entry *default_exception_ce;
+	int ZEPHIR_LAST_CALL_STATUS = 0;
+	zval curline;
+
+	ZEPHIR_MM_GROW();
+	ZVAL_UNDEF(&curline);
+
+	if (Z_REFCOUNTED_P(object)) Z_ADDREF_P(object);
+
+	if (line > 0) {
+		ZEPHIR_CALL_METHOD(&curline, object, "getline", NULL);
+		zephir_check_call_status();
+		if (ZEPHIR_IS_LONG(&curline, 0)) {
+			default_exception_ce = zend_exception_get_default();
+			zend_update_property_string(default_exception_ce, object, "file", sizeof("file")-1, file);
+			zend_update_property_long(default_exception_ce, object, "line", sizeof("line")-1, line);
+		}
+	}
+
+	zend_throw_exception_object(object);
+	ZEPHIR_MM_RESTORE();
 }

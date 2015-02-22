@@ -80,7 +80,7 @@ class TrimOptimizer extends OptimizerAbstract
             $charlist = $resolvedParams[1];
         }
 
-        $context->codePrinter->output('zephir_fast_trim(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ', ' . $charlist . ', ' . static::$TRIM_WHERE . ' TSRMLS_CC);');
+        $context->codePrinter->output('zephir_fast_trim(' . $symbolVariable->getPointeredName() . ', ' . $resolvedParams[0] . ', ' . $charlist . ', ' . static::$TRIM_WHERE . ');');
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }
 }

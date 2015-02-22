@@ -79,11 +79,7 @@ class LogicalBaseOperator extends BaseOperator
 
                             case 'variable':
                                 $compilationContext->headersManager->add('kernel/operators');
-                                if ($variableRight->isLocalOnly()) {
-                                    return new CompiledExpression('bool', '(' . $left->getCode() . ' ' . $this->_operator . ' zephir_is_true(&' . $variableRight->getName() . '))', $expression);
-                                } else {
-                                    return new CompiledExpression('bool', '(' . $left->getCode() . ' ' . $this->_operator . ' zephir_is_true(' . $variableRight->getName() . '))', $expression);
-                                }
+                                return new CompiledExpression('bool', '(' . $left->getCode() . ' ' . $this->_operator . ' zephir_is_true(' . $variableRight->getPointeredName() . '))', $expression);
                                 break;
 
                             default:

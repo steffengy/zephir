@@ -244,7 +244,6 @@ class DeclareStatement extends StatementAbstract
                             case 'null':
                                 $symbolVariable->setDynamicTypes('null');
                                 $symbolVariable->setMustInitNull(true);
-                                $symbolVariable->setLocalOnly(false);
                                 break;
 
                             default:

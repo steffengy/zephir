@@ -417,7 +417,7 @@ class FunctionCall extends Call
          * Temporary variables must be copied if they have more than one reference
          */
         foreach ($this->getMustCheckForCopyVariables() as $checkVariable) {
-            $codePrinter->output('zephir_check_temp_parameter(' . $checkVariable . ');');
+            $codePrinter->output('zephir_check_temp_parameter(&' . $checkVariable . ');');
         }
 
         if (is_array($references)) {
@@ -558,7 +558,7 @@ class FunctionCall extends Call
          * Temporary variables must be copied if they have more than one reference
          */
         foreach ($this->getMustCheckForCopyVariables() as $checkVariable) {
-            $codePrinter->output('zephir_check_temp_parameter(' . $checkVariable . ');');
+            $codePrinter->output('zephir_check_temp_parameter(&' . $checkVariable . ');');
         }
 
         $this->addCallStatusOrJump($compilationContext);

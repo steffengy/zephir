@@ -95,19 +95,18 @@ class Reference
                 return $tempVar;
 
             case 'bool':
-                if ($exprCompiled->getCode() == 'true') {
-                    return new GlobalConstant('ZEPHIR_GLOBAL(global_true)');
-                } else {
-                    if ($exprCompiled->getCode() == 'false') {
-                        return new GlobalConstant('ZEPHIR_GLOBAL(global_false)');
-                    } else {
-                        throw new Exception('?');
-                    }
-                }
-                break;
+                $boolVal = null;
+                if ($exprCompiled->getCode() == 'true') $boolVal = '1';
+                else if ($exprCompiled->getCode() == 'false') $boolVal = '0';
+                else throw new Exception("Boolean: Unknown value");
+                $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
+                $codePrinter->output('ZVAL_BOOL(&' . $tempVar->getName() . ', ' . $boolVal . ');');
+                return $tempVar;
 
             case 'null':
-                return new GlobalConstant('ZEPHIR_GLOBAL(global_null)');
+                $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
+                $codePrinter->output('ZVAL_NULL(&' . $tempVar->getName() . '");');
+                return $tempVar;
 
             case 'string':
             case 'ulong':
@@ -137,7 +136,7 @@ class Reference
 
                     case 'bool':
                         $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                        $codePrinter->output('ZVAL_BOOL(' . $tempVar->getName() . ', ' . $itemVariable->getName() . ');');
+                        $codePrinter->output('ZVAL_BOOL(&' . $tempVar->getName() . ', ' . $itemVariable->getName() . ');');
                         return $tempVar;
 
                     case 'string':

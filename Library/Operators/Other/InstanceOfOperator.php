@@ -113,7 +113,7 @@ class InstanceOfOperator extends BaseOperator
                         $compilationContext->headersManager->add('kernel/operators');
                         $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('string', $compilationContext);
                         $tempVariable->setMustInitNull(true);
-                        $tempVariableName = $tempVariable->getName();
+                        $tempVariableName = $tempVariable->getPointeredName();
                         $compilationContext->codePrinter->output('zephir_get_strval(' . $tempVariableName . ', ' . $resolvedVariable . ');');
                         $code = 'Z_STRVAL_P(' . $tempVariableName . '), Z_STRLEN_P(' . $tempVariableName . ')';
                         break;
@@ -126,9 +126,9 @@ class InstanceOfOperator extends BaseOperator
         /* @TODO, Possible optimization is use zephir_is_instance when the const class name is an internal class or interface */
         $compilationContext->headersManager->add('kernel/object');
         if (isset($code)) {
-            return new CompiledExpression('bool', 'zephir_is_instance_of(' . $symbolVariable->getName() . ', ' . $code . ' TSRMLS_CC)', $expression);
+            return new CompiledExpression('bool', 'zephir_is_instance_of(' . $symbolVariable->getPointeredName() . ', ' . $code . ')', $expression);
         }
 
-        return new CompiledExpression('bool', 'zephir_instance_of_ev(' . $symbolVariable->getName() . ', ' . $classEntry . ' TSRMLS_CC)', $expression);
+        return new CompiledExpression('bool', 'zephir_instance_of_ev(' . $symbolVariable->getPointeredName() . ', ' . $classEntry . ')', $expression);
     }
 }

@@ -148,9 +148,6 @@ class ArrayIndexAppend extends ArrayIndex
         /**
          * Arrays must be stored in the HEAP
          */
-        if ($symbolVariable->isLocalOnly()) {
-            throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is local only", $statement);
-        }
 
         if (!$symbolVariable->isInitialized()) {
             throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is not initialized", $statement);
@@ -158,10 +155,6 @@ class ArrayIndexAppend extends ArrayIndex
 
         if ($symbolVariable->isReadOnly()) {
             throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is read only", $statement);
-        }
-
-        if ($symbolVariable->isLocalOnly()) {
-            throw new CompilerException("Cannot mutate variable '" . $variable . "' because it is local only", $statement);
         }
 
         /**

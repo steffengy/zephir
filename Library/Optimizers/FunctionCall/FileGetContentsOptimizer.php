@@ -68,10 +68,10 @@ class FileGetContentsOptimizer extends OptimizerAbstract
 
         $resolvedParams = $call->getReadOnlyResolvedParams($expression['parameters'], $context, $expression);
         if ($symbolVariable) {
-            $context->codePrinter->output('zephir_file_get_contents(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ' TSRMLS_CC);');
+            $context->codePrinter->output('zephir_file_get_contents(' . $symbolVariable->getPointeredName() . ', ' . $resolvedParams[0] . ');');
             return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
         } else {
-            $context->codePrinter->output('zephir_file_get_contents(NULL, ' . $resolvedParams[0] . ' TSRMLS_CC);');
+            $context->codePrinter->output('zephir_file_get_contents(NULL, ' . $resolvedParams[0] . ');');
         }
 
         return new CompiledExpression('null', 'null', $expression);

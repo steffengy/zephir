@@ -40,7 +40,7 @@ class ClassEntryCache
      */
     public function get($className, $dynamic, CompilationContext $compilationContext)
     {
-
+        $compilationContext->headersManager->add('kernel/object');
         /**
          * Creates a guard variable if the class name is not dynamic
          */
@@ -50,11 +50,11 @@ class ClassEntryCache
             $zendClassEntry->setMustInitNull(true);
 
             $compilationContext->codePrinter->output('if (!' . $zendClassEntry->getName() . ') {');
-            $compilationContext->codePrinter->output("\t" . $zendClassEntry->getName() . ' = zend_fetch_class(' . $className . ', ZEND_FETCH_CLASS_AUTO TSRMLS_CC);');
+            $compilationContext->codePrinter->output("\t" . $zendClassEntry->getName() . ' = zephir_fetch_class_str(' . $className . ', ZEND_FETCH_CLASS_AUTO);');
             $compilationContext->codePrinter->output('}');
         } else {
             $zendClassEntry = $compilationContext->symbolTable->addTemp('zend_class_entry', $compilationContext);
-            $compilationContext->codePrinter->output($zendClassEntry->getName() . ' = zend_fetch_class(' . $className . ', ZEND_FETCH_CLASS_AUTO TSRMLS_CC);');
+            $compilationContext->codePrinter->output($zendClassEntry->getName() . ' = zephir_fetch_class_str(' . $className . ', ZEND_FETCH_CLASS_AUTO);');
         }
 
         return $zendClassEntry;

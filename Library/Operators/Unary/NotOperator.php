@@ -65,7 +65,7 @@ class NotOperator extends BaseOperator
 
                     case 'variable':
                         $compilationContext->headersManager->add('kernel/operators');
-                        return new CompiledExpression('bool', '!zephir_is_true(' . $variable->getName() . ')', $expression);
+                        return new CompiledExpression('bool', '!zephir_is_true(' . $variable->getPointeredName() . ')', $expression);
 
                     default:
                         throw new CompilerException("Unknown type: " . $variable->getType(), $expression);

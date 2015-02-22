@@ -101,11 +101,7 @@ class DivOperator extends ArithmeticalBaseOperator
                                 return new CompiledExpression('double', 'zephir_safe_div_long_double(' . $left->getCode() . ', ' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
 
                             case 'variable':
-                                if ($variableRight->isLocalOnly()) {
-                                    return new CompiledExpression('double', 'zephir_safe_div_long_zval(' . $left->getCode() . ', &' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                } else {
-                                    return new CompiledExpression('double', 'zephir_safe_div_long_zval(' . $left->getCode() . ', ' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                }
+                                return new CompiledExpression('double', 'zephir_safe_div_long_zval(' . $left->getCode() . ', &' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
                                 break;
 
                             default:
@@ -168,11 +164,7 @@ class DivOperator extends ArithmeticalBaseOperator
 
                             case 'variable':
                                 $compilationContext->headersManager->add('kernel/operators');
-                                if ($variableRight->isLocalOnly()) {
-                                    return new CompiledExpression('double', 'zephir_safe_div_double_zval(' . $left->getCode() . ', &' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                } else {
-                                    return new CompiledExpression('double', 'zephir_safe_div_double_zval(' . $left->getCode() . ', ' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                }
+                                return new CompiledExpression('double', 'zephir_safe_div_double_zval(' . $left->getCode() . ', &' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
                                 break;
 
                             default:
@@ -237,11 +229,7 @@ class DivOperator extends ArithmeticalBaseOperator
 
                                     case 'variable':
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        if ($variableRight->isLocalOnly()) {
-                                            return new CompiledExpression('double', 'zephir_safe_div_long_zval(' . $variableLeft->getName() . ', &' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                        } else {
-                                            return new CompiledExpression('double', 'zephir_safe_div_long_zval(' . $variableLeft->getName() . ', ' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                        }
+                                        return new CompiledExpression('double', 'zephir_safe_div_long_zval(' . $variableLeft->getName() . ', ' . $variableRight->getPointeredName() . ')', $expression);
                                         break;
 
                                     default:
@@ -334,11 +322,7 @@ class DivOperator extends ArithmeticalBaseOperator
 
                                     case 'variable':
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        if ($variableRight->isLocalOnly()) {
-                                            return new CompiledExpression('double', 'zephir_safe_div_double_zval(' . $variableLeft->getName() . ', &' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                        } else {
-                                            return new CompiledExpression('double', 'zephir_safe_div_double_zval(' . $variableLeft->getName() . ', ' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                        }
+                                        return new CompiledExpression('double', 'zephir_safe_div_double_zval(' . $variableLeft->getName() . ', ' . $variableRight->getPointeredName() . ')', $expression);
                                         break;
 
                                     default:
@@ -366,11 +350,8 @@ class DivOperator extends ArithmeticalBaseOperator
                             case 'long':
                             case 'ulong':
                                 $compilationContext->headersManager->add('kernel/operators');
-                                if ($variableLeft->isLocalOnly()) {
-                                    $op1 = '&' . $variableLeft->getName();
-                                } else {
-                                    $op1 = $variableLeft->getName();
-                                }
+                                
+                                $op1 = $variableLeft->getPointeredName();
                                 $op2 = $right->getCode();
                                 if ($right->getType() == 'double') {
                                     return new CompiledExpression('double', 'zephir_safe_div_zval_long(' . $op1 . ', ' . $op2 . ' TSRMLS_CC)', $expression);
@@ -381,11 +362,7 @@ class DivOperator extends ArithmeticalBaseOperator
 
                             case 'double':
                                 $compilationContext->headersManager->add('kernel/operators');
-                                if ($variableLeft->isLocalOnly()) {
-                                    $op1 = '&' . $variableLeft->getName();
-                                } else {
-                                    $op1 = $variableLeft->getName();
-                                }
+                                $op1 = $variableLeft->getPointeredName();
                                 $op2 = $right->getCode();
                                 if ($right->getType() == 'double') {
                                     return new CompiledExpression('double', 'zephir_safe_div_zval_double(' . $op1 . ', ' . $op2 . ' TSRMLS_CC)', $expression);
@@ -405,11 +382,7 @@ class DivOperator extends ArithmeticalBaseOperator
                                     case 'long':
                                     case 'ulong':
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        if ($variableLeft->isLocalOnly()) {
-                                            return new CompiledExpression('double', 'zephir_safe_div_zval_long(&' . $variableLeft->getName() . ', ' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                        } else {
-                                            return new CompiledExpression('double', 'zephir_safe_div_zval_long(' . $variableLeft->getName() . ', ' . $variableRight->getName() . ' TSRMLS_CC)', $expression);
-                                        }
+                                        return new CompiledExpression('double', 'zephir_safe_div_zval_long(' . $variableLeft->getPointeredName() . ', ' . $variableRight->getName() . ')', $expression);
                                         break;
 
                                     /* a(var) + a(bool) */
@@ -427,24 +400,11 @@ class DivOperator extends ArithmeticalBaseOperator
 
                                         $compilationContext->headersManager->add('kernel/operators');
 
-                                        if ($variableLeft->isLocalOnly()) {
-                                            $op1 = '&' . $variableLeft->getName();
-                                        } else {
-                                            $op1 = $variableLeft->getName();
-                                        }
-
-                                        if ($variableRight->isLocalOnly()) {
-                                            $op2 = '&' . $variableRight->getName();
-                                        } else {
-                                            $op2 = $variableRight->getName();
-                                        }
+                                        $op1 = '&' . $variableLeft->getName();
+                                        $op2 = '&' . $variableRight->getName();
 
                                         $expected = $this->getExpected($compilationContext, $expression);
-                                        if ($expected->isLocalOnly()) {
-                                            $compilationContext->codePrinter->output($this->_zvalOperator . '(&' . $expected->getName() . ', ' . $op1 . ', ' . $op2 . ' TSRMLS_CC);');
-                                        } else {
-                                            $compilationContext->codePrinter->output($this->_zvalOperator . '(' . $expected->getName() . ', ' . $op1 . ', ' . $op2 . ' TSRMLS_CC);');
-                                        }
+                                        $compilationContext->codePrinter->output($this->_zvalOperator . '(&' . $expected->getName() . ', ' . $op1 . ', ' . $op2 . ' TSRMLS_CC);');
 
                                         if ($variableLeft->isTemporal()) {
                                             $variableLeft->setIdle(true);

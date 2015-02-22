@@ -27,12 +27,12 @@ int zephir_fetch_parameters(int num_args, int required_args, int optional_args, 
 	int i;
 
 	if (num_args < required_args || (num_args > (required_args + optional_args))) {
-		zephir_throw_exception_string(spl_ce_BadMethodCallException, SL("Wrong number of parameters") TSRMLS_CC);
+		zephir_throw_exception_string(spl_ce_BadMethodCallException, SL("Wrong number of parameters"));
 		return FAILURE;
 	}
 
 	if (num_args > arg_count) {
-		zephir_throw_exception_string(spl_ce_BadMethodCallException, SL("Could not obtain parameters for parsing") TSRMLS_CC);
+		zephir_throw_exception_string(spl_ce_BadMethodCallException, SL("Could not obtain parameters for parsing"));
 		return FAILURE;
 	}
 
@@ -91,4 +91,121 @@ int zephir_is_iterable_ex(zval *arr, int duplicate, int reverse) {
 	}*/
 
 	return 1;
+}
+
+int zephir_fast_count_int(zval *array)
+{
+	zend_long cnt;
+
+	switch (Z_TYPE_P(array)) {
+			case IS_NULL:
+				return 0;
+			case IS_ARRAY:
+				/* For now we only support NORMAL_MODE not RECURSIVE as below:
+					cnt = zend_hash_num_elements(Z_ARRVAL_P(array));
+					if (mode == COUNT_RECURSIVE) {
+						ZEND_HASH_FOREACH_VAL(Z_ARRVAL_P(array), element) {
+							ZVAL_DEREF(element);
+							cnt += php_count_recursive(element, COUNT_RECURSIVE);
+						} ZEND_HASH_FOREACH_END();
+				}*/
+				return zend_hash_num_elements(Z_ARRVAL_P(array));
+			case IS_OBJECT: {
+	#ifdef HAVE_SPL
+				zval retval;
+	#endif
+				/* first, we check if the handler is defined */
+				if (Z_OBJ_HT_P(array)->count_elements) {
+					if (SUCCESS == Z_OBJ_HT(*array)->count_elements(array, &cnt)) {
+						return cnt;
+					}
+					return 1;
+				}
+	#ifdef HAVE_SPL
+				/* if not and the object implements Countable we call its count() method */
+				if (instanceof_function(Z_OBJCE_P(array), spl_ce_Countable)) {
+					zend_call_method_with_0_params(array, NULL, NULL, "count", &retval);
+					if (Z_TYPE(retval) != IS_UNDEF) {
+						return zval_get_long(&retval);
+						zval_ptr_dtor(&retval);
+					}
+					return 0;
+				}
+	#endif
+			}
+			default:
+				return 1;
+		}
+}
+
+/**
+ * Checks if a zval is callable
+ */
+int zephir_is_callable(zval *var) {
+
+	char *error = NULL;
+	zend_bool retval;
+
+	retval = zend_is_callable_ex(var, NULL, 0, NULL, NULL, &error);
+	if (error) {
+		efree(error);
+	}
+
+	return (int) retval;
+}
+
+/**
+ * Returns the type of a variable as a string
+ */
+void zephir_gettype(zval *return_value, zval *arg_in)
+{
+	/* Make sure we handle references properly */
+	zval *arg = arg_in;
+	if (Z_REFCOUNTED_P(arg) && Z_ISREF_P(arg)) {
+		arg = Z_REFVAL_P(arg_in);
+	}
+	switch (Z_TYPE_P(arg)) {
+
+		case IS_NULL:
+			RETVAL_STRING("NULL");
+			break;
+
+		case IS_TRUE:
+		case IS_FALSE:
+			RETVAL_STRING("boolean");
+			break;
+
+		case IS_LONG:
+			RETVAL_STRING("integer");
+			break;
+
+		case IS_DOUBLE:
+			RETVAL_STRING("double");
+			break;
+
+		case IS_STRING:
+			RETVAL_STRING("string");
+			break;
+
+		case IS_ARRAY:
+			RETVAL_STRING("array");
+			break;
+
+		case IS_OBJECT:
+			RETVAL_STRING("object");
+			break;
+
+		case IS_RESOURCE:
+			{
+				const char *type_name = zend_rsrc_list_get_rsrc_type(Z_RES_P(arg));
+
+				if (type_name) {
+					RETVAL_STRING("resource");
+					break;
+				}
+			}
+
+		default:
+			RETVAL_STRING("unknown type");
+	}
 }

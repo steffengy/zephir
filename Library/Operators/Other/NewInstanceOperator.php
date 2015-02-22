@@ -94,7 +94,7 @@ class NewInstanceOperator extends BaseOperator
                 throw new CompilerException("stdclass does not receive parameters in its constructor", $expression);
             }
 
-            $codePrinter->output('object_init(' . $symbolVariable->getName() . ');');
+            $codePrinter->output('object_init(' . $symbolVariable->getPointeredName() . ');');
             $symbolVariable->setClassTypes('stdclass');
 
         } else {
@@ -108,7 +108,7 @@ class NewInstanceOperator extends BaseOperator
              * Classes inside the same extension
              */
             if ($classDefinition) {
-                $codePrinter->output('object_init_ex(&' . $symbolVariable->getName() . ', ' . $classDefinition->getClassEntry($compilationContext) . ');');
+                $codePrinter->output('object_init_ex(' . $symbolVariable->getPointeredName() . ', ' . $classDefinition->getClassEntry($compilationContext) . ');');
                 $symbolVariable->setClassTypes($className);
             } else {
 
@@ -172,7 +172,7 @@ class NewInstanceOperator extends BaseOperator
                     $symbolVariable->setClassTypes($className);
 
                 }
-                $codePrinter->output('object_init_ex(&' . $symbolVariable->getName() . ', ' . $classEntry . ');');
+                $codePrinter->output('object_init_ex(' . $symbolVariable->getPointeredName() . ', ' . $classEntry . ');');
             }
         }
 
@@ -248,7 +248,7 @@ class NewInstanceOperator extends BaseOperator
             $compilationContext->headersManager->add('kernel/fcall');
 
             /* @todo, generate the code using builders */
-            $codePrinter->output('if (zephir_has_constructor(&' . $symbolVariable->getName() . ')) {');
+            $codePrinter->output('if (zephir_has_constructor(' . $symbolVariable->getPointeredName() . ')) {');
             $codePrinter->increaseLevel();
 
             $methodCall = new MethodCall();

@@ -284,12 +284,12 @@ class NativeArrayAccess
             case 'uint':
             case 'long':
                 $compilationContext->headersManager->add('kernel/array');
-                $codePrinter->output('zephir_array_fetch_long(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', ' . $exprIndex->getCode() . ', ' . $flags . ', "' . Compiler::getShortUserPath($arrayAccess['file']) . '", ' . $arrayAccess['line'] . ' TSRMLS_CC);');
+                $codePrinter->output('zephir_array_fetch_long(' . $symbolVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ', ' . $exprIndex->getCode() . ', ' . $flags . ', "' . Compiler::getShortUserPath($arrayAccess['file']) . '", ' . $arrayAccess['line'] . ');');
                 break;
 
             case 'string':
                 $compilationContext->headersManager->add('kernel/array');
-                $codePrinter->output('zephir_array_fetch_string(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', SL("' . $exprIndex->getCode() . '"), ' . $flags . ', "' . Compiler::getShortUserPath($arrayAccess['file']) . '", ' . $arrayAccess['line'] . ' TSRMLS_CC);');
+                $codePrinter->output('zephir_array_fetch_string(' . $symbolVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ', SL("' . $exprIndex->getCode() . '"), ' . $flags . ', "' . Compiler::getShortUserPath($arrayAccess['file']) . '", ' . $arrayAccess['line'] . ');');
                 break;
 
             case 'variable':
@@ -300,17 +300,13 @@ class NativeArrayAccess
                     case 'uint':
                     case 'long':
                         $compilationContext->headersManager->add('kernel/array');
-                        $codePrinter->output('zephir_array_fetch_long(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', ' . $variableIndex->getName() . ', ' . $flags . ', "' . Compiler::getShortUserPath($arrayAccess['file']) . '", ' . $arrayAccess['line'] . ' TSRMLS_CC);');
+                        $codePrinter->output('zephir_array_fetch_long(' . $symbolVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ', ' . $variableIndex->getName() . ', ' . $flags . ', "' . Compiler::getShortUserPath($arrayAccess['file']) . '", ' . $arrayAccess['line'] . ');');
                         break;
 
                     case 'string':
                     case 'variable':
                         $compilationContext->headersManager->add('kernel/array');
-                        if ($variableIndex->isLocalOnly()) {
-                            $codePrinter->output('zephir_array_fetch(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', &' . $variableIndex->getName() . ', ' . $flags . ', "' . Compiler::getShortUserPath($arrayAccess['file']) . '", ' . $arrayAccess['line'] . ' TSRMLS_CC);');
-                        } else {
-                            $codePrinter->output('zephir_array_fetch(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', ' . $variableIndex->getName() . ', ' . $flags . ', "' . Compiler::getShortUserPath($arrayAccess['file']) . '", ' . $arrayAccess['line'] . ' TSRMLS_CC);');
-                        }
+                        $codePrinter->output('zephir_array_fetch(' . $symbolVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ', ' . $variableIndex->getPointeredName() . ', ' . $flags . ', "' . Compiler::getShortUserPath($arrayAccess['file']) . '", ' . $arrayAccess['line'] . ' TSRMLS_CC);');
                         break;
 
                     default:

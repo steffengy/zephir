@@ -102,7 +102,7 @@ class StaticProperty
         switch ($resolvedExpr->getType()) {
 
             case 'null':
-                $codePrinter->output('zephir_update_static_property_ce(' . $classEntry .', SL("' . $property . '"), &(ZEPHIR_GLOBAL(global_null)) TSRMLS_CC);');
+                $codePrinter->output('zephir_update_static_property_null(' . $classEntry . ', SL("' . $property . '"));');
                 break;
 
             case 'int':
@@ -159,15 +159,7 @@ class StaticProperty
                 break;
 
             case 'bool':
-                if ($resolvedExpr->getBooleanCode() == '1') {
-                    $codePrinter->output('zephir_update_static_property_ce(' . $classEntry .', SL("' . $property . '"), &(ZEPHIR_GLOBAL(global_true)) TSRMLS_CC);');
-                } else {
-                    if ($resolvedExpr->getBooleanCode() == '0') {
-                        $codePrinter->output('zephir_update_static_property_ce(' . $classEntry .', SL("' . $property . '"), &(ZEPHIR_GLOBAL(global_false)) TSRMLS_CC);');
-                    } else {
-                        $codePrinter->output('zephir_update_static_property_ce(' . $classEntry .', SL("' . $property . '"), (' . $resolvedExpr->getBooleanCode() . ') ? &(ZEPHIR_GLOBAL(global_true)) : &(ZEPHIR_GLOBAL(global_false)) TSRMLS_CC);');
-                    }
-                }
+                $codePrinter->output('zephir_update_static_property_bool(' . $classEntry . ', SL("' . $property . '"), ' . $resolvedExpr->getBooleanCode() . ');');
                 break;
 
             case 'empty-array':
@@ -202,7 +194,7 @@ class StaticProperty
                             $propertyCache->setReusable(false);
                             $codePrinter->output('zephir_update_static_property_ce_cache(' . $classEntry .', SL("' . $property . '"), &' . $tempVariable->getName() . ', &' . $propertyCache->getName() . ' TSRMLS_CC);');
                         } else {
-                            $codePrinter->output('zephir_update_static_property_ce(' . $classEntry .', SL("' . $property . '"), &' . $tempVariable->getName() . ' TSRMLS_CC);');
+                            $codePrinter->output('zephir_update_static_property_ce(' . $classEntry .', SL("' . $property . '"), ' . $tempVariable->getPointeredName() . ');');
                         }
                         if ($tempVariable->isTemporal()) {
                             $tempVariable->setIdle(true);
@@ -264,7 +256,7 @@ class StaticProperty
                         break;
                     case 'variable':
                     case 'array':
-                        $codePrinter->output('zephir_update_static_property_ce(' . $classEntry .', SL("' . $property . '"), &' . $variableVariable->getName() . ' TSRMLS_CC);');
+                        $codePrinter->output('zephir_update_static_property_ce(' . $classEntry .', SL("' . $property . '"), ' . $variableVariable->getPointeredName() . ');');
                         if ($variableVariable->isTemporal()) {
                             $variableVariable->setIdle(true);
                         }
