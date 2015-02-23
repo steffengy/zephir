@@ -331,7 +331,7 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 	if ((!cache_entry || !*cache_entry) && !bypass_fcache) {
 		if (EXPECTED(status != FAILURE) && fcall_key && !temp_cache_entry && fcic.initialized) {
 			zephir_fcall_cache_entry *temp_cache_entry = fcic.function_handler;
-			if (NULL != zend_hash_str_add_ptr(zephir_globals_ptr->fcache, fcall_key, fcall_key_len, temp_cache_entry)) {
+			if (NULL == zend_hash_str_add_ptr(zephir_globals_ptr->fcache, fcall_key, fcall_key_len, temp_cache_entry)) {
 #ifndef ZEPHIR_RELEASE
 				free(temp_cache_entry);
 #endif

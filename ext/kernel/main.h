@@ -59,6 +59,14 @@ int zephir_fast_count_int(zval *value TSRMLS_DC);
   zephir_return_property(object, SL(member_name)); \
   RETURN_MM();
 
+#define RETURN_MM_ON_FAILURE(what) \
+	do { \
+		if (what == FAILURE) { \
+			ZEPHIR_MM_RESTORE(); \
+			return; \
+		} \
+	} while (0)
+
 /** Returns a zval in an object member  */
 #define RETURN_MEMBER(object, member_name) \
 	zephir_return_property(object, SL(member_name)); \
@@ -155,6 +163,9 @@ int zephir_fast_count_int(zval *value TSRMLS_DC);
 			RETURN_NULL(); \
 		} \
 	}
+
+inline int zephir_get_constant(zval *return_value, char *name, size_t len);
+#define ZEPHIR_GET_CONSTANT(return_value, const_name) RETURN_MM_ON_FAILURE(zephir_get_constant(return_value, SL(const_name)));
 
 /* Fetch Parameters */
 int zephir_fetch_parameters(int num_args, int required_args, int optional_args, ...);

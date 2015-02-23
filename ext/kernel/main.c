@@ -245,3 +245,16 @@ int zephir_get_global(zval *arr, const char *global, unsigned int global_length)
 
 	return SUCCESS;
 }
+
+inline int zephir_get_constant(zval *return_value, char *name, size_t len)
+{
+	zval *const_zval;
+	zend_string *const_str = zend_string_init(name, len, 0);
+	const_zval = zend_get_constant(const_str);
+	zend_string_release(const_str);
+	if (const_zval == NULL) {
+		return FAILURE;
+	}
+	ZVAL_COPY_VALUE(return_value, const_zval);
+	return SUCCESS;
+}
