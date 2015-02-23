@@ -331,6 +331,79 @@ int ZEPHIR_FASTCALL zephir_array_isset(const zval *arr, zval *index) {
 	}
 }
 
+int zephir_array_isset_string_fetch(zval *fetched, zval *arr, char *index, uint32_t index_length, int readonly)
+{
+	ZVAL_NULL(fetched);
+	return zephir_array_fetch_string(fetched, arr, index, index_length, readonly ZEPHIR_DEBUG_PARAMS_DUMMY);
+}
+
+int zephir_array_update_zval(zval *arr, zval *index, zval *value, int flags) {
+
+	HashTable *ht;
+
+	if (Z_TYPE_P(arr) != IS_ARRAY) {
+		zend_error(E_WARNING, "Cannot use a scalar value as an array (2)");
+		return FAILURE;
+	}
+
+	if ((flags & PH_CTOR) == PH_CTOR) {
+		zval new_zv;
+		Z_DELREF_P(value);
+		ZVAL_NULL(&new_zv);
+		value = &new_zv;
+		zval_copy_ctor(&new_zv);
+	}
+
+	if ((flags & PH_SEPARATE) == PH_SEPARATE) {
+		SEPARATE_ZVAL_IF_NOT_REF(arr);
+	}
+
+	if ((flags & PH_COPY) == PH_COPY) {
+		Z_ADDREF_P(value);
+	}
+
+	ht = Z_ARRVAL_P(arr);
+
+	switch (Z_TYPE_P(index)) {
+		/*TODO case IS_NULL:
+			return zend_symtable_update(ht, "", 1, value, sizeof(zval*), NULL);
+			*/
+
+		case IS_DOUBLE:
+			return zend_hash_index_update(ht, (ulong)Z_DVAL_P(index), value) != NULL;
+
+		case IS_TRUE:
+			return zend_hash_index_update(ht, 1, value) != NULL;
+
+		case IS_FALSE:
+			return zend_hash_index_update(ht, 0, value) != NULL;
+
+		case IS_LONG:
+		case IS_RESOURCE:
+			return zend_hash_index_update(ht, Z_LVAL_P(index), value) != NULL;
+
+		case IS_STRING:
+			return zend_symtable_update(ht, Z_STR_P(index), value) != NULL;
+
+		default:
+			zend_error(E_WARNING, "Illegal offset type");
+			return FAILURE;
+	}
+}
+
+int ZEPHIR_FASTCALL zephir_array_unset_string(zval *arr, const char *index, uint32_t index_length, int flags)
+{
+	if (Z_TYPE_P(arr) != IS_ARRAY) {
+		return 0;
+	}
+
+	if ((flags & PH_SEPARATE) == PH_SEPARATE) {
+		SEPARATE_ZVAL_IF_NOT_REF(arr);
+	}
+
+	return zend_hash_str_del(Z_ARRVAL_P(arr), index, index_length);
+}
+
 /* wrapper of array_merge */
 void zephir_fast_array_merge(zval *return_value, zval *array1, zval *array2)
 {

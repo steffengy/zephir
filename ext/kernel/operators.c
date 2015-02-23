@@ -21,6 +21,35 @@ int zephir_is_equal(zval *op1, zval *op2)
 }
 
 /**
+ * Returns the long value of a zval
+ */
+int zephir_is_numeric_ex(const zval *op)
+{
+	int type;
+
+	switch (Z_TYPE_P(op)) {
+		case IS_LONG:
+			return 1;
+
+		case IS_TRUE:
+		case IS_FALSE:
+			return 0;
+
+		case IS_DOUBLE:
+			return 1;
+
+		case IS_STRING:
+			if ((type = is_numeric_string(Z_STRVAL_P(op), Z_STRLEN_P(op), NULL, NULL, 0))) {
+				if (type == IS_LONG || type == IS_DOUBLE) {
+					return 1;
+				}
+			}
+	}
+
+	return 0;
+}
+
+/**
  * Natural compare with bool operandus on right
  */
 int zephir_compare_strict_bool(zval *op1, zend_bool op2)

@@ -666,3 +666,24 @@ void zephir_fast_str_replace(zval *return_value, zval *search, zval *replace, zv
 		count = php_str_replace_in_subject(search, replace, subject, return_value, case_sensitivity);
 	}
 }
+
+/**
+ * Check if a string is contained into another
+ */
+int zephir_memnstr_str(const zval *haystack, char *needle, unsigned int needle_length ZEPHIR_DEBUG_PARAMS) {
+
+	if (Z_TYPE_P(haystack) != IS_STRING) {
+		#ifndef ZEPHIR_RELEASE
+		zend_error(E_WARNING, "Invalid arguments supplied for memnstr in %s on line %d", file, line);
+		#else
+		zend_error(E_WARNING, "Invalid arguments supplied for memnstr()");
+		#endif
+		return 0;
+	}
+
+	if (Z_STRLEN_P(haystack) >= needle_length) {
+		return php_memnstr(Z_STRVAL_P(haystack), needle, needle_length, Z_STRVAL_P(haystack) + Z_STRLEN_P(haystack)) ? 1 : 0;
+	}
+
+	return 0;
+}

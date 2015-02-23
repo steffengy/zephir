@@ -64,6 +64,17 @@ int zephir_fast_count_int(zval *value TSRMLS_DC);
 	zephir_return_property(object, SL(member_name)); \
 	return;
 
+/** Return this pointer */
+#define RETURN_THIS() { \
+		RETVAL_ZVAL(this_ptr, 1, 0); \
+	} \
+	ZEPHIR_MM_RESTORE(); \
+	return;
+
+/** Return zval with always ctor, without restoring the memory stack */
+#define RETURN_THISW() \
+	RETURN_ZVAL(this_ptr, 1, 0);
+
 /** Return zval with always ctor */
 #define RETURN_CTOR(var) { \
 		RETVAL_ZVAL(var, 1, 0); \
@@ -92,6 +103,23 @@ int zephir_fast_count_int(zval *value TSRMLS_DC);
 		INIT_NS_CLASS_ENTRY(ce, #ns, #class_name, methods); \
 		lower_ns## _ ##name## _ce = zend_register_internal_class(&ce TSRMLS_CC); \
 		lower_ns## _ ##name## _ce->ce_flags |= flags;  \
+	}
+
+#define ZEPHIR_REGISTER_CLASS_EX(ns, class_name, lower_ns, lcname, parent_ce, methods, flags) \
+	{ \
+		zend_class_entry ce; \
+		if (!parent_ce) { \
+			fprintf(stderr, "Can't register class %s::%s with null parent\n", #ns, #class_name); \
+			return FAILURE; \
+		} \
+		memset(&ce, 0, sizeof(zend_class_entry)); \
+		INIT_NS_CLASS_ENTRY(ce, #ns, #class_name, methods); \
+		lower_ns## _ ##lcname## _ce = zend_register_internal_class_ex(&ce, parent_ce); \
+		if (!lower_ns## _ ##lcname## _ce) { \
+			fprintf(stderr, "Zephir Error: Class to extend '%s' was not found when registering class '%s'\n", (parent_ce ? parent_ce->name->val : "(null)"), ZEND_NS_NAME(#ns, #class_name)); \
+			return FAILURE; \
+		} \
+		lower_ns## _ ##lcname## _ce->ce_flags |= flags;  \
 	}
 
 #define ZEPHIR_REGISTER_INTERFACE(ns, classname, lower_ns, name, methods) \
@@ -130,6 +158,8 @@ int zephir_fast_count_int(zval *value TSRMLS_DC);
 
 /* Fetch Parameters */
 int zephir_fetch_parameters(int num_args, int required_args, int optional_args, ...);
+
+int zephir_get_global(zval *arr, const char *global, unsigned int global_length);
 
 /* TODO: It's anyways only implemented for linux, implement win32+linux */
 #ifndef zephir_print_backtrace

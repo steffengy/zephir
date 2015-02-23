@@ -28,5 +28,6 @@ int zephir_unset_property(zval* object, const char* name);
 
 /* Update properties (array) */
 int zephir_update_property_array(zval *object, const char *property, uint32_t property_length, const zval *index, zval *value);
+int zephir_update_property_array_append(zval *object, char *property, unsigned int property_length, zval *value);
 int zephir_update_property_array_multi(zval *object, const char *property, uint32_t property_length, zval *value, const char *types, int types_length, int types_count, ...);
 #endif

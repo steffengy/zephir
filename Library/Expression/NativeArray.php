@@ -432,7 +432,7 @@ class NativeArray
                                     case 'bool':
                                         $compilationContext->headersManager->add('kernel/array');
                                         $valueVariable = $this->getArrayValue($resolvedExpr, $compilationContext);
-                                        $codePrinter->output('zephir_array_update_zval(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', &' . $valueVariable->getName() . ', PH_COPY);');
+                                        $codePrinter->output('zephir_array_update_zval(' . $symbolVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ', ' . $valueVariable->getPointeredName() . ', PH_COPY);');
                                         if ($valueVariable->isTemporal()) {
                                             $valueVariable->setIdle(true);
                                         }
@@ -441,7 +441,7 @@ class NativeArray
                                     case 'variable':
                                         $compilationContext->headersManager->add('kernel/array');
                                         $valueVariable = $this->getArrayValue($resolvedExpr, $compilationContext);
-                                        $codePrinter->output('zephir_array_update_zval(&' . $symbolVariable->getName() . ', ' . $variableVariable->getName() . ', &' . $valueVariable->getName() . ', PH_COPY);');
+                                        $codePrinter->output('zephir_array_update_zval(' . $symbolVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ', ' . $valueVariable->getPointeredName() . ', PH_COPY);');
                                         if ($valueVariable->isTemporal()) {
                                             $valueVariable->setIdle(true);
                                         }

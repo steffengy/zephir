@@ -18,6 +18,7 @@ void zephir_fast_strpos(zval *return_value, const zval *haystack, const zval *ne
 void zephir_addslashes(zval *return_value, zval *str);
 void zephir_stripslashes(zval *return_value, zval *str);
 void zephir_fast_str_replace(zval *return_value, zval *search, zval *replace, zval *subject);
+int zephir_memnstr_str(const zval *haystack, char *needle, unsigned int needle_length ZEPHIR_DEBUG_PARAMS);
 
 int zephir_json_encode(zval *return_value, zval *v, int opts);
 int zephir_json_decode(zval *return_value, zval *v, zend_bool assoc);

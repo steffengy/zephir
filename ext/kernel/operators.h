@@ -13,6 +13,12 @@
 /** strict boolean comparison */
 #define ZEPHIR_IS_FALSE(var)       ((Z_TYPE_P(var) == IS_FALSE) || zephir_compare_strict_bool(var, 0))
 #define ZEPHIR_IS_TRUE(var)        ((Z_TYPE_P(var) == IS_TRUE) || zephir_compare_strict_bool(var, 1))
+#define ZEPHIR_IS_FALSE_IDENTICAL(var)       (Z_TYPE_P(var) == IS_FALSE)
+#define ZEPHIR_IS_TRUE_IDENTICAL(var)        (Z_TYPE_P(var) == IS_TRUE)
+
+/** Equals/Identical */
+#define ZEPHIR_IS_EQUAL(op1, op2)      zephir_is_equal(op1, op2)
+#define ZEPHIR_IS_IDENTICAL(op1, op2)  zephir_is_identical(op1, op2)
 
 #define zephir_is_true(value) \
 	(Z_TYPE_P(value) == IS_TRUE ? 1 : ( \
@@ -57,7 +63,9 @@
 /* zephir_make_printable_zval_ex: returns use_copy */
 #define zephir_make_printable_zval(expr, expr_copy) zend_make_printable_zval(expr, expr_copy)
 
+int zephir_is_numeric_ex(const zval *op);
 int zephir_is_equal(zval *op1, zval *op2);
+#define zephir_is_numeric(value) (Z_TYPE_P(value) == IS_LONG || Z_TYPE_P(value) == IS_DOUBLE || zephir_is_numeric_ex(value))
 
 zend_bool zephir_get_boolval_ex(const zval *op_in);
 double zephir_get_doubleval_ex(const zval *op);

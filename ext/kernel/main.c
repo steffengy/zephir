@@ -209,3 +209,39 @@ void zephir_gettype(zval *return_value, zval *arg_in)
 			RETVAL_STRING("unknown type");
 	}
 }
+
+/**
+ * Gets the global zval into PG macro
+ */
+int zephir_get_global(zval *arr, const char *global, unsigned int global_length) {
+
+	zval *gv;
+
+	zend_bool jit_initialization = PG(auto_globals_jit);
+	zend_string *global_str;
+
+	ZVAL_UNDEF(arr);
+	if (jit_initialization) {
+		global_str = zend_string_init(global, global_length, 0);
+		zend_is_auto_global(global_str);
+		zend_string_release(global_str);
+	}
+
+	if (&EG(symbol_table)) {
+		if ((gv = zend_hash_str_find(&EG(symbol_table), global, global_length)) != NULL) {
+			if (Z_TYPE_P(gv) == IS_ARRAY) {
+				ZVAL_DUP(arr, gv);
+				if (Z_TYPE_P(arr) == IS_UNDEF) {
+					ZVAL_NULL(arr);
+				}
+			} else {
+				ZVAL_NULL(arr);
+			}
+			return SUCCESS;
+		}
+	}
+
+	ZVAL_NULL(arr);
+
+	return SUCCESS;
+}

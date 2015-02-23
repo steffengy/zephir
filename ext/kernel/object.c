@@ -139,6 +139,33 @@ int zephir_update_property_array(zval *object, const char *property, uint32_t pr
 	return SUCCESS;
 }
 
+/**
+ * Appends a zval value to an array property
+ */
+int zephir_update_property_array_append(zval *object, char *property, unsigned int property_length, zval *value) {
+
+	zval tmp;
+	int separated = 0;
+
+	if (Z_TYPE_P(object) != IS_OBJECT) {
+		return SUCCESS;
+	}
+	zephir_read_property(&tmp, object, WRAP_ARG(property, property_length));
+
+	SEPARATE_ZVAL(&tmp);
+
+	/** Convert the value to array if not is an array */
+	if (Z_TYPE(tmp) != IS_ARRAY) {
+		convert_to_array(&tmp);
+	}
+
+	add_next_index_zval(&tmp, value);
+
+	zephir_update_property_zval(object, WRAP_ARG(property, property_length), &tmp);
+
+	return SUCCESS;
+}
+
 int zephir_update_property_array_multi(zval *object, const char *property, uint32_t property_length, zval *value, const char *types, int types_length, int types_count, ...) {
 	va_list ap;
 	zval tmp;

@@ -122,10 +122,10 @@ class FetchOperator extends BaseOperator
                     case 'int':
                     case 'long':
                     case 'uint':
-                        return new CompiledExpression('bool', 'zephir_array_isset_long_fetch(&' . $variable->getName() . ', ' . $evalVariable->getName() . ', ' . $resolvedExpr->getCode() . ', ' . $flags . ' TSRMLS_CC)', $expression);
+                        return new CompiledExpression('bool', 'zephir_array_isset_long_fetch(' . $variable->getPointeredName() . ', ' . $evalVariable->getPointeredName() . ', ' . $resolvedExpr->getCode() . ', ' . $flags . ')', $expression);
 
                     case 'string':
-                        return new CompiledExpression('bool', 'zephir_array_isset_string_fetch(&' . $variable->getName() . ', ' . $evalVariable->getName() . ', SS("' . $resolvedExpr->getCode() . '"), ' . $flags . ' TSRMLS_CC)', $expression);
+                        return new CompiledExpression('bool', 'zephir_array_isset_string_fetch(' . $variable->getPointeredName() . ', ' . $evalVariable->getPointeredName() . ', SS("' . $resolvedExpr->getCode() . '"), ' . $flags . ')', $expression);
 
                     case 'variable':
                         $indexVariable = $compilationContext->symbolTable->getVariableForRead($resolvedExpr->getCode(), $compilationContext, $expression['right']['left']);
@@ -138,7 +138,7 @@ class FetchOperator extends BaseOperator
 
                             case 'string':
                             case 'variable':
-                                return new CompiledExpression('bool', 'zephir_array_isset_fetch(&' . $variable->getName() . ', ' . $evalVariable->getName() . ', ' . $indexVariable->getName() . ', ' . $flags . ' TSRMLS_CC)', $expression);
+                                return new CompiledExpression('bool', 'zephir_array_isset_fetch(' . $variable->getPointeredName() . ', ' . $evalVariable->getPointeredName() . ', ' . $indexVariable->getPointeredName() . ', ' . $flags . ')', $expression);
 
                             default:
                                 throw new CompilerException('[' . $indexVariable->getType() . ']', $expression);
