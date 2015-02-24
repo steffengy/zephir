@@ -52,6 +52,7 @@
 
 #define zephir_get_arrval(returnValue, passValue) \
 	{ \
+		ZVAL_NULL(returnValue); \
 		if (Z_TYPE_P(passValue) == IS_ARRAY) { \
 			ZEPHIR_CPY_WRT(returnValue, passValue); \
 		} else { \

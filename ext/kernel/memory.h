@@ -33,7 +33,7 @@
 	}
 
 /* ZVAL_UNDEF to prevent errors in zend engine (dtor calls method for a specific type since junk data in memory...) */
-#define ZEPHIR_INIT_VAR(z) ZVAL_UNDEF(z); zephir_memory_alloc(z)
+#define ZEPHIR_INIT_VAR(z) zephir_memory_alloc(z)
 
 /* Even a not referenced variable can hold values on the stack! */
 #define ZEPHIR_INIT_ZVAL_NREF(z) ZEPHIR_INIT_VAR(z)
@@ -41,10 +41,10 @@
 #define ZEPHIR_INIT_NVAR(z)	\
     if (z) { \
 		if (Z_REFCOUNTED_P(z)) { \
-			zval_ptr_dtor(z); \
 			if (Z_ISREF_P(z) && Z_REFCOUNT_P(z) > 1) { \
 				ZVAL_UNREF(z); \
 			} \
+			zval_ptr_dtor(z); \
 		} \
 		ZVAL_NULL(z); \
 	} else { \

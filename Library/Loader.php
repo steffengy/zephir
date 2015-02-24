@@ -40,11 +40,14 @@ class Loader
      */
     public static function autoload($className)
     {
-        require __DIR__ .
+        $file = __DIR__ .
             str_replace(
                 'Zephir' . DIRECTORY_SEPARATOR,
                 DIRECTORY_SEPARATOR,
                 str_replace('\\', DIRECTORY_SEPARATOR, $className)
             ) . '.php';
+        if (file_exists($file))
+            require $file;
+        else echo "[AutoLoader] Could not require file: ".$file."\r\n";
     }
 }

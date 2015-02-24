@@ -65,10 +65,10 @@ class SymbolTable
         $returnValue->increaseUses();
         $this->variables['return_value'] = $returnValue;
 
-        $returnValue = new Variable('variable', 'return_value_ptr', $compilationContext->currentBranch);
+        /*$returnValue = new Variable('variable', 'return_value_ptr', $compilationContext->currentBranch);
         $returnValue->setIsInitialized(true, $compilationContext, array());
         $returnValue->increaseUses();
-        $this->variables['return_value_ptr'] = $returnValue;
+        $this->variables['return_value_ptr'] = $returnValue;*/
     }
 
     /**

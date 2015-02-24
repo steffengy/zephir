@@ -1637,7 +1637,7 @@ class ClassMethod
              */
             if ($variable->getType() == 'variable') {
                 if ($variable->getNumberUses() > 0) {
-                    if ($variable->getName() != 'this_ptr' && $variable->getName() != 'return_value' && $variable->getName() != 'return_value_ptr') {
+                    if ($variable->getName() != 'this_ptr' && $variable->getName() != 'return_value') {
                         $defaultValue = $variable->getDefaultInitValue();
                         if (is_array($defaultValue)) {
                             $symbolTable->mustGrownStack(true);
@@ -1956,17 +1956,6 @@ class ClassMethod
             $code .= PHP_EOL;
         }
 
-        $code .= $initCode . $initVarCode;
-        $codePrinter->preOutput($code);
-
-        /**
-         * Grow the stack if needed
-         */
-        if ($symbolTable->getMustGrownStack()) {
-            $compilationContext->headersManager->add('kernel/memory');
-            $codePrinter->preOutput("\t" . 'ZEPHIR_MM_GROW();');
-        }
-
         /**
          * Check if there are unused variables
          */
@@ -1982,7 +1971,7 @@ class ClassMethod
                 $compilationContext->logger->warning('Variable "' . $variable->getName() . '" declared but not used in ' . $completeName . '::' . $this->getName(), "unused-variable-external", $variable->getOriginal());
             }
 
-            if ($variable->getName() != 'this_ptr' && $variable->getName() != 'return_value' && $variable->getName() != 'return_value_ptr') {
+            if ($variable->getName() != 'this_ptr' && $variable->getName() != 'return_value') {
                 $type = $variable->getType();
                 if (!isset($usedVariables[$type])) {
                     $usedVariables[$type] = array();
@@ -2001,7 +1990,7 @@ class ClassMethod
                 continue;
             }
 
-            if ($variable->getName() == 'this_ptr' || $variable->getName() == 'return_value' || $variable->getName() == 'return_value_ptr' || $variable->getName() == 'ZEPHIR_LAST_CALL_STATUS') {
+            if ($variable->getName() == 'this_ptr' || $variable->getName() == 'return_value' || $variable->getName() == 'ZEPHIR_LAST_CALL_STATUS') {
                 continue;
             }
 
@@ -2013,6 +2002,16 @@ class ClassMethod
                     $compilationContext->logger->warning('Variable "' . $variable->getName() . '" assigned but not used in ' . $completeName . '::' . $this->getName(), "unused-variable", $variable->getOriginal());
                 }
             }
+        }
+        
+        $codePrinter->preOutput($code . $initCode . $initVarCode);
+        
+        /**
+         * Grow the stack if needed
+         */
+        if ($symbolTable->getMustGrownStack()) {
+            $compilationContext->headersManager->add('kernel/memory');
+            $codePrinter->preOutput("\t" . 'ZEPHIR_MM_GROW();');
         }
 
         if (count($usedVariables)) {

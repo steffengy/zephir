@@ -13,7 +13,7 @@ inline zend_class_entry *zephir_fetch_class_str_ex(char *class_name, size_t leng
 //zephir_fetch_static_property_ce(zend_class_entry *ce, const char *property, int len)
 #define zephir_read_static_property_ce(target_zval, ce, property_str) ZVAL_COPY_VALUE(target_zval, zend_read_static_property(ce, property_str, 0))
 //zephir_read_property(zval *target, zval *src, char *name, size_t length)
-#define zephir_read_property(target_zval, src_zval, name_str) zend_read_property(Z_OBJCE_P(src_zval), src_zval, name_str, 0, target_zval)
+zval *zephir_read_property(zval *target, zval *src, const char *name, size_t length);
 #define zephir_return_property(object, name_str) zephir_read_property(return_value, this_ptr, name_str)
 int zephir_read_property_zval(zval *result, zval *object, zval *property, int flags);
 

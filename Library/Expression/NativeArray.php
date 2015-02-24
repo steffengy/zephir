@@ -465,7 +465,7 @@ class NativeArray
                 $resolvedExpr = $expr->compile($compilationContext);
                 $itemVariable = $this->getArrayValue($resolvedExpr, $compilationContext);
                 $compilationContext->headersManager->add('kernel/array');
-                $codePrinter->output('zephir_array_fast_append(&' . $symbolVariable->getName() . ', ' . $itemVariable->getName() . ');');
+                $codePrinter->output('zephir_array_fast_append(' . $symbolVariable->getPointeredName() . ', ' . $itemVariable->getPointeredName() . ');');
                 if ($itemVariable->isTemporal()) {
                     $itemVariable->setIdle(true);
                 }

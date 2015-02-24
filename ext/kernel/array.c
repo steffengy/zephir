@@ -15,6 +15,33 @@
 //#include "kernel/hash.h"
 //#include "kernel/backtrace.h"
 
+int zephir_array_update_long(zval *arr, unsigned long index, zval *value, int flags ZEPHIR_DEBUG_PARAMS){
+
+	if (Z_TYPE_P(arr) != IS_ARRAY) {
+		zend_error(E_WARNING, "Cannot use a scalar value as an array in %s on line %d", file, line);
+		return FAILURE;
+	}
+
+	if ((flags & PH_CTOR) == PH_CTOR) {
+		zval new_zv;
+		if (Z_REFCOUNTED_P(value)) Z_DELREF_P(value);
+		ZVAL_NULL(&new_zv);
+		ZVAL_COPY_VALUE(&new_zv, value);
+		value = &new_zv;
+		//zval_copy_ctor(new_zv);
+	}
+
+	if ((flags & PH_SEPARATE) == PH_SEPARATE) {
+		SEPARATE_ZVAL_IF_NOT_REF(arr);
+	}
+
+	if ((flags & PH_COPY) == PH_COPY) {
+		if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
+	}
+
+	return zend_hash_index_update(Z_ARRVAL_P(arr), index, value);
+}
+
 zval *zephir_array_update_string(zval *arr, const char *index, size_t index_length, zval *value, int flags)
 {
 	if (Z_REFCOUNTED_P(arr) && Z_ISREF_P(arr)) {
@@ -30,7 +57,7 @@ zval *zephir_array_update_string(zval *arr, const char *index, size_t index_leng
 		if (Z_REFCOUNTED_P(value)) Z_DELREF_P(value);
 		ZVAL_NULL(&new_zv);
 		ZVAL_COPY_VALUE(&new_zv, value);
-		//*value = new_zv;
+		value = &new_zv;
 		//zval_copy_ctor(new_zv);
 	}
 

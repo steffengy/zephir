@@ -85,6 +85,18 @@ int zephir_instance_of_ev(const zval *object, const zend_class_entry *ce) {
 	return instanceof_function(Z_OBJCE_P(object), ce);
 }
 
+zval *zephir_read_property(zval *target, zval *src, const char *name, size_t length)
+{
+	zval tmp;
+	zval *ret;
+
+	ZVAL_UNDEF(&tmp);
+	ret = zend_read_property(Z_OBJCE_P(src), src, name, length, 0, &tmp);
+	ZEPHIR_CPY_WRT_CTOR(target, ret);
+
+	return ret;
+}
+
 /**
  * Reads a property from an object
  */
@@ -113,7 +125,7 @@ int zephir_update_property_array(zval *object, const char *property, uint32_t pr
 	ZVAL_UNDEF(&tmp);
 
 	if (Z_TYPE_P(object) == IS_OBJECT) {
-		zephir_read_property(&tmp, object, WRAP_ARG(property, property_length));
+		zephir_read_property(&tmp, object, property, property_length);
 
 		SEPARATE_ZVAL(&tmp);
 

@@ -135,6 +135,8 @@ class Variable
      * Last AST node where the variable was used
      */
     protected $usedNode;
+    
+    protected $initZval = false;
 
     /**
      * Variable constructor
@@ -219,7 +221,9 @@ class Variable
         if ($name == 'this_ptr' || $name == 'return_value') {
             return $name;
         }
-        return '&' . $name;
+        //$e = new Exception;
+        
+        return '&' . $name; //. $e->getTraceAsString();
     }
 
     /**
@@ -722,6 +726,11 @@ class Variable
      */
     public function initVariant(CompilationContext $compilationContext)
     {
+        /* Prevent zvals with invalid types */
+        if ($this->variantInits == 0 && !$this->initZval) {
+            $compilationContext->codePrinter->output('ZVAL_UNDEF(' . $this->getPointeredName() . ');');
+            $this->initZval = true;
+        }
         if ($this->numberSkips) {
             $this->numberSkips--;
             return;
@@ -734,6 +743,11 @@ class Variable
          */
         if ($this->getName() != 'this_ptr' && $this->getName() != 'return_value') {
 
+            /* Prevent zvals with invalid types */
+            if ($this->variantInits == 0) {
+                $compilationContext->codePrinter->output('ZVAL_UNDEF(' . $this->getPointeredName() . ');');
+            }
+            
             if ($this->initBranch === false) {
                 $this->initBranch = $compilationContext->currentBranch;
             }
@@ -741,6 +755,7 @@ class Variable
             $compilationContext->headersManager->add('kernel/memory');
 
             $compilationContext->symbolTable->mustGrownStack(true);
+
             if ($compilationContext->insideCycle) {
                 $this->mustInitNull = true;
                 $compilationContext->codePrinter->output('ZEPHIR_INIT_NVAR(&' . $this->getName() . ');');
@@ -806,6 +821,12 @@ class Variable
      */
     public function initComplexLiteralVariant(CompilationContext $compilationContext)
     {
+        /* Prevent zvals with invalid types */
+        if ($this->variantInits == 0 && !$this->initZval) {
+            $compilationContext->codePrinter->output('ZVAL_UNDEF(' . $this->getPointeredName() . ');');
+            $this->initZval = true;
+        }
+        
         if ($this->numberSkips) {
             $this->numberSkips--;
             return;
