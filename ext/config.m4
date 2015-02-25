@@ -9,10 +9,29 @@ if test "$PHP_TEST" = "yes"; then
 	fi
 
 	AC_DEFINE(HAVE_TEST, 1, [Whether you have Test])
-	test_sources="test.c kernel/main.c kernel/memory.c kernel/exception.c kernel/hash.c kernel/debug.c kernel/backtrace.c kernel/object.c kernel/array.c kernel/extended/array.c kernel/string.c kernel/fcall.c kernel/require.c kernel/file.c kernel/operators.c kernel/concat.c kernel/variables.c kernel/filter.c kernel/iterator.c kernel/exit.c test\fibonnaci.zep.c
+	test_sources="test.c kernel/main.c kernel/memory.c kernel/exception.c kernel/hash.c kernel/debug.c kernel/backtrace.c kernel/object.c kernel/array.c kernel/extended/array.c kernel/string.c kernel/fcall.c kernel/require.c kernel/file.c kernel/operators.c kernel/concat.c kernel/variables.c kernel/filter.c kernel/iterator.c kernel/exit.c test\arrayobject.zep.c
+	test\branchprediction.zep.c
+	test\concat.zep.c
+	test\diinterface.zep.c
+	test\echoes.zep.c
+	test\evaltest.zep.c
+	test\exception.zep.c
+	test\exceptions.zep.c
+	test\exists.zep.c
+	test\exitdie.zep.c
+	test\factorial.zep.c
+	test\fibonnaci.zep.c
+	test\optimizers\arraymerge.zep.c
+	test\regexdna.zep.c
 	test\scallparent.zep.c
+	test\spectralnorm.zep.c
+	test\strings.zep.c
 	test\ternary.zep.c
+	test\testinterface.zep.c
+	test\trie.zep.c
+	test\trytest.zep.c
 	test\typeoff.zep.c
+	test\unknownclass.zep.c
 	test\vars.zep.c "
 	PHP_NEW_EXTENSION(test, $test_sources, $ext_shared,, )
 	PHP_SUBST(TEST_SHARED_LIBADD)

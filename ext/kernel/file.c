@@ -22,9 +22,8 @@
 
 void zephir_file_get_contents(zval *return_value, zval *filename)
 {
-	char *contents;
 	php_stream *stream;
-	int len;
+	zend_string *str;
 	long maxlen = PHP_STREAM_COPY_ALL;
 	zval *zcontext = NULL;
 	php_stream_context *context = NULL;
@@ -42,14 +41,10 @@ void zephir_file_get_contents(zval *return_value, zval *filename)
 		RETURN_FALSE;
 	}
 
-	if ((len = php_stream_copy_to_mem(stream, &contents, maxlen, 0)) > 0) {
-		RETVAL_STRINGL(contents, len, 0);
+	if ((str = php_stream_copy_to_mem(stream, maxlen, 0)) != NULL) {
+		RETVAL_STR(str);
 	} else {
-		if (len == 0) {
-			RETVAL_EMPTY_STRING();
-		} else {
-			RETVAL_FALSE;
-		}
+		RETVAL_FALSE;
 	}
 
 	php_stream_close(stream);
@@ -89,7 +84,8 @@ void zephir_file_put_contents(zval *return_value, zval *filename, zval *data)
 		case IS_NULL:
 		case IS_LONG:
 		case IS_DOUBLE:
-		case IS_BOOL:
+		case IS_TRUE:
+		case IS_FALSE:
 		case IS_CONSTANT:
 			use_copy = zend_make_printable_zval(data, &copy);
 			if (use_copy) {

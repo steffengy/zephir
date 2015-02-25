@@ -83,7 +83,8 @@ class TryCatchStatement extends StatementAbstract
                     $variable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $compilationContext);
                 }
 
-                $codePrinter->output('ZVAL_OBJ(' . $variable->getPointeredName() . ', EG(exception));');
+                $codePrinter->output('ZVAL_UNDEF(' . $variable->getPointeredName() . ');');
+                $codePrinter->output('zephir_obj_cpy_wrt_ctor(' . $variable->getPointeredName() . ', EG(exception));');
 
                 /**
                  * @TODO, use a builder here

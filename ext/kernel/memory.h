@@ -88,6 +88,7 @@ void ZEPHIR_FASTCALL zephir_memory_grow_stack();
 int ZEPHIR_FASTCALL zephir_memory_restore_stack();
 int ZEPHIR_FASTCALL zephir_clean_restore_stack();
 int zephir_cleanup_fcache(void *pDest, int num_args, va_list args, zend_hash_key *hash_key);
+void zephir_obj_cpy_wrt_ctor(zval *d, zend_object *obj);
 
 void ZEPHIR_FASTCALL zephir_memory_observe(zval *var);
 void ZEPHIR_FASTCALL zephir_memory_alloc(zval *var);

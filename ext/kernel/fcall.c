@@ -530,11 +530,6 @@ int zephir_call_class_method_aparams(zval *return_value_ptr, zend_class_entry *c
 		}
 	}
 
-	if (return_value_ptr) {
-		zval_ptr_dtor(return_value_ptr);
-		ZVAL_UNDEF(return_value_ptr);
-	}
-
 	zval_ptr_dtor(&fn);
 
 	return status;

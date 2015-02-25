@@ -356,6 +356,23 @@ void ZEND_FASTCALL zephir_memory_only_observe(zval *var)
 	ZVAL_NULL(var); /* In case an exception or error happens BEFORE the observed variable gets initialized */
 }
 
+
+/**
+ * Initialize and duplicate a new zval, containing a zend_object (memory-safe)
+ */
+void zephir_obj_cpy_wrt_ctor(zval *d, zend_object *obj)
+{
+	zval tmp;
+
+	if (d && Z_REFCOUNTED_P(d)) {
+		zval_ptr_dtor(d);
+	} else {
+		zephir_memory_observe(d);
+	}
+	ZVAL_OBJ(&tmp, obj);
+	ZVAL_DUP(d, &tmp);
+}
+
 #ifndef ZEPHIR_RELEASE
 
 /**

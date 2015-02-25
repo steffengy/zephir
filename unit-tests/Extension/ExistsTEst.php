@@ -37,7 +37,6 @@ class ExistsTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($t->testInterfaceExists("TestExInterfacex") == false);
 
         $this->assertTrue($t->testMethodExists($t, "testMethodExists") == true);
-
         $this->assertTrue($t->testFileExists(__DIR__ . "/php/exists.php") == true);
         $this->assertTrue($t->testFileExists(__DIR__ . "/php/existsxxxx.php") == false);
     }

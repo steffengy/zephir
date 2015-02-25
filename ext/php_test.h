@@ -47,10 +47,6 @@ ZEND_BEGIN_MODULE_GLOBALS(test)
 	/* Max recursion control */
 	unsigned int recursive_lock;
 
-	/* Global constants */
-	zval *global_true;
-	zval *global_false;
-	zval *global_null;
 	
 	zephir_struct_test test;
 

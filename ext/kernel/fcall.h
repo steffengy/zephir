@@ -19,6 +19,7 @@ typedef enum _zephir_call_type {
 typedef zend_function zephir_fcall_cache_entry;
 
 #define ZEPHIR_ZEND_CALL_FUNCTION_WRAPPER zend_call_function
+#define zephir_eval_php(str, retval_ptr, context) zend_eval_string_ex(Z_STRVAL_P(str), retval_ptr, context, 0)
 
 #ifdef _MSC_VER
 	#define ZEPHIR_PASS_CALL_PARAMS(x) x

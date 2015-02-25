@@ -241,7 +241,7 @@ class StaticProperty
                                 ));
                                 $expression->setExpectReturn(true, $tempVariable);
                                 $expression->compile($compilationContext);
-                                $compilationContext->codePrinter->output('zephir_concat_function(' . $variableVariable->getName() . ', ' . $tempVariable->getName() . ', '.$variableVariable->getName().' TSRMLS_CC);');
+                                $compilationContext->codePrinter->output('zephir_concat_function(' . $variableVariable->getPointeredName() . ', ' . $tempVariable->getPointeredName() . ', '.$variableVariable->getPointeredName().');');
                                 //continue
 
                             case 'assign':

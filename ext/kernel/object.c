@@ -24,6 +24,72 @@ inline zend_class_entry *zephir_fetch_class_str_ex(char *class_name, size_t leng
 	return retval;
 }
 
+/**
+ * Checks if a class exist
+ */
+int zephir_class_exists(const zval *class_name, int autoload)
+{
+	zend_class_entry *ce;
+
+	if (Z_TYPE_P(class_name) == IS_STRING) {
+		if ((ce = zend_lookup_class_ex(Z_STR_P(class_name), NULL, autoload)) != NULL) {
+			return (ce->ce_flags & (ZEND_ACC_INTERFACE | (ZEND_ACC_TRAIT - ZEND_ACC_EXPLICIT_ABSTRACT_CLASS))) == 0;
+		}
+		return 0;
+	}
+
+	php_error_docref(NULL, E_WARNING, "class name must be a string");
+	return 0;
+}
+
+/**
+ * Checks if a interface exist
+ */
+int zephir_interface_exists(const zval *class_name, int autoload)
+{
+	zend_class_entry *ce;
+
+	if (Z_TYPE_P(class_name) == IS_STRING) {
+		if ((ce = zend_lookup_class_ex(Z_STR_P(class_name), NULL, autoload)) != NULL) {
+			return (ce->ce_flags & ZEND_ACC_INTERFACE) > 0;
+		}
+		return 0;
+	}
+
+	php_error_docref(NULL, E_WARNING, "interface name must be a string");
+	return 0;
+}
+
+/**
+ * Check if a method is implemented on certain object
+ */
+int zephir_method_exists(const zval *object, const zval *method_name)
+{
+	zend_class_entry *ce;
+	zend_string *lower_str;
+
+	if (likely(Z_TYPE_P(object) == IS_OBJECT)) {
+		ce = Z_OBJCE_P(object);
+	} else {
+		if (Z_TYPE_P(object) == IS_STRING) {
+			ce = zend_fetch_class(Z_STR_P(object), ZEND_FETCH_CLASS_DEFAULT);
+		} else {
+			return FAILURE;
+		}
+	}
+
+	lower_str = zend_string_tolower(Z_STR_P(method_name));
+	while (ce) {
+		if (zend_hash_exists(&ce->function_table, lower_str)) {
+			zend_string_release(lower_str);
+			return SUCCESS;
+		}
+		ce = ce->parent;
+	}
+	zend_string_release(lower_str);
+	return FAILURE;
+}
+
 int zephir_unset_property(zval* object, const char* name)
 {
 	if (Z_TYPE_P(object) == IS_OBJECT) {

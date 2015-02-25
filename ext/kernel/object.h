@@ -9,6 +9,9 @@ int zephir_instance_of_ev(const zval *object, const zend_class_entry *ce);
 #define zephir_fetch_class_str(class_name, fetch_type) zephir_fetch_class_str_ex(class_name, fetch_type);
 #define zephir_fetch_class(class_name, fetch_type) zend_fetch_class(class_name, fetch_type)
 inline zend_class_entry *zephir_fetch_class_str_ex(char *class_name, size_t length, int fetch_type);
+int zephir_class_exists(const zval *class_name, int autoload);
+int zephir_interface_exists(const zval *class_name, int autoload);
+int zephir_method_exists(const zval *object, const zval *method_name);
 
 //zephir_fetch_static_property_ce(zend_class_entry *ce, const char *property, int len)
 #define zephir_read_static_property_ce(target_zval, ce, property_str) ZVAL_COPY_VALUE(target_zval, zend_read_static_property(ce, property_str, 0))

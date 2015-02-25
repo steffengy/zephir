@@ -20,6 +20,10 @@
 #define ZEPHIR_IS_EQUAL(op1, op2)      zephir_is_equal(op1, op2)
 #define ZEPHIR_IS_IDENTICAL(op1, op2)  zephir_is_identical(op1, op2)
 
+/** SQL null empty **/
+#define ZEPHIR_IS_EMPTY(var)       (Z_TYPE_P(var) == IS_NULL || ZEPHIR_IS_FALSE(var) || (Z_TYPE_P(var) == IS_STRING && !Z_STRLEN_P(var)) || !zend_is_true(var))
+#define ZEPHIR_IS_NOT_EMPTY(var)   (!ZEPHIR_IS_EMPTY(var))
+
 #define zephir_is_true(value) \
 	(Z_TYPE_P(value) == IS_TRUE ? 1 : ( \
 		Z_TYPE_P(value) == IS_FALSE ? 0 : ( \

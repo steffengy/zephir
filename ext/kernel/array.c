@@ -39,7 +39,7 @@ int zephir_array_update_long(zval *arr, unsigned long index, zval *value, int fl
 		if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
 	}
 
-	return zend_hash_index_update(Z_ARRVAL_P(arr), index, value);
+	return zend_hash_index_update(Z_ARRVAL_P(arr), index, value) != NULL;
 }
 
 zval *zephir_array_update_string(zval *arr, const char *index, size_t index_length, zval *value, int flags)
