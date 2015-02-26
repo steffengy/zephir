@@ -92,10 +92,10 @@ class IssetOperator extends BaseOperator
 
                     case 'int':
                     case 'long':
-                        return new CompiledExpression('bool', 'zephir_array_isset_long(' . $variable->getName() . ', ' . $resolvedExpr->getCode() . ')', $left['right']);
+                        return new CompiledExpression('bool', 'zephir_array_isset_long(' . $variable->getPointeredName() . ', ' . $resolvedExpr->getCode() . ')', $left['right']);
 
                     case 'string':
-                        return new CompiledExpression('bool', 'zephir_array_isset_string(' . $variable->getName() . ', SS("' . $resolvedExpr->getCode() . '"))', $left['right']);
+                        return new CompiledExpression('bool', 'zephir_array_isset_string(' . $variable->getPointeredName() . ', SL("' . $resolvedExpr->getCode() . '"))', $left['right']);
 
                     case 'variable':
                         $indexVariable = $compilationContext->symbolTable->getVariableForRead($resolvedExpr->getCode(), $compilationContext, $left['right']);
@@ -104,7 +104,7 @@ class IssetOperator extends BaseOperator
 
                             case 'int':
                             case 'long':
-                                return new CompiledExpression('bool', 'zephir_array_isset_long(' . $variable->getName() . ', ' . $indexVariable->getName() . ')', $left['right']);
+                                return new CompiledExpression('bool', 'zephir_array_isset_long(' . $variable->getPointeredName() . ', ' . $indexVariable->getName() . ')', $left['right']);
 
                             case 'variable':
                             case 'string':
@@ -143,7 +143,7 @@ class IssetOperator extends BaseOperator
                 }
 
                 if ($left['type'] == 'property-access') {
-                    return new CompiledExpression('bool', 'zephir_isset_property(' . $variable->getName() . ', SS("' . $left['right']['value'] . '") TSRMLS_CC)', $left);
+                    return new CompiledExpression('bool', 'zephir_isset_property(' . $variable->getPointeredName() . ', SL("' . $left['right']['value'] . '"))', $left);
                 }
 
                 $expr = new Expression($left['right']);
@@ -159,7 +159,7 @@ class IssetOperator extends BaseOperator
 
                             case 'variable':
                             case 'string':
-                                return new CompiledExpression('bool', 'zephir_isset_property_zval(' . $variable->getName() . ', ' . $indexVariable->getName() . ' TSRMLS_CC)', $left['right']);
+                                return new CompiledExpression('bool', 'zephir_isset_property_zval(' . $variable->getPointeredName() . ', ' . $indexVariable->getPointeredName() . ')', $left['right']);
 
                             default:
                                 throw new CompilerException('[' . $indexVariable->getType() . ']', $expression);

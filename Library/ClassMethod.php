@@ -1941,13 +1941,6 @@ class ClassMethod
             $codePrinter->preOutputBlankLine();
             $compilationContext->headersManager->add('kernel/memory');
             
-            /**
-             * Make sure the zval's are valid (and have a valid type)
-             */
-            foreach ($params as $param) {
-                $code .= "\t" . 'ZVAL_UNDEF(' . $param . ');' . PHP_EOL;
-            }
-            
             if ($symbolTable->getMustGrownStack()) {
                 $code .= "\t" . 'zephir_fetch_params(1, ' . $numberRequiredParams . ', ' . $numberOptionalParams . ', ' . join(', ', $params) . ');' . PHP_EOL;
             } else {
@@ -2021,6 +2014,8 @@ class ClassMethod
         /**
          * Generate the variable definition for variables used
          */
+        $variablesInit = '';
+        $varDeclarations = array();
         foreach ($usedVariables as $type => $variables) {
 
             $pointer = null;
@@ -2141,6 +2136,9 @@ class ClassMethod
              */
             foreach ($variables as $variable) {
                 $isComplex = ($type == 'variable' || $type == 'string' || $type == 'array' || $type == 'resource' || $type == 'callable' || $type == 'object');
+                if ($isComplex) {
+                    $variablesInit .= PHP_EOL . "\t" . 'ZVAL_UNDEF(' . $variable->getPointeredName() . ');';
+                }
                 if ($isComplex && $variable->mustInitNull()) {
                     $groupVariables[] = $variable->getName();
                     continue;
@@ -2191,8 +2189,9 @@ class ClassMethod
                 $groupVariables[] = $pointer . $variable->getName();
             }
 
-            $codePrinter->preOutput("\t" . $code . join(', ', $groupVariables) . ';');
+            $varDeclarations[] = $code . join(', ', $groupVariables) . ';';
         }
+        $codePrinter->preOutput("\t" . join(PHP_EOL . "\t", $varDeclarations) . $variablesInit);
 
         /**
          * Finalize the method compilation

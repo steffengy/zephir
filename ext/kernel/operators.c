@@ -392,3 +392,44 @@ double zephir_safe_div_long_long(long op1, long op2)
 	return (double) op1 / (double) op2;
 }
 
+void zephir_negate(zval *z)
+{
+	while (1) {
+		switch (Z_TYPE_P(z)) {
+			case IS_LONG:
+				ZVAL_LONG(z, -Z_LVAL_P(z));
+				return;
+
+			case IS_TRUE:
+				ZVAL_LONG(z, -1);
+				return;
+
+			case IS_FALSE:
+				ZVAL_LONG(z, 0);
+				return;
+
+			case IS_DOUBLE:
+				ZVAL_DOUBLE(z, -Z_DVAL_P(z));
+				return;
+
+			case IS_NULL:
+				ZVAL_LONG(z, 0);
+				return;
+
+			default:
+				convert_scalar_to_number(z);
+				assert(Z_TYPE_P(z) == IS_LONG || Z_TYPE_P(z) == IS_DOUBLE);
+		}
+	}
+}
+
+/**
+ * Check if a zval is less than a long value
+ */
+int zephir_less_long(zval *op1, long op2)
+{
+	zval result, op2_zval;
+	ZVAL_LONG(&op2_zval, op2);
+	is_smaller_function(&result, op1, &op2_zval);
+	return Z_TYPE(result) == IS_TRUE;
+}

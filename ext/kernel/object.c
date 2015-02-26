@@ -151,13 +151,13 @@ int zephir_instance_of_ev(const zval *object, const zend_class_entry *ce) {
 	return instanceof_function(Z_OBJCE_P(object), ce);
 }
 
-zval *zephir_read_property(zval *target, zval *src, const char *name, size_t length)
+zval *zephir_read_property(zval *target, zval *src, const char *name, size_t length, zend_bool silent)
 {
 	zval tmp;
 	zval *ret;
 
 	ZVAL_UNDEF(&tmp);
-	ret = zend_read_property(Z_OBJCE_P(src), src, name, length, 0, &tmp);
+	ret = zend_read_property(Z_OBJCE_P(src), src, name, length, silent, &tmp);
 	ZEPHIR_CPY_WRT_CTOR(target, ret);
 
 	return ret;
@@ -179,7 +179,7 @@ int zephir_read_property_zval(zval *result, zval *object, zval *property, int fl
 		return FAILURE;
 	}
 
-	return zephir_read_property(result, object, WRAP_ARG(Z_STRVAL_P(property), Z_STRLEN_P(property))) != NULL;
+	return zephir_read_property(result, object, WRAP_ARG(Z_STRVAL_P(property), Z_STRLEN_P(property)), 1) != NULL;
 }
 
 /**
@@ -191,7 +191,7 @@ int zephir_update_property_array(zval *object, const char *property, uint32_t pr
 	ZVAL_UNDEF(&tmp);
 
 	if (Z_TYPE_P(object) == IS_OBJECT) {
-		zephir_read_property(&tmp, object, property, property_length);
+		zephir_read_property(&tmp, object, property, property_length, 0);
 
 		SEPARATE_ZVAL(&tmp);
 
@@ -228,7 +228,7 @@ int zephir_update_property_array_append(zval *object, char *property, unsigned i
 	if (Z_TYPE_P(object) != IS_OBJECT) {
 		return SUCCESS;
 	}
-	zephir_read_property(&tmp, object, WRAP_ARG(property, property_length));
+	zephir_read_property(&tmp, object, WRAP_ARG(property, property_length), 0);
 
 	SEPARATE_ZVAL(&tmp);
 
@@ -250,7 +250,7 @@ int zephir_update_property_array_multi(zval *object, const char *property, uint3
 	ZVAL_UNDEF(&tmp);
 
 	if (Z_TYPE_P(object) == IS_OBJECT) {
-		zephir_read_property(&tmp, object, WRAP_ARG(property, property_length));
+		zephir_read_property(&tmp, object, WRAP_ARG(property, property_length), 0);
 
 		SEPARATE_ZVAL(&tmp);
 
@@ -269,4 +269,54 @@ int zephir_update_property_array_multi(zval *object, const char *property, uint3
 		zval_ptr_dtor(&tmp);
 	}
 	return SUCCESS;
+}
+
+/**
+ * Creates a closure
+ */
+int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entry *ce, const char *method_name, uint32_t method_length)
+{
+	zend_function *function_ptr;
+
+	if ((function_ptr = zend_hash_str_find_ptr(&ce->function_table, method_name, method_length)) != NULL) {
+		ZVAL_NULL(return_value);
+		return FAILURE;
+	}
+
+	zend_create_closure(return_value, function_ptr, ce, this_ptr);
+	return SUCCESS;
+}
+
+/**
+ * Checks if property exists on object
+ */
+int zephir_isset_property(zval *object, const char *property_name, unsigned int property_length)
+{
+	if (Z_TYPE_P(object) == IS_OBJECT) {
+		if (likely(zend_hash_str_exists(&Z_OBJCE_P(object)->properties_info, property_name, property_length))) {
+			return 1;
+		} else {
+			return zend_hash_str_exists(Z_OBJ_HT_P(object)->get_properties(object), property_name, property_length);
+		}
+	}
+
+	return 0;
+}
+
+/**
+ * Checks if string property exists on object
+ */
+int zephir_isset_property_zval(zval *object, const zval *property)
+{
+	if (Z_TYPE_P(object) == IS_OBJECT) {
+		if (Z_TYPE_P(property) == IS_STRING) {
+			if (likely(zend_hash_exists(&Z_OBJCE_P(object)->properties_info, Z_STR_P(property)))) {
+				return 1;
+			} else {
+				return zend_hash_exists(Z_OBJ_HT_P(object)->get_properties(object), Z_STR_P(property));
+			}
+		}
+	}
+
+	return 0;
 }

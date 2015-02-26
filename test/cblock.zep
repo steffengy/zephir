@@ -13,7 +13,7 @@ namespace Test;
 %{
 // top statement before class, add to after headers
 // test include .h
-#include "kernel/require.h"
+// TODO #include "kernel/require.h"
 }%
 
 %{

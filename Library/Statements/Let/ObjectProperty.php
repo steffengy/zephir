@@ -127,7 +127,7 @@ class ObjectProperty
 
                         $resolvedVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
                         $codePrinter->output('ZVAL_LONG(&' . $resolvedVariable->getName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
-                        $codePrinter->output($functionName . '(' . $tempVariable->getName() . ', ' . $resolvedVariable->getName() . ')');
+                        $codePrinter->output($functionName . '(' . $tempVariable->getPointeredName() . ', ' . $resolvedVariable->getPointeredName() . ')');
                         break;
 
                     case 'assign':

@@ -783,7 +783,7 @@ class Variable
 
                                 $compilationContext->symbolTable->mustGrownStack(true);
                                 $compilationContext->headersManager->add('kernel/operators');
-                                $codePrinter->output($functionName . '(' . $symbol . ', ' . $tempVariable->getName() . ');');
+                                $codePrinter->output($functionName . '(' . $symbol . ', ' . $tempVariable->getPointeredName() . ');');
                                 break;
 
                             case 'assign':
@@ -1047,13 +1047,13 @@ class Variable
                                     case 'add-assign':
                                         $compilationContext->symbolTable->mustGrownStack(true);
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        $codePrinter->output('ZEPHIR_ADD_ASSIGN(' . $variable . ', ' . $itemVariable->getName() . ');');
+                                        $codePrinter->output('ZEPHIR_ADD_ASSIGN(&' . $variable . ', ' . $itemVariable->getName() . ');');
                                         break;
 
                                     case 'sub-assign':
                                         $compilationContext->symbolTable->mustGrownStack(true);
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        $codePrinter->output('ZEPHIR_SUB_ASSIGN(' . $variable . ', ' . $itemVariable->getName() . ');');
+                                        $codePrinter->output('ZEPHIR_SUB_ASSIGN(&' . $variable . ', ' . $itemVariable->getName() . ');');
                                         break;
 
                                     default:

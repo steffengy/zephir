@@ -211,9 +211,9 @@ class NativeArray
          */
         $arrayLength = intval(count($expression['left']) * 1.25);
         if (!function_exists('gmp_nextprime')) {
-            $codePrinter->output('array_init_size(&' . $symbolVariable->getName() . ', ' . ($arrayLength + 1) . ');');
+            $codePrinter->output('array_init_size(' . $symbolVariable->getPointeredName() . ', ' . ($arrayLength + 1) . ');');
         } else {
-            $codePrinter->output('array_init_size(&' . $symbolVariable->getName() . ', ' . gmp_strval(gmp_nextprime($arrayLength)) . ');');
+            $codePrinter->output('array_init_size(' . $symbolVariable->getPointeredName() . ', ' . gmp_strval(gmp_nextprime($arrayLength)) . ');');
         }
 
         foreach ($expression['left'] as $item) {
@@ -235,15 +235,15 @@ class NativeArray
                             case 'uint':
                             case 'long':
                             case 'ulong':
-                                $codePrinter->output('add_assoc_long_ex(&' . $symbolVariable->getName() . ', SS("' . $resolvedExprKey->getCode() . '"), ' . $resolvedExpr->getCode() . ');');
+                                $codePrinter->output('add_assoc_long_ex(&' . $symbolVariable->getName() . ', SL("' . $resolvedExprKey->getCode() . '"), ' . $resolvedExpr->getCode() . ');');
                                 break;
 
                             case 'double':
-                                $codePrinter->output('add_assoc_double_ex(&' . $symbolVariable->getName() . ', SS("' . $resolvedExprKey->getCode() . '"), ' . $resolvedExpr->getCode() . ');');
+                                $codePrinter->output('add_assoc_double_ex(&' . $symbolVariable->getName() . ', SL("' . $resolvedExprKey->getCode() . '"), ' . $resolvedExpr->getCode() . ');');
                                 break;
 
                             case 'bool':
-                                $codePrinter->output('add_assoc_bool_ex(&' . $symbolVariable->getName() . ', SS("' . $resolvedExprKey->getCode() . '"), ' . $resolvedExpr->getCode() . ');');
+                                $codePrinter->output('add_assoc_bool_ex(&' . $symbolVariable->getName() . ', SL("' . $resolvedExprKey->getCode() . '"), ' . $resolvedExpr->getCode() . ');');
                                 break;
 
                             case 'string':

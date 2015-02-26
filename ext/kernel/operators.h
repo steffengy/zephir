@@ -36,6 +36,7 @@
 #define ZEPHIR_GE(op1, op2)       zephir_greater_equal(op1, op2)
 #define ZEPHIR_LE(op1, op2)       zephir_less_equal(op1, op2)
 #define ZEPHIR_LT(op1, op2)       ((Z_TYPE_P(op1) == IS_LONG && Z_TYPE_P(op2) == IS_LONG) ? Z_LVAL_P(op1) < Z_LVAL_P(op2) : zephir_less(op1, op2))
+#define ZEPHIR_LT_LONG(op1, op2)  ((Z_TYPE_P(op1) == IS_LONG && Z_LVAL_P(op1) < op2) || zephir_less_long(op1, op2))
 #define ZEPHIR_GT(op1, op2)       zephir_greater(op1, op2)
 #define ZEPHIR_GT_LONG(op1, op2)  ((Z_TYPE_P(op1) == IS_LONG && Z_LVAL_P(op1) > op2) || zephir_greater_long(op1, op2))
 
@@ -65,6 +66,48 @@
 		} \
 	}
 
+#define ZEPHIR_ADD_ASSIGN(z, v)  \
+	{  \
+		zval tmp;  \
+		SEPARATE_ZVAL(z);  \
+		add_function(&tmp, z, v TSRMLS_CC);  \
+		if (Z_TYPE(tmp) == IS_LONG) {  \
+			Z_LVAL_P(z) = Z_LVAL(tmp);  \
+		} else {  \
+			if (Z_TYPE(tmp) == IS_DOUBLE) {  \
+				Z_DVAL_P(z) = Z_DVAL(tmp);  \
+			}  \
+		}  \
+	}
+
+#define ZEPHIR_SUB_ASSIGN(z, v)  \
+	{  \
+		zval tmp;  \
+		SEPARATE_ZVAL(z);  \
+		sub_function(&tmp, z, v);  \
+		if (Z_TYPE(tmp) == IS_LONG) {  \
+			Z_LVAL_P(z) = Z_LVAL(tmp);  \
+		} else {  \
+			if (Z_TYPE(tmp) == IS_DOUBLE) {  \
+				Z_DVAL_P(z) = Z_DVAL(tmp);  \
+			}  \
+		}  \
+	}
+
+#define ZEPHIR_MUL_ASSIGN(z, v)  \
+	{  \
+		zval tmp;  \
+		SEPARATE_ZVAL(z);  \
+		mul_function(&tmp, z, v);  \
+		if (Z_TYPE(tmp) == IS_LONG) {  \
+			Z_LVAL_P(z) = Z_LVAL(tmp);  \
+		} else {  \
+			if (Z_TYPE(tmp) == IS_DOUBLE) {  \
+				Z_DVAL_P(z) = Z_DVAL(tmp);  \
+			}  \
+		}  \
+	}
+
 /* zephir_make_printable_zval_ex: returns use_copy */
 #define zephir_make_printable_zval(expr, expr_copy) zend_make_printable_zval(expr, expr_copy)
 
@@ -86,6 +129,7 @@ int zephir_compare_strict_string(zval *op1, const char *op2, int op2_length);
 int zephir_greater_long(zval *op1, long op2);
 int zephir_greater_equal(zval *op1, zval *op2);
 int zephir_less(zval *op1, zval *op2);
+int zephir_less_long(zval *op1, long op2);
 int zephir_less_equal(zval *op1, zval *op2);
 int zephir_greater(zval *op1, zval *op2);
 
@@ -99,5 +143,7 @@ double zephir_safe_div_long_double(long op1, double op2);
 #define zephir_get_intval(z) (Z_TYPE_P(z) == IS_LONG ? Z_LVAL_P(z) : zephir_get_intval_ex(z))
 #define zephir_add_function_ex(result, op1, op2) add_function(result, op1, op2)
 #define zephir_add_function zephir_add_function_ex
+#define zephir_convert_to_object(op) convert_to_object(op)
+void zephir_negate(zval *z);
 
 #endif

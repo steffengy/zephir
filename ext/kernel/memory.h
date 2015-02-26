@@ -73,13 +73,14 @@
 	ZVAL_NULL(d); \
 	ZVAL_DUP(d, v); \
 
+/* TODO: Fix the implementation if it causes bugs, for now disabled */
 #define ZEPHIR_SEPARATE_PARAM(z) \
 	do { \
-		zval *orig_ptr = z; \
+		/*zval *orig_ptr = z; \
 		zephir_memory_observe(z TSRMLS_CC); \
 		ZVAL_NULL(z); \
 		zval_copy_ctor(z); \
-		ZVAL_UNREF(z); \
+		/*ZVAL_UNREF(z);*/ \
 	} while (0)
 
 void zephir_initialize_memory(zend_zephir_globals_def *zephir_globals_ptr);

@@ -3,7 +3,7 @@ ARG_ENABLE("%PROJECT_LOWER%", "enable %PROJECT_LOWER%", "no");
 if (PHP_%PROJECT_UPPER% != "no") {
   EXTENSION("%PROJECT_LOWER%", "%PROJECT_LOWER%.c", null, "-I"+configure_module_dirname);
   //TODO:ADD_SOURCES(configure_module_dirname + "/kernel", "main.c memory.c exception.c hash.c debug.c backtrace.c object.c array.c string.c fcall.c require.c file.c operators.c concat.c variables.c filter.c iterator.c exit.c", "%PROJECT_LOWER%");
-  ADD_SOURCES(configure_module_dirname + "/kernel", "main.c exception.c memory.c object.c array.c string.c fcall.c file.c operators.c concat.c variables.c iterator.c exit.c", "%PROJECT_LOWER%")
+  ADD_SOURCES(configure_module_dirname + "/kernel", "main.c exception.c memory.c object.c array.c string.c fcall.c require.c file.c operators.c concat.c variables.c iterator.c exit.c", "%PROJECT_LOWER%")
   //ADD_SOURCES(configure_module_dirname + "/kernel/extended", "array.c", "%PROJECT_LOWER%");
   %EXTRA_FILES_COMPILED%
   %FILES_COMPILED%

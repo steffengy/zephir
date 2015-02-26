@@ -817,9 +817,9 @@ class ClassDefinition
         }
         if ($this->isFinal()) {
             if ($flags == '0') {
-                $flags = 'ZEND_ACC_FINAL_CLASS';
+                $flags = 'ZEND_ACC_FINAL';
             } else {
-                $flags .= '|ZEND_ACC_FINAL_CLASS';
+                $flags .= '|ZEND_ACC_FINAL';
             }
         }
 

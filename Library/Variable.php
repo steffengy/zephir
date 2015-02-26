@@ -135,8 +135,6 @@ class Variable
      * Last AST node where the variable was used
      */
     protected $usedNode;
-    
-    protected $initZval = false;
 
     /**
      * Variable constructor
@@ -726,11 +724,6 @@ class Variable
      */
     public function initVariant(CompilationContext $compilationContext)
     {
-        /* Prevent zvals with invalid types */
-        if ($this->variantInits == 0 && !$this->initZval) {
-            $compilationContext->codePrinter->output('ZVAL_UNDEF(' . $this->getPointeredName() . ');');
-            $this->initZval = true;
-        }
         if ($this->numberSkips) {
             $this->numberSkips--;
             return;
@@ -742,11 +735,6 @@ class Variable
          * Variables initialized for the first time in a cycle are always initialized using ZEPHIR_INIT_NVAR
          */
         if ($this->getName() != 'this_ptr' && $this->getName() != 'return_value') {
-
-            /* Prevent zvals with invalid types */
-            if ($this->variantInits == 0) {
-                $compilationContext->codePrinter->output('ZVAL_UNDEF(' . $this->getPointeredName() . ');');
-            }
             
             if ($this->initBranch === false) {
                 $this->initBranch = $compilationContext->currentBranch;
@@ -821,11 +809,6 @@ class Variable
      */
     public function initComplexLiteralVariant(CompilationContext $compilationContext)
     {
-        /* Prevent zvals with invalid types */
-        if ($this->variantInits == 0 && !$this->initZval) {
-            $compilationContext->codePrinter->output('ZVAL_UNDEF(' . $this->getPointeredName() . ');');
-            $this->initZval = true;
-        }
         
         if ($this->numberSkips) {
             $this->numberSkips--;

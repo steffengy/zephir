@@ -167,6 +167,17 @@ typedef zend_function zephir_fcall_cache_entry;
 		} \
 	} while (0)
 
+#define ZEPHIR_RETURN_CALL_ZVAL_FUNCTION(func_name, cache, ...) \
+	do { \
+		ZEPHIR_GET_ZVAL_PARAMS(__VA_ARGS__); \
+		if (__builtin_constant_p(func_name)) { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_zval_func_aparams(return_value, func_name, cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+		else { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_zval_func_aparams(return_value, func_name, cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+	} while (0)
+
 #define zephir_check_call_status() \
 	do \
 		if (ZEPHIR_LAST_CALL_STATUS == FAILURE) { \
@@ -220,5 +231,9 @@ int zephir_call_class_method_aparams(zval *return_value_ptr, zend_class_entry *c
 int zephir_call_func_aparams(zval *return_value_ptr, const char *func_name, uint32_t func_length,
 	zephir_fcall_cache_entry **cache_entry,
 	uint32_t param_count, zval params[]);
+
+int zephir_call_zval_func_aparams(zval *return_value_ptr, zval *func_name,
+	zephir_fcall_cache_entry **cache_entry,
+	uint32_t param_count, zval *params);
 
 #endif
