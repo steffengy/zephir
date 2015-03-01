@@ -2,7 +2,6 @@
 #define ZEPHIR_KERNEL_ARRAY_H
 #define ZEPHIR_MAX_ARRAY_LEVELS 16
 
-zval *zephir_array_update_string(zval *arr, const char *index, size_t index_length, zval *value, int flags);
 int ZEPHIR_FASTCALL zephir_array_unset(zval *arr, zval *index, int flags);
 int ZEPHIR_FASTCALL zephir_array_unset_long(zval *arr, unsigned long index, int flags);
 
@@ -14,7 +13,8 @@ int ZEPHIR_FASTCALL zephir_array_isset_string(const zval *arr, const char *index
 int ZEPHIR_FASTCALL zephir_array_isset(const zval *arr, zval *index);
 int zephir_array_isset_string_fetch(zval *fetched, zval *arr, char *index, uint32_t index_length, int readonly);
 
-int zephir_array_update_long(zval *arr, unsigned long index, zval *value, int flags ZEPHIR_DEBUG_PARAMS);
+zval *zephir_array_update_string(zval *arr, const char *index, size_t index_length, zval *value, int flags);
+zval *zephir_array_update_long(zval *arr, unsigned long index, zval *value, int flags ZEPHIR_DEBUG_PARAMS);
 int zephir_array_update_zval(zval *arr, zval *index, zval *value, int flags);
 int zephir_array_update_multi(zval *arr, zval *value, const char *types, int types_length, int types_count, ...);
 int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int types_length, int types_count, va_list ap);

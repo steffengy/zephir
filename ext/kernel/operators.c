@@ -21,6 +21,16 @@ int zephir_is_equal(zval *op1, zval *op2)
 }
 
 /**
+ * Check if two zvals are identical
+ */
+int zephir_is_identical(zval *op1, zval *op2)
+{
+	zval result;
+	is_identical_function(&result, op1, op2);
+	return Z_TYPE(result) == IS_TRUE;
+}
+
+/**
  * Returns the long value of a zval
  */
 int zephir_is_numeric_ex(const zval *op)
@@ -432,4 +442,42 @@ int zephir_less_long(zval *op1, long op2)
 	ZVAL_LONG(&op2_zval, op2);
 	is_smaller_function(&result, op1, &op2_zval);
 	return Z_TYPE(result) == IS_TRUE;
+}
+
+/**
+ * Appends the content of the right operator to the left operator
+ */
+void zephir_concat_self_str(zval *left, const char *right, int right_length)
+{
+	zval left_copy;
+	zend_string *tmp_str;
+	int use_copy = 0;
+	size_t length;
+
+	/* If the left operator is not initialized, just build a new string */
+	if (Z_TYPE_P(left) == IS_NULL || Z_TYPE_P(left) == IS_UNDEF) {
+		tmp_str = zend_string_init(right, right_length, 0);
+		ZVAL_STR(left, tmp_str);
+		zend_string_release(tmp_str);
+		return;
+	}
+
+	/* Convert to string, if other type */
+	if (Z_TYPE_P(left) != IS_STRING) {
+		use_copy = zend_make_printable_zval(left, &left_copy);
+		if (use_copy) {
+			ZEPHIR_CPY_WRT_CTOR(left, &left_copy);
+		}
+	}
+
+	/*SEPARATE_ZVAL_IF_NOT_REF(left);*/
+
+	tmp_str = strpprintf(Z_STRLEN_P(left) + right_length, "%s%s", Z_STRVAL_P(left), right);
+	zval_ptr_dtor(left);
+	ZVAL_NEW_STR(left, tmp_str);
+	zend_string_release(tmp_str);
+
+	if (use_copy) {
+		zval_dtor(&left_copy);
+	}
 }

@@ -91,7 +91,7 @@ class AssignTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($t->testPropertyMulAssign2() === 3);
         $this->assertTrue($t->testPropertyAssignStringConcat() === 'test string');
         $this->assertTrue($t->testArrayVarAssign1('test_index', 'value') == array('test_index' => 'value'));
-        $this->assertTrue($t->testArrayVarAssign2('test_index', 'value') == array('test_index' => 'value'));
+        $this->assertTrue($t->testArrayVarAssign2('test_index2', 'value') == array('test_index2' => 'value'));
         $this->assertTrue($t->testPropertyArray14() == $this->getComplexArrayTestValue());
         $this->assertTrue($t->testStaticPropertyArrayMulti4() == $this->getComplexArrayTestValue());
         $this->assertTrue($t->testStaticPropertyArrayAppend() == array("test", 1, 1.5, false, array()));
@@ -105,9 +105,9 @@ class AssignTest extends \PHPUnit_Framework_TestCase
         /**
          * @see LetStatement::_assignArrayIndexSingle();
          */
-        assert(!isset($_POST['test_index']));
-        $t->testGlobalVarAssign('test_index', 'value');
-        assert($_POST['test_index'] == 'value');
+        assert(!isset($_POST['test_index32']));
+        $t->testGlobalVarAssign('test_index2', 'value');
+        assert($_POST['test_index2'] == 'value');
         
         /* Check primitive types */
         $t->testAssignSuperGlobals();

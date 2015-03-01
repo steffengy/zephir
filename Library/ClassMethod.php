@@ -1092,7 +1092,7 @@ class ClassMethod
                         $compilationContext->symbolTable->mustGrownStack(true);
                         $compilationContext->headersManager->add('kernel/memory');
                         $code .= "\t\t" . 'ZEPHIR_INIT_VAR(&' . $parameter['name'] . ');' . PHP_EOL;
-                        $code .= "\t\t" . 'ZVAL_DOUBLE(' . $parameter['name'] . ', ' . $parameter['default']['value'] . ');' . PHP_EOL;
+                        $code .= "\t\t" . 'ZVAL_DOUBLE(&' . $parameter['name'] . ', ' . $parameter['default']['value'] . ');' . PHP_EOL;
                         break;
 
                     case 'string':
@@ -1659,8 +1659,8 @@ class ClassMethod
                                             throw new CompilerException("Invalid char literal: '" . $defaultValue['value'] . "'", $defaultValue);
                                         }
                                     }
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(&' . $variable->getName() . ');' . PHP_EOL;
-                                    $initVarCode .= "\t" . 'ZVAL_LONG(&' . $variable->getName() . ', \'' . $defaultValue['value'] . '\');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getPointeredName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZVAL_LONG(' . $variable->getPointeredName() . ', \'' . $defaultValue['value'] . '\');' . PHP_EOL;
                                     break;
 
                                 case 'null':
@@ -1669,19 +1669,19 @@ class ClassMethod
                                     break;
 
                                 case 'double':
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(&' . $variable->getName() . ');' . PHP_EOL;
-                                    $initVarCode .= "\t" . 'ZVAL_DOUBLE(' . $variable->getName() . ', ' . $defaultValue['value'] . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getPointeredName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZVAL_DOUBLE(' . $variable->getPointeredName() . ', ' . $defaultValue['value'] . ');' . PHP_EOL;
                                     break;
 
                                 case 'string':
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(&' . $variable->getName() . ');' . PHP_EOL;
-                                    $initVarCode .= "\t" . 'ZVAL_STRING(&' . $variable->getName() . ', "' . Utils::addSlashes($defaultValue['value'], true) . '");' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getPointeredName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZVAL_STRING(' . $variable->getPointeredName() . ', "' . Utils::addSlashes($defaultValue['value'], true) . '");' . PHP_EOL;
                                     break;
 
                                 case 'array':
                                 case 'empty-array':
-                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(&' . $variable->getName() . ');' . PHP_EOL;
-                                    $initVarCode .= "\t" . 'array_init(&' . $variable->getName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getPointeredName() . ');' . PHP_EOL;
+                                    $initVarCode .= "\t" . 'array_init(' . $variable->getPointeredName() . ');' . PHP_EOL;
                                     break;
 
                                 default:
@@ -1704,13 +1704,13 @@ class ClassMethod
                         switch ($defaultValue['type']) {
 
                             case 'string':
-                                $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                $initVarCode .= "\t" . 'ZVAL_STRING(&' . $variable->getName() . ', "' . Utils::addSlashes($defaultValue['value'], true) . '");' . PHP_EOL;
+                                $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getPointeredName() . ');' . PHP_EOL;
+                                $initVarCode .= "\t" . 'ZVAL_STRING(' . $variable->getPointeredName() . ', "' . Utils::addSlashes($defaultValue['value'], true) . '");' . PHP_EOL;
                                 break;
 
                             case 'null':
-                                $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                $initVarCode .= "\t" . 'ZVAL_EMPTY_STRING(&' . $variable->getName() . ');' . PHP_EOL;
+                                $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getPointeredName() . ');' . PHP_EOL;
+                                $initVarCode .= "\t" . 'ZVAL_EMPTY_STRING(' . $variable->getPointeredName() . ');' . PHP_EOL;
                                 break;
 
                             default:
@@ -1738,8 +1738,8 @@ class ClassMethod
 
                             case 'array':
                             case 'empty-array':
-                                $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getName() . ');' . PHP_EOL;
-                                $initVarCode .= "\t" . 'array_init(&' . $variable->getName() . ');' . PHP_EOL;
+                                $initVarCode .= "\t" . 'ZEPHIR_INIT_VAR(' . $variable->getPointeredName() . ');' . PHP_EOL;
+                                $initVarCode .= "\t" . 'array_init(' . $variable->getPointeredName() . ');' . PHP_EOL;
                                 break;
 
                             default:
@@ -2183,6 +2183,11 @@ class ClassMethod
 
                 if ($variable->mustInitNull() && $pointer) {
                     $groupVariables[] = $pointer . $variable->getName() . ' = NULL';
+                    continue;
+                }
+                
+                if ($variable->mustInitNull() && !$pointer) {
+                    $groupVariables[] = $variable->getName() . ' = 0';
                     continue;
                 }
 

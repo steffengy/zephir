@@ -32,6 +32,10 @@
 		) \
 	))
 
+/* Increment/Decrement */
+#define zephir_increment(var) fast_increment_function(var)
+#define zephir_decrement(var) fast_decrement_function(var)
+
 /** greater/smaller comparision */
 #define ZEPHIR_GE(op1, op2)       zephir_greater_equal(op1, op2)
 #define ZEPHIR_LE(op1, op2)       zephir_less_equal(op1, op2)
@@ -113,6 +117,7 @@
 
 int zephir_is_numeric_ex(const zval *op);
 int zephir_is_equal(zval *op1, zval *op2);
+int zephir_is_identical(zval *op1, zval *op2);
 #define zephir_is_numeric(value) (Z_TYPE_P(value) == IS_LONG || Z_TYPE_P(value) == IS_DOUBLE || zephir_is_numeric_ex(value))
 
 zend_bool zephir_get_boolval_ex(const zval *op_in);
@@ -144,6 +149,9 @@ double zephir_safe_div_long_double(long op1, double op2);
 #define zephir_add_function_ex(result, op1, op2) add_function(result, op1, op2)
 #define zephir_add_function zephir_add_function_ex
 #define zephir_convert_to_object(op) convert_to_object(op)
+
 void zephir_negate(zval *z);
+
+void zephir_concat_self_str(zval *left, const char *right, int right_length);
 
 #endif

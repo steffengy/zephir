@@ -118,7 +118,7 @@ class StaticPropertyArrayIndexAppend extends ArrayIndex
                         case 'string':
                         case 'variable':
                             $keys .= 'z';
-                            $offsetItems[] = $variableIndex->getName();
+                            $offsetItems[] = $variableIndex->getPointeredName();
                             $numberParams++;
                             break;
 
@@ -132,7 +132,7 @@ class StaticPropertyArrayIndexAppend extends ArrayIndex
             }
         }
 
-        $codePrinter->output('zephir_update_static_property_array_multi_ce(' . $classEntry .', SL("' . $property . '"), &' . $variableExpr->getName() . ' TSRMLS_CC, SL("' . $keys . 'a"), ' . $numberParams . ', ' . join(', ', $offsetItems) . ');');
+        $codePrinter->output('zephir_update_static_property_array_multi_ce(' . $classEntry .', SL("' . $property . '"), &' . $variableExpr->getName() . ', SL("' . $keys . 'a"), ' . $numberParams . ', ' . join(', ', $offsetItems) . ');');
 
         if ($variableExpr->isTemporal()) {
             $variableExpr->setIdle(true);

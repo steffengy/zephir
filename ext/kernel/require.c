@@ -41,7 +41,6 @@ int zephir_require_ret(zval *return_value_ptr, const char *require_path)
 {
 	zend_bool ret;
 	zend_file_handle file_handle;
-	zval tmp;
 	zend_op_array *retval;
 	char *opened_path = NULL;
 

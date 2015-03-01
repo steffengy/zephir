@@ -203,7 +203,7 @@ int zephir_update_property_array(zval *object, const char *property, uint32_t pr
 		if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
 
 		if (Z_TYPE_P(index) == IS_STRING) {
-			zend_symtable_str_update(Z_ARRVAL(tmp), Z_STRVAL_P(index), Z_STRLEN_P(index) + 1, value);
+			zend_symtable_str_update(Z_ARRVAL(tmp), Z_STRVAL_P(index), Z_STRLEN_P(index), value);
 		} else if (Z_TYPE_P(index) == IS_LONG) {
 			zend_hash_index_update(Z_ARRVAL(tmp), Z_LVAL_P(index), value);
 		} else if (Z_TYPE_P(index) == IS_NULL) {
@@ -211,6 +211,43 @@ int zephir_update_property_array(zval *object, const char *property, uint32_t pr
 		}
 
 		zephir_update_property_zval(object, WRAP_ARG(property, property_length), &tmp);
+		zval_ptr_dtor(&tmp);
+	}
+
+	return SUCCESS;
+}
+
+/**
+ * Increments/Decrease an object property
+ */
+int zephir_property_indecr_ex(zval *object, char *property_name, unsigned int property_length, zend_bool increment)
+{
+	zval tmp;
+	zend_class_entry *ce;
+
+	ZVAL_UNDEF(&tmp);
+	if (Z_TYPE_P(object) != IS_OBJECT) {
+		php_error_docref(NULL, E_WARNING, "Attempt to assign property of non-object");
+		return FAILURE;
+	}
+
+	ce = Z_OBJCE_P(object);
+	if (ce->parent) {
+		ce = zephir_lookup_class_ce(ce, property_name, property_length);
+	}
+
+	if (zephir_read_property(&tmp, object, property_name, property_length, 0)) {
+		if (Z_REFCOUNTED(tmp))  Z_DELREF(tmp);
+
+		SEPARATE_ZVAL(&tmp);
+
+		if (increment) {
+			zephir_increment(&tmp);
+		} else {
+			zephir_decrement(&tmp);
+		}
+
+		zephir_update_property_zval(object, WRAP_ARG(property_name, property_length), &tmp);
 		zval_ptr_dtor(&tmp);
 	}
 
@@ -268,6 +305,34 @@ int zephir_update_property_array_multi(zval *object, const char *property, uint3
 		va_end(ap);
 		zval_ptr_dtor(&tmp);
 	}
+	return SUCCESS;
+}
+
+/*
+ * Multiple array-offset update
+ */
+int zephir_update_static_property_array_multi_ce(zend_class_entry *ce, const char *property, uint32_t property_length, zval *value, const char *types, int types_length, int types_count, ...)
+{
+	va_list ap;
+	zval tmp;
+	ZVAL_UNDEF(&tmp);
+
+	zephir_read_static_property_ce(&tmp, ce, WRAP_ARG(property, property_length));
+	SEPARATE_ZVAL(&tmp);
+
+	/* Convert the value to array if not is an array */
+	if (Z_TYPE(tmp) != IS_ARRAY) {
+		convert_to_array(&tmp);
+	}
+
+	va_start(ap, types_count);
+
+	//int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int types_length, int types_count, va_list ap);
+	zephir_array_update_multi_ex(&tmp, value, types, types_length, types_count, ap);
+	zephir_update_static_property_ce(ce, WRAP_ARG(property, property_length), &tmp);
+
+	zval_ptr_dtor(&tmp);
+	va_end(ap);
 	return SUCCESS;
 }
 

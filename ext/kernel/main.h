@@ -103,6 +103,13 @@ int zephir_fast_count_int(zval *value TSRMLS_DC);
 	ZEPHIR_MM_RESTORE(); \
 	return;
 
+#define RETURN_ON_FAILURE(what) \
+	do { \
+		if (what == FAILURE) { \
+			return; \
+		} \
+	} while (0)
+
 /** class/interface registering */
 #define ZEPHIR_REGISTER_CLASS(ns, class_name, lower_ns, name, methods, flags) \
 	{ \
@@ -153,6 +160,13 @@ int zephir_fast_count_int(zval *value TSRMLS_DC);
 			return FAILURE; \
 		} \
 	}
+
+#define ZEPHIR_SET_SYMBOL(symbol_table, name, value) { \
+	zval _set_symbol_t; \
+	ZVAL_UNDEF(&_set_symbol_t); \
+	ZEPHIR_CPY_WRT(&_set_symbol_t, value); \
+	_zend_hash_str_update(symbol_table, SL(name), &_set_symbol_t ZEND_FILE_LINE_CC); \
+}
 
 /** Low overhead parse/fetch parameters */
 #define zephir_fetch_params(memory_grow, required_params, optional_params, ...) \

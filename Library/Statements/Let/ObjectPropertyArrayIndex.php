@@ -194,7 +194,7 @@ class ObjectPropertyArrayIndex extends ArrayIndex
 
                     case 'double':
                         $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                        $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getName() . ', ' . $resolvedExpr->getCode() . ');');
+                        $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getPointeredName() . ', ' . $resolvedExpr->getCode() . ');');
                         $codePrinter->output('zephir_update_property_array(' . $symbolVariable->getPointeredName() . ', SL("' . $property . '"), ' . $indexVariable->getPointeredName() . ', ' . $tempVariable->getPointeredName() . ');');
                         break;
 
@@ -334,7 +334,7 @@ class ObjectPropertyArrayIndex extends ArrayIndex
                         case 'string':
                         case 'variable':
                             $keys .= 'z';
-                            $offsetItems[] = $variableIndex->getName();
+                            $offsetItems[] = $variableIndex->getPointeredName();
                             $numberParams++;
                             break;
 
@@ -348,7 +348,7 @@ class ObjectPropertyArrayIndex extends ArrayIndex
             }
         }
 
-        $codePrinter->output('zephir_update_property_array_multi(&' . $symbolVariable->getName() . ', SL("' . $property . '"), &' . $variableExpr->getName() . ', SL("' . $keys . '"), ' . $numberParams . ', ' . join(', ', $offsetItems) . ');');
+        $codePrinter->output('zephir_update_property_array_multi(' . $symbolVariable->getPointeredName() . ', SL("' . $property . '"), &' . $variableExpr->getName() . ', SL("' . $keys . '"), ' . $numberParams . ', ' . join(', ', $offsetItems) . ');');
 
         if ($variableExpr->isTemporal()) {
             $variableExpr->setIdle(true);

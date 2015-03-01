@@ -232,16 +232,16 @@ int zephir_get_global(zval *arr, const char *global, unsigned int global_length)
 			if (Z_TYPE_P(gv) == IS_ARRAY) {
 				ZVAL_DUP(arr, gv);
 				if (Z_TYPE_P(arr) == IS_UNDEF) {
-					ZVAL_NULL(arr);
+					array_init(arr);
 				}
 			} else {
-				ZVAL_NULL(arr);
+				array_init(arr);
 			}
 			return SUCCESS;
 		}
 	}
 
-	ZVAL_NULL(arr);
+	array_init(arr);
 
 	return SUCCESS;
 }

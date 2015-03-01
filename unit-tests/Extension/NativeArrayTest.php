@@ -93,9 +93,16 @@ class NativeArrayTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($t->testMultipleArrayUpdate7() == array('a' => array(1 => array('c' => true)), 0 => array('b' => array(2 => false))));
         $this->assertTrue($t->testMultipleArrayUpdate8() == array('a' => array(0 => null, 1 => true, 2 => false)));
         $this->assertTrue($t->testMultipleArrayUpdate9() == array('a' => array(0 => null, 1 => false)));
-        $this->assertTrue($t->testMultipleArrayUpdate10() == array('a' => array(0 => null, 1 => array('c' => false))));
         $this->assertTrue($t->testMultipleArrayUpdate11() == array('y' => array('x' => null)));
         $this->assertTrue($t->testMultipleArrayUpdate12() == array('y' => array('x' => array('z' => null))));
+    }
+    
+    public function testInvalidMultipleArrayUpdate()
+    {
+        /* IS_TRUE = 3 and we try to update an array where a key is already set to IS_TRUE, same behavior as PHP */
+        $t = new NativeArray();
+        $this->setExpectedException('PHPUnit_Framework_Error_Warning', 'Cannot use a scalar value as an array (3)');
+        $this->assertTrue($t->testMultipleArrayUpdate10() == array('a' => array(0 => null, 1 => array('c' => false))));
     }
 
     public function testArrayKeys()

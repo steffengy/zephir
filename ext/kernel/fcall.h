@@ -204,6 +204,13 @@ typedef zend_function zephir_fcall_cache_entry;
 		} \
 	}
 
+#define RETURN_ON_FAILURE(what) \
+	do { \
+		if (what == FAILURE) { \
+			return; \
+		} \
+	} while (0)
+
 /**
  * @brief Checks if the class defines a constructor
  * @param ce Class entry

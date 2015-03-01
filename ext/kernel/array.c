@@ -15,7 +15,7 @@
 //#include "kernel/hash.h"
 //#include "kernel/backtrace.h"
 
-int zephir_array_update_long(zval *arr, unsigned long index, zval *value, int flags ZEPHIR_DEBUG_PARAMS){
+zval *zephir_array_update_long(zval *arr, unsigned long index, zval *value, int flags ZEPHIR_DEBUG_PARAMS){
 
 	if (Z_TYPE_P(arr) != IS_ARRAY) {
 		zend_error(E_WARNING, "Cannot use a scalar value as an array in %s on line %d", file, line);
@@ -39,7 +39,7 @@ int zephir_array_update_long(zval *arr, unsigned long index, zval *value, int fl
 		if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
 	}
 
-	return zend_hash_index_update(Z_ARRVAL_P(arr), index, value) != NULL;
+	return zend_hash_index_update(Z_ARRVAL_P(arr), index, value);
 }
 
 zval *zephir_array_update_string(zval *arr, const char *index, size_t index_length, zval *value, int flags)
@@ -62,7 +62,7 @@ zval *zephir_array_update_string(zval *arr, const char *index, size_t index_leng
 	}
 
 	if ((flags & PH_SEPARATE) == PH_SEPARATE) {
-		SEPARATE_ZVAL_IF_NOT_REF(arr);
+		SEPARATE_ZVAL(value);
 	}
 
 	if ((flags & PH_COPY) == PH_COPY) {
@@ -265,47 +265,111 @@ int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int 
 	zval *p = arr;
 	int i;
 	size_t len = 0;
+	int status;
 
 	SEPARATE_ZVAL_IF_NOT_REF(arr);
-
 	for (i = 0; i < types_length; ++i)
 	{
 		char *arg = NULL;
+		zval *zv;
 		zend_bool must_free = 0;
+		ulong tmp_arg;
+		int use_tmp_arg = 0;
 
-		switch (types[i]) {
+		switch (types[i])
+		{
 			case 's':
 				arg = va_arg(ap, char*);
 				len = va_arg(ap, int);
 				break;
+
 			case 'l':
-				len = spprintf(&arg, 0, "%ld\0", va_arg(ap, long));
-				must_free = 1;
+				tmp_arg = (ulong) va_arg(ap, long);
+				use_tmp_arg = 1;
 				break;
-			//case 'z':
+
+			case 'z':
+				zv = va_arg(ap, zval*);
+				switch (Z_TYPE_P(zv))
+				{
+					case IS_NULL:
+						len = spprintf(&arg, 0, "");
+						must_free = 1;
+						break;
+
+					case IS_DOUBLE:
+						tmp_arg = (ulong) Z_DVAL_P(zv);
+						use_tmp_arg = 1;
+						break;
+
+					case IS_FALSE:
+					case IS_TRUE:
+						tmp_arg = Z_TYPE_P(zv) == IS_TRUE;
+						use_tmp_arg = 1;
+						break;
+
+					case IS_LONG:
+					case IS_RESOURCE:
+						tmp_arg = (ulong) Z_LVAL_P(zv);
+						use_tmp_arg = 1;
+						break;
+
+					case IS_STRING:
+						arg = Z_STRVAL_P(zv);
+						len = Z_STRLEN_P(zv);
+						break;
+
+					default:
+						zend_error(E_WARNING, "Illegal offset type %d", Z_TYPE_P(zv));
+						return FAILURE;
+				}
+				break;
+
 			case 'a':
 				arg = NULL;
 				break;
+
 			default:
 				zend_error(E_ERROR, "type %c not supported zephir_array_update_multi yet", types[i]);
 				break;
 		}
-		if (i == types_length - 1 && arg == NULL) {
+
+		if (i == types_length - 1 && arg == NULL && !use_tmp_arg) {
 			zephir_array_append(p, value, 0);
 			continue;
 		}
-		if (i == types_length - 1) {
-			zephir_array_update_string(p, arg, len, value, PH_SEPARATE);
+
+		if (i == types_length - 1)
+		{
+			if (use_tmp_arg)
+				zephir_array_update_long(p, tmp_arg, value, PH_SEPARATE | PH_COPY ZEPHIR_DEBUG_PARAMS_DUMMY);
+			else
+				zephir_array_update_string(p, arg, len, value, PH_SEPARATE | PH_COPY);
 			if (must_free) efree(arg);
 			continue;
 		}
-		if ((fetched = zend_symtable_str_find(Z_ARRVAL_P(p), arg, len)) == NULL)
+		if (i == types_length - 1)
+		{
+			if (must_free) efree(arg);
+			break;
+		}
+
+		if (use_tmp_arg) {
+			status = (fetched = zend_hash_index_find(Z_ARRVAL_P(p), tmp_arg)) == NULL;
+		} else {
+			status = (fetched = zend_symtable_str_find(Z_ARRVAL_P(p), arg, len)) == NULL;
+		}
+
+		if (status)
 		{
 			zval subarr;
 
 			array_init(&subarr);
-			Z_ADDREF_P(&subarr);
-			p = zephir_array_update_string(p, arg, len, &subarr, PH_SEPARATE);
+			if (use_tmp_arg) {
+				p = zephir_array_update_long(p, tmp_arg, &subarr, PH_SEPARATE | PH_COPY ZEPHIR_DEBUG_PARAMS_DUMMY);
+			} else {
+				p = zephir_array_update_string(p, arg, len, &subarr, PH_SEPARATE | PH_COPY);
+			}
 			zval_ptr_dtor(&subarr);
 		} else {
 			p = fetched;
@@ -403,7 +467,7 @@ int zephir_array_update_zval(zval *arr, zval *index, zval *value, int flags) {
 	}
 
 	if ((flags & PH_COPY) == PH_COPY) {
-		Z_ADDREF_P(value);
+		if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
 	}
 
 	ht = Z_ARRVAL_P(arr);

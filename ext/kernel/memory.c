@@ -120,13 +120,16 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g)
 				zval *var = active_memory->addresses[i];
 				if (Z_TYPE_P(var) > IS_CALLABLE) {
 					fprintf(stderr, "%s: observed variable #%d (%p) has invalid type %u [%s]\n", __func__, (int)i, var, Z_TYPE_P(var), active_memory->func);
+					assert(0);
 				}
 
 				if (Z_REFCOUNTED_P(var) && Z_REFCOUNT_P(var) == 0) {
 					fprintf(stderr, "%s: observed variable #%d (%p) has 0 references, type=%d [%s]\n", __func__, (int)i, var, Z_TYPE_P(var), active_memory->func);
+					assert(0);
 				}
 				else if (Z_REFCOUNTED_P(var) && Z_REFCOUNT_P(var) >= 1000000) {
 					fprintf(stderr, "%s: observed variable #%d (%p) has too many references (%u), type=%d  [%s]\n", __func__, (int)i, var, Z_REFCOUNT_P(var), Z_TYPE_P(var), active_memory->func);
+					assert(0);
 				}
 #if 0
 				/* Skip this check, PDO does return variables with is_ref = 1 and refcount = 1*/

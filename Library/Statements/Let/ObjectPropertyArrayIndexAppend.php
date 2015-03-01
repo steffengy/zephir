@@ -160,7 +160,7 @@ class ObjectPropertyArrayIndexAppend extends ArrayIndex
                         case 'string':
                         case 'variable':
                             $keys .= 'z';
-                            $offsetItems[] = $variableIndex->getName();
+                            $offsetItems[] = $variableIndex->getPointeredName();
                             $numberParams++;
                             break;
 
@@ -174,7 +174,7 @@ class ObjectPropertyArrayIndexAppend extends ArrayIndex
             }
         }
 
-        $codePrinter->output('zephir_update_property_array_multi(&' . $symbolVariable->getName() . ', SL("' . $property . '"), &' . $variableExpr->getName() . ', SL("' . $keys . 'a"), ' . $numberParams . ', ' . join(', ', $offsetItems) . ');');
+        $codePrinter->output('zephir_update_property_array_multi(' . $symbolVariable->getPointeredName() . ', SL("' . $property . '"), &' . $variableExpr->getName() . ', SL("' . $keys . 'a"), ' . $numberParams . ', ' . join(', ', $offsetItems) . ');');
     }
 
     /**

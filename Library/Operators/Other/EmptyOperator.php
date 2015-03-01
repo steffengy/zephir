@@ -60,6 +60,6 @@ class EmptyOperator extends BaseOperator
             throw new CompilerException("Only dynamic/string variables can be used in 'empty' operators", $expression['left']);
         }
 
-        return new CompiledExpression('bool', 'ZEPHIR_IS_EMPTY(' . $variableLeft->getName() . ')', $expression);
+        return new CompiledExpression('bool', 'ZEPHIR_IS_EMPTY(' . $variableLeft->getPointeredName() . ')', $expression);
     }
 }

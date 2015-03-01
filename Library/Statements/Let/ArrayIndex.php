@@ -163,11 +163,6 @@ class ArrayIndex
         $isGlobalVariable = $compilationContext->symbolTable->isSuperGlobal($variable);
 
         $compilationContext->headersManager->add('kernel/array');
-
-        if ($isGlobalVariable) {
-            $variableTempSeparated = $compilationContext->symbolTable->getTempLocalVariableForWrite('int', $compilationContext);
-            $codePrinter->output($variableTempSeparated->getName().' = zephir_maybe_separate_zval(&' . $variable . ');');
-        }
         
         switch ($exprIndex->getType()) {
 
@@ -206,11 +201,7 @@ class ArrayIndex
                 throw new CompilerException("Value: " . $exprIndex->getType() . " cannot be used as array index", $statement);
         }
         
-        if ($isGlobalVariable) {
-            $codePrinter->output('if (' . $variableTempSeparated->getName() . ') {');
-            $codePrinter->output("\t" . 'ZEND_SET_SYMBOL(&EG(symbol_table), "' . $variable . '", ' . $variable . ');');
-            $codePrinter->output('}');
-        }
+        $codePrinter->output("\t" . 'ZEPHIR_SET_SYMBOL(&EG(symbol_table), "' . $variable . '", &' . $variable . ');');
     }
 
     /**
@@ -292,7 +283,7 @@ class ArrayIndex
                         case 'string':
                         case 'variable':
                             $keys .= 'z';
-                            $offsetItems[] = $variableIndex->getName();
+                            $offsetItems[] = $variableIndex->getPointeredName();
                             $numberParams++;
                             break;
                         default:

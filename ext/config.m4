@@ -11,17 +11,20 @@ if test "$PHP_TEST" = "yes"; then
 	AC_DEFINE(HAVE_TEST, 1, [Whether you have Test])
 	test_sources="test.c kernel/main.c kernel/memory.c kernel/exception.c kernel/hash.c kernel/debug.c kernel/backtrace.c kernel/object.c kernel/array.c kernel/extended/array.c kernel/string.c kernel/fcall.c kernel/require.c kernel/file.c kernel/operators.c kernel/concat.c kernel/variables.c kernel/filter.c kernel/iterator.c kernel/exit.c test\arithmetic.zep.c
 	test\arrayobject.zep.c
+	test\assign.zep.c
 	test\bitwise.zep.c
 	test\branchprediction.zep.c
 	test\cast.zep.c
 	test\cblock.zep.c
 	test\closures.zep.c
+	test\compare.zep.c
 	test\concat.zep.c
 	test\constants.zep.c
 	test\constantsparent.zep.c
 	test\declaretest.zep.c
 	test\diinterface.zep.c
 	test\echoes.zep.c
+	test\emptytest.zep.c
 	test\evaltest.zep.c
 	test\exception.zep.c
 	test\exceptions.zep.c
@@ -42,8 +45,10 @@ if test "$PHP_TEST" = "yes"; then
 	test\logical.zep.c
 	test\methodabstract.zep.c
 	test\methodinterface.zep.c
+	test\nativearray.zep.c
 	test\ooimpl\abeginning.zep.c
 	test\ooimpl\zbeginning.zep.c
+	test\operator.zep.c
 	test\optimizers\arraymerge.zep.c
 	test\properties\extendspublicproperties.zep.c
 	test\properties\privateproperties.zep.c
@@ -68,6 +73,7 @@ if test "$PHP_TEST" = "yes"; then
 	test\trytest.zep.c
 	test\typeoff.zep.c
 	test\unknownclass.zep.c
+	test\unsettest.zep.c
 	test\vars.zep.c
 	test\0__closure.zep.c
 	test\1__closure.zep.c

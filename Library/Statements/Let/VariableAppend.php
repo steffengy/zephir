@@ -79,7 +79,7 @@ class VariableAppend
                 switch ($resolvedExpr->getType()) {
                     case 'null':
                         $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                        $codePrinter->output('ZVAL_NULL(&' . $symbolVariable->getName() . ');');
+                        $codePrinter->output('ZVAL_NULL(' . $symbolVariable->getPointeredName() . ');');
                         $codePrinter->output('zephir_array_append(&' . $variable . ', &' . $symbolVariable->getName() . ', PH_SEPARATE, "' . Compiler::getShortUserPath($statement['file']) . '", ' . $statement['line'] . ');');
                         break;
 
@@ -87,21 +87,21 @@ class VariableAppend
                     case 'uint':
                     case 'long':
                         $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                        $codePrinter->output('ZVAL_LONG(&' . $symbolVariable->getName() . ', ' . $resolvedExpr->getCode() . ');');
+                        $codePrinter->output('ZVAL_LONG(' . $symbolVariable->getPointeredName() . ', ' . $resolvedExpr->getCode() . ');');
                         $codePrinter->output('zephir_array_append(&' . $variable . ', &' . $symbolVariable->getName() . ', PH_SEPARATE, "' . Compiler::getShortUserPath($statement['file']) . '", ' . $statement['line'] . ');');
                         $symbolVariable->setIdle(true);
                         break;
 
                     case 'double':
                         $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                        $codePrinter->output('ZVAL_DOUBLE(' . $symbolVariable->getName() . ', ' . $resolvedExpr->getCode() . ');');
+                        $codePrinter->output('ZVAL_DOUBLE(' . $symbolVariable->getPointeredName() . ', ' . $resolvedExpr->getCode() . ');');
                         $codePrinter->output('zephir_array_append(&' . $variable . ', &' . $symbolVariable->getName() . ', PH_SEPARATE, "' . Compiler::getShortUserPath($statement['file']) . '", ' . $statement['line'] . ');');
                         $symbolVariable->setIdle(true);
                         break;
 
                     case 'bool':
                         $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                        $codePrinter->output('ZVAL_BOOL(&' . $symbolVariable->getName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
+                        $codePrinter->output('ZVAL_BOOL(' . $symbolVariable->getPointeredName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
                         $codePrinter->output('zephir_array_append(&' . $variable . ', &' . $symbolVariable->getName() . ', PH_SEPARATE, "' . Compiler::getShortUserPath($statement['file']) . '", ' . $statement['line'] . ');');
                         $symbolVariable->setIdle(true);
                         break;
@@ -109,7 +109,7 @@ class VariableAppend
                     case 'ulong':
                     case 'string':
                         $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                        $codePrinter->output('ZVAL_STRING(&' . $symbolVariable->getName() . ', "' . Utils::addSlashes($resolvedExpr->getCode(), true) . '");');
+                        $codePrinter->output('ZVAL_STRING(' . $symbolVariable->getPointeredName() . ', "' . Utils::addSlashes($resolvedExpr->getCode(), true) . '");');
                         $codePrinter->output('zephir_array_append(&' . $variable . ', &' . $symbolVariable->getName() . ', PH_SEPARATE, "' . Compiler::getShortUserPath($statement['file']) . '", ' . $statement['line'] . ');');
                         $symbolVariable->setIdle(true);
                         break;
@@ -127,21 +127,21 @@ class VariableAppend
                             case 'uint':
                             case 'long':
                                 $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                                $codePrinter->output('ZVAL_LONG(&' . $symbolVariable->getName() . ', ' . $exprVariable->getName() . ');');
+                                $codePrinter->output('ZVAL_LONG(' . $symbolVariable->getPointeredName() . ', ' . $exprVariable->getName() . ');');
                                 $codePrinter->output('zephir_array_append(&' . $variable . ', &' . $symbolVariable->getName() . ', PH_SEPARATE, "' . Compiler::getShortUserPath($statement['file']) . '", ' . $statement['line'] . ');');
                                 $symbolVariable->setIdle(true);
                                 break;
 
                             case 'double':
                                 $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                                $codePrinter->output('ZVAL_DOUBLE(&' . $symbolVariable->getName() . ', ' . $exprVariable->getName() . ');');
+                                $codePrinter->output('ZVAL_DOUBLE(' . $symbolVariable->getPointeredName() . ', ' . $exprVariable->getName() . ');');
                                 $codePrinter->output('zephir_array_append(&' . $variable . ', &' . $symbolVariable->getName() . ', PH_SEPARATE, "' . Compiler::getShortUserPath($statement['file']) . '", ' . $statement['line'] . ');');
                                 $symbolVariable->setIdle(true);
                                 break;
 
                             case 'bool':
                                 $symbolVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext, $statement);
-                                $codePrinter->output('ZVAL_BOOL(&' . $symbolVariable->getName() . ', ' . $exprVariable->getName() . ');');
+                                $codePrinter->output('ZVAL_BOOL(' . $symbolVariable->getPointeredName() . ', ' . $exprVariable->getName() . ');');
                                 $codePrinter->output('zephir_array_append(&' . $variable . ', &' . $symbolVariable->getName() . ', PH_SEPARATE, "' . Compiler::getShortUserPath($statement['file']) . '", ' . $statement['line'] . ');');
                                 $symbolVariable->setIdle(true);
                                 break;

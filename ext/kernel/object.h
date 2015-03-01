@@ -15,7 +15,7 @@ int zephir_interface_exists(const zval *class_name, int autoload);
 int zephir_method_exists(const zval *object, const zval *method_name);
 
 //zephir_fetch_static_property_ce(zend_class_entry *ce, const char *property, int len)
-#define zephir_read_static_property_ce(target_zval, ce, property_str) ZVAL_COPY_VALUE(target_zval, zend_read_static_property(ce, property_str, 0))
+#define zephir_read_static_property_ce(target_zval, ce, property_str) ZEPHIR_CPY_WRT_CTOR(target_zval, zend_read_static_property(ce, property_str, 0))
 //zephir_read_property(zval *target, zval *src, char *name, size_t length)
 zval *zephir_read_property(zval *target, zval *src, const char *name, size_t length, zend_bool silent);
 #define zephir_return_property(object, name_str) zephir_read_property(return_value, this_ptr, name_str, 0)
@@ -38,4 +38,8 @@ int zephir_isset_property(zval *object, const char *property_name, unsigned int 
 int zephir_update_property_array(zval *object, const char *property, uint32_t property_length, const zval *index, zval *value);
 int zephir_update_property_array_append(zval *object, char *property, unsigned int property_length, zval *value);
 int zephir_update_property_array_multi(zval *object, const char *property, uint32_t property_length, zval *value, const char *types, int types_length, int types_count, ...);
+int zephir_update_static_property_array_multi_ce(zend_class_entry *ce, const char *property, uint32_t property_length, zval *value, const char *types, int types_length, int types_count, ...);
+int zephir_property_indecr_ex(zval *object, char *property_name, unsigned int property_length, zend_bool increment);
+#define zephir_property_incr(object, property_name) zephir_property_indecr_ex(object, property_name, 1)
+#define zephir_property_decr(object, property_name) zephir_property_indecr_ex(object, property_name, 0)
 #endif

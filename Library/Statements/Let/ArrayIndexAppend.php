@@ -116,7 +116,7 @@ class ArrayIndexAppend extends ArrayIndex
                         case 'string':
                         case 'variable':
                             $keys .= 'z';
-                            $offsetItems[] = $variableIndex->getName();
+                            $offsetItems[] = $variableIndex->getPointeredName();
                             $numberParams++;
                             break;
                         default:

@@ -162,7 +162,7 @@ class ObjectProperty
                 }
 
                 if ($variable == 'this') {
-                    $codePrinter->output('zephir_update_property_this(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 } else {
                     $codePrinter->output('zephir_update_property_zval(&' . $symbolVariable->getName() . ', SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                 }
@@ -189,13 +189,13 @@ class ObjectProperty
                         }
 
                         $resolvedVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                        $codePrinter->output('ZVAL_DOUBLE(' . $resolvedVariable->getName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
+                        $codePrinter->output('ZVAL_DOUBLE(' . $resolvedVariable->getPointeredName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
                         $codePrinter->output($functionName . '(' . $tempVariable->getName() . ', ' . $resolvedVariable->getName() . ')');
                         break;
 
                     case 'assign':
                         $tempVariable->initNonReferenced($compilationContext);
-                        $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
+                        $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getPointeredName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
                         break;
 
                     default:
@@ -284,7 +284,7 @@ class ObjectProperty
 
                     case 'double':
                         $tempVariable = $compilationContext->symbolTable->getTempNonTrackedVariable('variable', $compilationContext, true);
-                        $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getPointeredName() . ', ' . $variableVariable->getPointeredName() . ');');
+                        $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getPointeredName() . ', ' . $variableVariable->getName() . ');');
                         if ($variable == 'this') {
                             $codePrinter->output('zephir_update_property_zval(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getPointeredName() . ');');
                         } else {
