@@ -38,6 +38,7 @@
 int zephir_is_iterable_ex(zval *arr, int duplicate, int reverse);
 int zephir_is_callable(zval *var);
 void zephir_gettype(zval *return_value, zval *arg);
+zend_class_entry* zephir_get_internal_ce(const char *class_name, unsigned int class_name_len);
 
 int zephir_fast_count_int(zval *value TSRMLS_DC);
 

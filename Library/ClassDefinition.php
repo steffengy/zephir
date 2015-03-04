@@ -1413,7 +1413,7 @@ class ClassDefinition
 
             case 'pdostatement':
                 $compilationContext->headersManager->add('kernel/main');
-                $classEntry = 'zephir_get_internal_ce(SS("pdostatement") TSRMLS_CC)';
+                $classEntry = 'zephir_get_internal_ce(SL("pdostatement"))';
                 break;
 
             case 'pdoexception':
@@ -1475,7 +1475,7 @@ class ClassDefinition
                 if (!$check) {
                     throw new CompilerException('Unknown class entry for "' . $className . '"');
                 } else {
-                    $classEntry = 'zephir_get_internal_ce(SS("' . Utils::escapeClassName(strtolower($className)) . '") TSRMLS_CC)';
+                    $classEntry = 'zephir_get_internal_ce(SL("' . Utils::escapeClassName(strtolower($className)) . '"))';
                 }
         }
 

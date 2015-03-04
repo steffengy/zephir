@@ -50,11 +50,11 @@ class ClassEntryCache
             $zendClassEntry->setMustInitNull(true);
 
             $compilationContext->codePrinter->output('if (!' . $zendClassEntry->getName() . ') {');
-            $compilationContext->codePrinter->output("\t" . $zendClassEntry->getName() . ' = zephir_fetch_class_str(' . $className . ', ZEND_FETCH_CLASS_AUTO);');
+            $compilationContext->codePrinter->output("\t" . $zendClassEntry->getName() . ' = zephir_fetch_class_str_ex(' . $className . ', ZEND_FETCH_CLASS_AUTO);');
             $compilationContext->codePrinter->output('}');
         } else {
             $zendClassEntry = $compilationContext->symbolTable->addTemp('zend_class_entry', $compilationContext);
-            $compilationContext->codePrinter->output($zendClassEntry->getName() . ' = zephir_fetch_class_str(' . $className . ', ZEND_FETCH_CLASS_AUTO);');
+            $compilationContext->codePrinter->output($zendClassEntry->getName() . ' = zephir_fetch_class_str_ex(' . $className . ', ZEND_FETCH_CLASS_AUTO);');
         }
 
         return $zendClassEntry;

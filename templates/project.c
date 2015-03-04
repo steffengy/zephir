@@ -47,7 +47,6 @@ static PHP_MINIT_FUNCTION(%PROJECT_LOWER%)
 
 	setlocale(LC_ALL, "C");
 #endif
-
 	%CLASS_INITS%
 
 #if PHP_VERSION_ID < 50500

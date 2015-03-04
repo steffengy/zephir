@@ -42,4 +42,14 @@ int zephir_update_static_property_array_multi_ce(zend_class_entry *ce, const cha
 int zephir_property_indecr_ex(zval *object, char *property_name, unsigned int property_length, zend_bool increment);
 #define zephir_property_incr(object, property_name) zephir_property_indecr_ex(object, property_name, 1)
 #define zephir_property_decr(object, property_name) zephir_property_indecr_ex(object, property_name, 0)
+
+#define zephir_fetch_safe_class(destination, var) \
+  	{ \
+		if (Z_TYPE_P(var) == IS_STRING) { \
+			ZEPHIR_CPY_WRT(destination, var); \
+		} else { \
+			ZEPHIR_INIT_NVAR(destination); \
+			ZVAL_STRING(destination, "<undefined class>"); \
+		} \
+	}
 #endif

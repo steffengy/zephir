@@ -156,6 +156,18 @@ typedef zend_function zephir_fcall_cache_entry;
 		} \
 	} while (0)
 
+#define ZEPHIR_CALL_PARENT(return_value_ptr, class_entry, this_ptr, method, cache, ...) \
+	do { \
+		ZEPHIR_GET_ZVAL_PARAMS(__VA_ARGS__); \
+		ZEPHIR_OBSERVE_OR_NULLIFY_ZVAL(return_value_ptr); \
+		if (__builtin_constant_p(method)) { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_class_method_aparams(return_value_ptr, class_entry, zephir_fcall_parent, this_ptr, method, sizeof(method)-1, cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+		else { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_class_method_aparams(return_value_ptr, class_entry, zephir_fcall_parent, this_ptr, method, strlen(method), cache, ZEPHIR_CALL_NUM_PARAMS(params_p), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+	} while (0)
+
 #define ZEPHIR_RETURN_CALL_PARENT(class_entry, this_ptr, method, cache, ...) \
 	do { \
 		ZEPHIR_GET_ZVAL_PARAMS(__VA_ARGS__); \

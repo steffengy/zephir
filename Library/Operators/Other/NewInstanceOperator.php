@@ -131,9 +131,9 @@ class NewInstanceOperator extends BaseOperator
                     $safeSymbolVariable->setIsInitialized(true, $compilationContext, $expression);
                     $safeSymbolVariable->increaseUses();
 
-                    $compilationContext->codePrinter->output('zephir_fetch_safe_class(' . $safeSymbolVariable->getName() .', ' . $classNameVariable->getName() .');');
+                    $compilationContext->codePrinter->output('zephir_fetch_safe_class(' . $safeSymbolVariable->getPointeredName() .', ' . $classNameVariable->getPointeredName() .');');
 
-                    $classNameToFetch = 'Z_STRVAL_P(' . $safeSymbolVariable->getName() . '), Z_STRLEN_P(' . $safeSymbolVariable->getName() . ')';
+                    $classNameToFetch = 'Z_STRVAL_P(' . $safeSymbolVariable->getPointeredName() . '), Z_STRLEN_P(' . $safeSymbolVariable->getPointeredName() . ')';
                     $zendClassEntry = $compilationContext->cacheManager->getClassEntryCache()->get($classNameToFetch, true, $compilationContext);
                     $classEntry = $zendClassEntry->getName();
 

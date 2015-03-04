@@ -248,7 +248,7 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 	zephir_fcall_cache_entry *temp_cache_entry = NULL;
 	zend_class_entry *old_scope = EG(scope);
 	ulong fcall_key_hash;
-	zend_bool bypass_fcache = 0;
+	zend_bool call_constructor = 0;
 
 	assert(obj_ce || !object_p);
 
@@ -266,7 +266,7 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 		return FAILURE;
 	}
 
-	bypass_fcache = Z_TYPE_P(function_name) == IS_UNDEF;
+	call_constructor = Z_TYPE_P(function_name) == IS_UNDEF;
 	if (type != zephir_fcall_function && !object_p) {
 		object_p = &(EG(current_execute_data)->This);
 		if (!obj_ce && object_p) {
@@ -278,7 +278,7 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 		EG(scope) = obj_ce;
 	}
 
-	if ((!cache_entry || !*cache_entry) && !bypass_fcache) {
+	if ((!cache_entry || !*cache_entry)) {
 		if (zephir_globals_ptr->cache_enabled) {
 			fcall_key_hash = zephir_make_fcall_key(&fcall_key, &fcall_key_len, (object_p && type != zephir_fcall_ce ? Z_OBJCE_P(object_p) : obj_ce), type, function_name);
 		}
@@ -294,33 +294,31 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 	fci.no_separation  = 1;
 	fci.symbol_table   = NULL;
 
-	if (bypass_fcache) {
-		if (!obj_ce->constructor) {
+	fcic.initialized = 0;
+	fcic.function_handler = NULL;
+	if (!cache_entry || !*cache_entry) {
+		if (fcall_key && (temp_cache_entry = zend_hash_str_find_ptr(zephir_globals_ptr->fcache, fcall_key, fcall_key_len)) != NULL) {
+			zephir_fcall_populate_fci_cache(&fcic, &fci, type);
+			fcic.function_handler = temp_cache_entry;
+		}
+	} else {
+		zephir_fcall_populate_fci_cache(&fcic, &fci, type);
+		fcic.function_handler = *cache_entry;
+	}
+
+	if (call_constructor) {
+		if (fcic.initialized == 0) {
+			zephir_fcall_populate_fci_cache(&fcic, &fci, type);
+		}
+		assert(fcic.initialized);
+		/* We call the CE constructor */
+		fcic.function_handler = type == zephir_fcall_parent ? fcic.calling_scope->constructor : fcic.called_scope->constructor;
+		if (!fcic.function_handler) {
 			zend_error(E_ERROR, "Trying to call constructor, when none exists! Maybe corrupt functionname zval!");
 		}
-		if (!object_p) {
-			zend_error(E_ERROR, "Trying to call constructor of a none-object! Maybe corrupt object zval");
-		}
-		/* We call the CE constructor - bypass entire fcache logic, most effective */
-		fcic.initialized = 1;
-		fcic.function_handler = obj_ce->constructor;
-		fcic.calling_scope = obj_ce; //EG(scope) = obj_ce
-		fcic.called_scope = obj_ce;
-		fcic.object = object_p ? Z_OBJ_P(object_p) : NULL;
-	} else {
-		fcic.initialized = 0;
-		fcic.function_handler = NULL;
-		if (!cache_entry || !*cache_entry) {
-			if (fcall_key && (temp_cache_entry = zend_hash_str_find_ptr(zephir_globals_ptr->fcache, fcall_key, fcall_key_len)) != NULL) {
-				zephir_fcall_populate_fci_cache(&fcic, &fci, type);
-
-				fcic.function_handler = temp_cache_entry;
-			}
-		} else {
-			zephir_fcall_populate_fci_cache(&fcic, &fci, type);
-			fcic.function_handler = *cache_entry;
-		}
+		assert(object_p);
 	}
+
 	status = ZEPHIR_ZEND_CALL_FUNCTION_WRAPPER(&fci, &fcic);
 	/* DBG: (crash & open debugger)
 	retval_ptr = NULL;
@@ -328,7 +326,7 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 
 	EG(scope) = old_scope;
 
-	if ((!cache_entry || !*cache_entry) && !bypass_fcache) {
+	if ((!cache_entry || !*cache_entry)) {
 		if (EXPECTED(status != FAILURE) && fcall_key && !temp_cache_entry && fcic.initialized) {
 			zephir_fcall_cache_entry *temp_cache_entry = fcic.function_handler;
 			if (NULL == zend_hash_str_add_ptr(zephir_globals_ptr->fcache, fcall_key, fcall_key_len, temp_cache_entry)) {
