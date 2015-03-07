@@ -343,6 +343,7 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 		for (arg = 0; arg < param_count; ++arg) {
 			if (ARG_SHOULD_BE_SENT_BY_REF(fcic.function_handler, arg + 1)) {
 				ZVAL_NEW_REF(param_arr + arg, params[arg]);
+				ZVAL_REF(params[arg], Z_REF_P(param_arr + arg));
 				if (Z_REFCOUNTED_P(params[arg])) {
 					Z_ADDREF_P(params[arg]);
 				}
