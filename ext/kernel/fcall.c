@@ -236,10 +236,11 @@ static ulong zephir_make_fcall_key(char **result, size_t *length, const zend_cla
  */
 int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_call_type type,
 	zval *function_name, zval *retval_ptr, zephir_fcall_cache_entry **cache_entry, uint32_t param_count,
-	zval params[])
+	zval *params[])
 {
 	zval local_retval_ptr;
-	int status;
+	int status, arg;
+	zval *param_arr;
 	zend_fcall_info fci;
 	zend_fcall_info_cache fcic;
 	zend_zephir_globals_def *zephir_globals_ptr = ZEPHIR_VGLOBAL;
@@ -289,8 +290,8 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 	fci.object     = object_p ? Z_OBJ_P(object_p) : NULL;
 	fci.function_name  = *function_name;
 	fci.retval = retval_ptr ? retval_ptr : &local_retval_ptr;
-	fci.param_count    = param_count;
-	fci.params         = params;
+	fci.param_count    = 0;
+	fci.params         = NULL;
 	fci.no_separation  = 1;
 	fci.symbol_table   = NULL;
 
@@ -317,12 +318,44 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 			zend_error(E_ERROR, "Trying to call constructor, when none exists! Maybe corrupt functionname zval!");
 		}
 		assert(object_p);
+	} else if (!cache_entry || !*cache_entry) {
+		zend_string *callable_name;
+		char *error = NULL;
+
+		if (!zend_is_callable_ex(&fci.function_name, fci.object, IS_CALLABLE_CHECK_SILENT, &callable_name, &fcic, &error)) {
+			if (error) {
+				zend_error(E_WARNING, "Invalid callback %s, %s", callable_name->val, error);
+				efree(error);
+			}
+			if (callable_name) {
+				zend_string_release(callable_name);
+			}
+			return FAILURE;
+		} else if (error) {
+			zend_error(E_STRICT, "%s", error);
+			efree(error);
+		}
+		zend_string_release(callable_name);
+	}
+
+	if (param_count) {
+		param_arr = emalloc(param_count * sizeof(zval));
+		for (arg = 0; arg < param_count; ++arg) {
+			if (ARG_SHOULD_BE_SENT_BY_REF(fcic.function_handler, arg + 1)) {
+				ZVAL_NEW_REF(param_arr + arg, params[arg]);
+				if (Z_REFCOUNTED_P(params[arg])) {
+					Z_ADDREF_P(params[arg]);
+				}
+			} else if(params[arg] != NULL) {
+				ZVAL_COPY_VALUE(param_arr + arg, params[arg]);
+			}
+		}
+		fci.params = param_arr;
+		fci.param_count = param_count;
 	}
 
 	status = ZEPHIR_ZEND_CALL_FUNCTION_WRAPPER(&fci, &fcic);
-	/* DBG: (crash & open debugger)
-	retval_ptr = NULL;
-	*retval_ptr = *function_name;*/
+	if (param_count) efree(param_arr);
 
 	EG(scope) = old_scope;
 
@@ -422,7 +455,7 @@ static char *zephir_fcall_possible_method(zend_class_entry *ce, const char *wron
 int zephir_call_class_method_aparams(zval *return_value_ptr, zend_class_entry *ce, zephir_call_type type, zval *object,
 	const char *method_name, uint32_t method_len,
 	zephir_fcall_cache_entry **cache_entry,
-	uint32_t param_count, zval params[])
+	uint32_t param_count, zval *params[])
 {
 	char *possible_method;
 	zval fn;
@@ -535,7 +568,7 @@ int zephir_call_class_method_aparams(zval *return_value_ptr, zend_class_entry *c
 
 int zephir_call_func_aparams(zval *return_value_ptr, const char *func_name, uint32_t func_length,
 	zephir_fcall_cache_entry **cache_entry,
-	uint32_t param_count, zval params[])
+	uint32_t param_count, zval *params[])
 {
 	int status;
 	zval func;
@@ -566,7 +599,7 @@ int zephir_call_func_aparams(zval *return_value_ptr, const char *func_name, uint
 
 int zephir_call_zval_func_aparams(zval *return_value_ptr, zval *func_name,
 	zephir_fcall_cache_entry **cache_entry,
-	uint32_t param_count, zval *params)
+	uint32_t param_count, zval *params[])
 {
 	int status;
 
