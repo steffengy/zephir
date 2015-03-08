@@ -341,14 +341,15 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 	if (param_count) {
 		param_arr = emalloc(param_count * sizeof(zval));
 		for (arg = 0; arg < param_count; ++arg) {
-			if (ARG_SHOULD_BE_SENT_BY_REF(fcic.function_handler, arg + 1)) {
-				ZVAL_NEW_REF(param_arr + arg, params[arg]);
-				ZVAL_REF(params[arg], Z_REF_P(param_arr + arg));
+			if (ARG_SHOULD_BE_SENT_BY_REF(fcic.function_handler, arg + 1) && !Z_ISREF_P(params[arg])) {
+				ZVAL_NEW_REF(&param_arr[arg], params[arg]);
+				//zval_ptr_dtor(params[arg]);
 				if (Z_REFCOUNTED_P(params[arg])) {
 					Z_ADDREF_P(params[arg]);
 				}
+				ZVAL_REF(params[arg], Z_REF_P(&param_arr[arg]));
 			} else if(params[arg] != NULL) {
-				ZVAL_COPY_VALUE(param_arr + arg, params[arg]);
+				ZVAL_COPY(&param_arr[arg], params[arg]);
 			}
 		}
 		fci.params = param_arr;

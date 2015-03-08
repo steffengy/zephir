@@ -160,8 +160,9 @@ class StringsManager
             $code .= "\t" . '} else {' . PHP_EOL;
             $code .= "\t\t" . 'tmp_str = strpprintf(length, "' . implode('', $varTypes) . '", ' . implode(', ', $varOps) . ');' . PHP_EOL;
             $code .= "\t" . '}' . PHP_EOL;
-            $code .= "\t" . 'ZVAL_NEW_STR(result, tmp_str);' . PHP_EOL;
-            $code .= "\t" . 'zend_string_release(tmp_str);' . PHP_EOL;
+            $code .= "\t" . 'ZVAL_STR(result, tmp_str);' . PHP_EOL;
+            //Do not release the string here, or the refcount (logically) breaks:
+            //$code .= "\t" . '//zend_string_release(tmp_str);' . PHP_EOL;
 
             foreach ($zvars as $zvar) {
                 $code .= "\t" . 'if (use_copy' . $zvar . ') {' . PHP_EOL;
