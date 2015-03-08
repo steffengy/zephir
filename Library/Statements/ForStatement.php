@@ -818,7 +818,12 @@ class ForStatement extends StatementAbstract
         }*/
         
         if (isset($keyVariable)) {
-            $codePrinter->output("\t" . 'ZVAL_STR(&' . $keyVariable->getName() . ', ' . $arrayStrKey->getName() . ');');
+            /* We need to check for numeric/string keys here */
+            $codePrinter->output("\t" . 'if (Z_TYPE(' . $keyVariable->getName() . ') == IS_STRING) { ');
+            $codePrinter->output("\t\t" . 'ZVAL_STR(&' . $keyVariable->getName() . ', ' . $arrayStrKey->getName() . ');');
+            $codePrinter->output("\t" . '} else {');
+            $codePrinter->output("\t\t" . 'ZVAL_LONG(&' . $keyVariable->getName() . ', ' . $arrayNumKey->getName() . ');');
+            $codePrinter->output("\t" . '}');
         }
         if (isset($variable)) {
             $codePrinter->output("\t" . 'ZVAL_COPY_VALUE(&' . $variable->getName() . ', ' . $arrayVal->getName() . ');');

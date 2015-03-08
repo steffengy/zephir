@@ -151,6 +151,32 @@ int zephir_instance_of_ev(const zval *object, const zend_class_entry *ce) {
 	return instanceof_function(Z_OBJCE_P(object), ce);
 }
 
+/**
+ * Check if an object is instance of a class
+ */
+int zephir_is_instance_of(zval *object, const char *class_name, unsigned int class_length)
+{
+	zend_class_entry *ce, *temp_ce;
+	zend_string *temp_name;
+
+	if (Z_TYPE_P(object) == IS_OBJECT) {
+
+		ce = Z_OBJCE_P(object);
+		if (ce->name->len == class_length) {
+			return !zend_binary_strcasecmp(ce->name->val, ce->name->len, class_name, class_length);
+		}
+
+		temp_name = zend_string_init(class_name, class_length, 0);
+		temp_ce = zend_fetch_class(temp_name, ZEND_FETCH_CLASS_DEFAULT);
+		zend_string_release(temp_name);
+		if (temp_ce) {
+			return instanceof_function(ce, temp_ce);
+		}
+	}
+
+	return 0;
+}
+
 zval *zephir_read_property(zval *target, zval *src, const char *name, size_t length, zend_bool silent)
 {
 	zval tmp;

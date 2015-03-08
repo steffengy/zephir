@@ -35,6 +35,7 @@ if test "$PHP_TEST" = "yes"; then
 	test\fannkuch.zep.c
 	test\fcall.zep.c
 	test\fibonnaci.zep.c
+	test\flow.zep.c
 	test\fortytwo.zep.c
 	test\instanceoff.zep.c
 	test\internalclasses.zep.c
@@ -43,6 +44,8 @@ if test "$PHP_TEST" = "yes"; then
 	test\issues.zep.c
 	test\json.zep.c
 	test\logical.zep.c
+	test\mcall.zep.c
+	test\mcallchained.zep.c
 	test\methodabstract.zep.c
 	test\methodargs.zep.c
 	test\methodinterface.zep.c
@@ -89,6 +92,7 @@ if test "$PHP_TEST" = "yes"; then
 	test\properties\publicproperties.zep.c
 	test\properties\staticprotectedproperties.zep.c
 	test\properties\staticpublicproperties.zep.c
+	test\quantum.zep.c
 	test\range.zep.c
 	test\references.zep.c
 	test\regexdna.zep.c
@@ -96,8 +100,11 @@ if test "$PHP_TEST" = "yes"; then
 	test\resourcetest.zep.c
 	test\returns.zep.c
 	test\router\exception.zep.c
+	test\scall.zep.c
+	test\scallexternal.zep.c
 	test\scallparent.zep.c
 	test\spectralnorm.zep.c
+	test\spropertyaccess.zep.c
 	test\statements.zep.c
 	test\strings.zep.c
 	test\ternary.zep.c

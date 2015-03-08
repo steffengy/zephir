@@ -44,6 +44,8 @@
 #define ZEPHIR_GT(op1, op2)       zephir_greater(op1, op2)
 #define ZEPHIR_GT_LONG(op1, op2)  ((Z_TYPE_P(op1) == IS_LONG && Z_LVAL_P(op1) > op2) || zephir_greater_long(op1, op2))
 
+#define ZEPHIR_STRING_OFFSET(op1, index) ((index >= 0 && index < Z_STRLEN_P(op1)) ? Z_STRVAL_P(op1)[index] : '\0')
+
 #define zephir_get_strval(left, right) \
 	{ \
 		int use_copy_right; \
@@ -141,6 +143,7 @@ int zephir_greater(zval *op1, zval *op2);
 double zephir_safe_div_long_long(long op1, long op2);
 double zephir_safe_div_long_zval(long op1, zval *op2);
 double zephir_safe_div_long_double(long op1, double op2);
+double zephir_safe_div_double_long(double op1, long op2);
 
 #define zephir_get_boolval(z) (Z_TYPE_P(z) == IS_TRUE ? 1 : (Z_TYPE_P(z) == IS_FALSE ? 0 : zephir_get_boolval_ex(z)))
 #define zephir_get_doubleval(z) (Z_TYPE_P(z) == IS_DOUBLE ? Z_DVAL_P(z) : zephir_get_doubleval_ex(z))
@@ -153,5 +156,7 @@ double zephir_safe_div_long_double(long op1, double op2);
 void zephir_negate(zval *z);
 
 void zephir_concat_self_str(zval *left, const char *right, int right_length);
+void zephir_concat_self_char(zval *left, char right);
+void zephir_concat_self(zval *left, zval *right);
 
 #endif

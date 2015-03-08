@@ -4,6 +4,7 @@
 
 void zephir_get_called_class(zval *return_value);
 int zephir_instance_of_ev(const zval *object, const zend_class_entry *ce);
+int zephir_is_instance_of(zval *object, const char *class_name, unsigned int class_length);
 int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entry *ce, const char *method_name, uint32_t method_length);
 
 /* _str receives the old char * wrapped in SL */

@@ -391,6 +391,18 @@ double zephir_safe_div_long_double(long op1, double op2)
 }
 
 /**
+ * Do safe divisions between two double/long
+ */
+double zephir_safe_div_double_long(double op1, long op2)
+{
+	if (!op2) {
+		zend_error(E_WARNING, "Division by zero");
+		return 0;
+	}
+	return op1 / (double) op2;
+}
+
+/**
  * Do safe divisions between two longs
  */
 double zephir_safe_div_long_long(long op1, long op2)
@@ -452,7 +464,6 @@ void zephir_concat_self_str(zval *left, const char *right, int right_length)
 	zval left_copy;
 	zend_string *tmp_str;
 	int use_copy = 0;
-	size_t length;
 
 	/* If the left operator is not initialized, just build a new string */
 	if (Z_TYPE_P(left) == IS_NULL || Z_TYPE_P(left) == IS_UNDEF) {
@@ -474,10 +485,41 @@ void zephir_concat_self_str(zval *left, const char *right, int right_length)
 
 	tmp_str = strpprintf(Z_STRLEN_P(left) + right_length, "%s%s", Z_STRVAL_P(left), right);
 	zval_ptr_dtor(left);
-	ZVAL_NEW_STR(left, tmp_str);
-	zend_string_release(tmp_str);
+	ZVAL_STR(left, tmp_str);
 
 	if (use_copy) {
 		zval_dtor(&left_copy);
+	}
+}
+
+/**
+ * Appends the content of the right operator to the left operator
+ */
+void zephir_concat_self_char(zval *left, char right)
+{
+	char tmp[2] = { right };
+	tmp[1] = '\0';
+	zephir_concat_self_str(left, tmp, 2);
+}
+
+/**
+ * Appends the content of the right operator to the left operator
+ */
+void zephir_concat_self(zval *left, zval *right)
+{
+	int use_copy;
+	zval right_copy;
+
+	/* Convert to string, if other type */
+	if (Z_TYPE_P(right) != IS_STRING) {
+		use_copy = zend_make_printable_zval(right, &right_copy);
+		if (use_copy) {
+			ZEPHIR_CPY_WRT_CTOR(right, &right_copy);
+		}
+	}
+
+	zephir_concat_self_str(left, Z_STRVAL_P(right), Z_STRLEN_P(right));
+	if (use_copy) {
+		zval_dtor(&right_copy);
 	}
 }

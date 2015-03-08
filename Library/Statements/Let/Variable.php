@@ -581,7 +581,7 @@ class Variable
 
                                     case 'concat-assign':
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        $codePrinter->output('zephir_concat_self_char(&' . $variable . ', ' . $itemVariable->getName() . ' TSRMLS_CC);');
+                                        $codePrinter->output('zephir_concat_self_char(&' . $variable . ', ' . $itemVariable->getName() . ');');
                                         break;
 
                                     default:
@@ -1041,19 +1041,19 @@ class Variable
 
                                     case 'concat-assign':
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        $codePrinter->output('zephir_concat_self(&' . $variable . ', ' . $itemVariable->getName() . ' TSRMLS_CC);');
+                                        $codePrinter->output('zephir_concat_self(&' . $variable . ', ' . $itemVariable->getPointeredName() . ');');
                                         break;
 
                                     case 'add-assign':
                                         $compilationContext->symbolTable->mustGrownStack(true);
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        $codePrinter->output('ZEPHIR_ADD_ASSIGN(&' . $variable . ', ' . $itemVariable->getName() . ');');
+                                        $codePrinter->output('ZEPHIR_ADD_ASSIGN(&' . $variable . ', ' . $itemVariable->getPointeredName() . ');');
                                         break;
 
                                     case 'sub-assign':
                                         $compilationContext->symbolTable->mustGrownStack(true);
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        $codePrinter->output('ZEPHIR_SUB_ASSIGN(&' . $variable . ', ' . $itemVariable->getName() . ');');
+                                        $codePrinter->output('ZEPHIR_SUB_ASSIGN(&' . $variable . ', ' . $itemVariable->getPointeredName() . ');');
                                         break;
 
                                     default:
