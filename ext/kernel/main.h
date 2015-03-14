@@ -179,7 +179,7 @@ int zephir_fast_count_int(zval *value TSRMLS_DC);
 		} \
 	}
 
-inline int zephir_get_constant(zval *return_value, char *name, size_t len);
+int ZEPHIR_FASTCALL zephir_get_constant(zval *return_value, char *name, size_t len);
 #define ZEPHIR_GET_CONSTANT(return_value, const_name) RETURN_MM_ON_FAILURE(zephir_get_constant(return_value, SL(const_name)));
 
 /* Fetch Parameters */

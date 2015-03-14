@@ -12,7 +12,7 @@ void zephir_uncamelize(zval *return_value, const zval *str);
 /** Function replacement */
 int zephir_fast_strlen_ev(zval *str);
 void zephir_fast_join_ex(zval *result, zend_string *glue, zval *pieces);
-inline void zephir_fast_join_str(zval *return_value, char *glue, unsigned int glue_length, zval *pieces);
+void ZEPHIR_FASTCALL zephir_fast_join_str(zval *return_value, char *glue, unsigned int glue_length, zval *pieces);
 void zephir_fast_explode(zval *return_value, zval *delimiter, zval *str, long limit);
 void zephir_fast_explode_str(zval *return_value, const char *delimiter, int delimiter_length, zval *str, long limit);
 void zephir_fast_trim(zval *return_value, zval *str, zval *charlist, int where);

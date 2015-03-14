@@ -246,7 +246,7 @@ int zephir_get_global(zval *arr, const char *global, unsigned int global_length)
 	return SUCCESS;
 }
 
-inline int zephir_get_constant(zval *return_value, char *name, size_t len)
+int ZEPHIR_FASTCALL zephir_get_constant(zval *return_value, char *name, size_t len)
 {
 	zval *const_zval;
 	zend_string *const_str = zend_string_init(name, len, 0);

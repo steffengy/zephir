@@ -7,5 +7,5 @@ if (PHP_%PROJECT_UPPER% != "no") {
   //ADD_SOURCES(configure_module_dirname + "/kernel/extended", "array.c", "%PROJECT_LOWER%");
   %EXTRA_FILES_COMPILED%
   %FILES_COMPILED%
-  ADD_FLAG("CFLAGS_%PROJECT_UPPER%", ""); //TODO: Enable /D ZEPHIR_RELEASE again
+  ADD_FLAG("CFLAGS_%PROJECT_UPPER%", "/D ZEPHIR_RELEASE");
 }

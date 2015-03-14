@@ -12,7 +12,7 @@ int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entr
 /* _str receives the old char * wrapped in SL */
 #define zephir_fetch_class_str(class_name, fetch_type) zephir_fetch_class_str_ex(class_name, fetch_type)
 #define zephir_fetch_class(class_name, fetch_type) zend_fetch_class(class_name, fetch_type)
-inline zend_class_entry *zephir_fetch_class_str_ex(char *class_name, size_t length, int fetch_type);
+zend_class_entry *zephir_fetch_class_str_ex(char *class_name, size_t length, int fetch_type);
 int zephir_class_exists(const zval *class_name, int autoload);
 int zephir_interface_exists(const zval *class_name, int autoload);
 int zephir_method_exists(const zval *object, const zval *method_name);

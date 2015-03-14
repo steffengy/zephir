@@ -135,7 +135,7 @@ void zephir_fast_join_ex(zval *result, zend_string *glue, zval *pieces)
  * This function is an adaption of the php_implode function
  *
  */
-inline void zephir_fast_join_str(zval *return_value, char *glue, unsigned int glue_length, zval *pieces)
+void ZEPHIR_FASTCALL zephir_fast_join_str(zval *return_value, char *glue, unsigned int glue_length, zval *pieces)
 {
 	/* Maybe implement the fast method again? */
 	zend_string *zglue = zend_string_init(glue, glue_length, 0);
