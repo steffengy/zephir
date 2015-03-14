@@ -18,6 +18,7 @@ Experiment Information
 * This experiment did not focus on performance, so some implementations may be heavily inefficient.
 * This experiment will very likely contain some (more or less) heavy memory leaks, since it was completed in very short time
   and is not tested at all (except unit tests - which are very limited)
+* PSR2 checking disabled, because it's not necessary for an experiment, and I do not want to invest time into fixing PSR-2.
 
 Main features:
 
