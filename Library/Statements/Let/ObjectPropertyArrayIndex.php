@@ -308,7 +308,7 @@ class ObjectPropertyArrayIndex extends ArrayIndex
                 case 'long':
                 case 'ulong':
                     $keys .= 'l';
-                    $offsetItems[] = $offsetExpr->getCode();
+                    $offsetItems[] = '((zend_ulong)' . $offsetExpr->getCode() . ')';
                     $numberParams++;
                     break;
 
