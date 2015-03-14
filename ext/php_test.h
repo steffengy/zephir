@@ -72,6 +72,7 @@ ZEND_EXTERN_MODULE_GLOBALS(test)
 #endif
 
 #ifdef ZTS
+    void ***tsrm_ls;
 	#define ZEPHIR_VGLOBAL ((zend_test_globals *) (*((void ***) tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(test_globals_id)])
 #else
 	#define ZEPHIR_VGLOBAL &(test_globals)

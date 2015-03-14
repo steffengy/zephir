@@ -473,6 +473,7 @@ int zephir_call_class_method_aparams(zval *return_value_ptr, zend_class_entry *c
 	uint32_t param_count, zval *params[])
 {
 	char *possible_method;
+	zend_string *tmp_str = NULL;
 	zval fn;
 	zval mn;
 	int status;
@@ -500,7 +501,8 @@ int zephir_call_class_method_aparams(zval *return_value_ptr, zend_class_entry *c
 
 				case zephir_fcall_ce:
 					assert(ce != NULL);
-					add_next_index_str(&fn, ce->name);
+					tmp_str = zend_string_init(ce->name->val, ce->name->len, 0);
+					add_next_index_str(&fn, tmp_str);
 					break;
 
 				case zephir_fcall_method:

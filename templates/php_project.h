@@ -57,6 +57,7 @@ ZEND_EXTERN_MODULE_GLOBALS(%PROJECT_LOWER%)
 #endif
 
 #ifdef ZTS
+    void ***tsrm_ls;
 	#define ZEPHIR_VGLOBAL ((zend_%PROJECT_LOWER%_globals *) (*((void ***) tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(%PROJECT_LOWER%_globals_id)])
 #else
 	#define ZEPHIR_VGLOBAL &(%PROJECT_LOWER%_globals)
