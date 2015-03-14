@@ -73,7 +73,7 @@ class AssignTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue($t->testAssign34() === false);
         $this->assertTrue($t->testAssign35() === false);
         $this->assertTrue($t->testAssign36() === false);
-        $this->assertTrue($t->testAssign37() == $this->getComplexArrayTestValue());
+        $this->assertEquals($t->testAssign37(), $this->getComplexArrayTestValue());
     }
 
     public function testPropertyAssign()

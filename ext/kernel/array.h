@@ -15,7 +15,7 @@ int zephir_array_isset_string_fetch(zval *fetched, zval *arr, char *index, uint3
 int zephir_array_isset_long_fetch(zval *fetched, zval *arr, unsigned long index, int readonly);
 
 zval *zephir_array_update_string(zval *arr, const char *index, size_t index_length, zval *value, int flags);
-zval *zephir_array_update_long(zval *arr, unsigned long index, zval *value, int flags ZEPHIR_DEBUG_PARAMS);
+zval *zephir_array_update_long(zval *arr, zend_ulong index, zval *value, int flags ZEPHIR_DEBUG_PARAMS);
 int zephir_array_update_zval(zval *arr, zval *index, zval *value, int flags);
 int zephir_array_update_multi(zval *arr, zval *value, const char *types, int types_length, int types_count, ...);
 int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int types_length, int types_count, va_list ap);

@@ -28,7 +28,7 @@ typedef zend_function zephir_fcall_cache_entry;
 
 #else
 	#define ZEPHIR_PASS_CALL_PARAMS(x) x
-	#define ZEPHIR_CALL_NUM_PARAMS(x) sizeof(x)/sizeof(zval)
+	#define ZEPHIR_CALL_NUM_PARAMS(x) sizeof(x)/sizeof(zval*)
 	#define ZEPHIR_FETCH_VA_ARGS
 #endif
 

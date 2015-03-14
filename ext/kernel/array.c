@@ -15,7 +15,7 @@
 //#include "kernel/hash.h"
 //#include "kernel/backtrace.h"
 
-zval *zephir_array_update_long(zval *arr, unsigned long index, zval *value, int flags ZEPHIR_DEBUG_PARAMS){
+zval *zephir_array_update_long(zval *arr, zend_ulong index, zval *value, int flags ZEPHIR_DEBUG_PARAMS){
 
 	if (Z_TYPE_P(arr) != IS_ARRAY) {
 		zend_error(E_WARNING, "Cannot use a scalar value as an array in %s on line %d", file, line);
@@ -36,7 +36,9 @@ zval *zephir_array_update_long(zval *arr, unsigned long index, zval *value, int 
 	}
 
 	if ((flags & PH_COPY) == PH_COPY) {
-		if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
+		if (Z_REFCOUNTED_P(value)) {
+			Z_ADDREF_P(value);
+		}
 	}
 
 	return zend_hash_index_update(Z_ARRVAL_P(arr), index, value);
@@ -273,7 +275,7 @@ int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int 
 		char *arg = NULL;
 		zval *zv;
 		zend_bool must_free = 0;
-		ulong tmp_arg;
+		zend_ulong tmp_arg = 0;
 		int use_tmp_arg = 0;
 
 		switch (types[i])
@@ -284,7 +286,7 @@ int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int 
 				break;
 
 			case 'l':
-				tmp_arg = (ulong) va_arg(ap, long);
+				tmp_arg = va_arg(ap, zend_ulong);
 				use_tmp_arg = 1;
 				break;
 
@@ -298,7 +300,7 @@ int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int 
 						break;
 
 					case IS_DOUBLE:
-						tmp_arg = (ulong) Z_DVAL_P(zv);
+						tmp_arg = (zend_ulong) Z_DVAL_P(zv);
 						use_tmp_arg = 1;
 						break;
 
@@ -310,7 +312,7 @@ int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int 
 
 					case IS_LONG:
 					case IS_RESOURCE:
-						tmp_arg = (ulong) Z_LVAL_P(zv);
+						tmp_arg = Z_LVAL_P(zv);
 						use_tmp_arg = 1;
 						break;
 
@@ -341,9 +343,9 @@ int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int 
 
 		if (i == types_length - 1)
 		{
-			if (use_tmp_arg)
+			if (use_tmp_arg) {
 				zephir_array_update_long(p, tmp_arg, value, PH_SEPARATE | PH_COPY ZEPHIR_DEBUG_PARAMS_DUMMY);
-			else
+			} else
 				zephir_array_update_string(p, arg, len, value, PH_SEPARATE | PH_COPY);
 			if (must_free) efree(arg);
 			continue;
