@@ -241,7 +241,7 @@ int zephir_array_fetch_string(zval *return_value, zval *arr, char *index, size_t
 	return FAILURE;
 }
 
-int zephir_array_append(zval *arr, zval *value, int flags) {
+int zephir_array_append(zval *arr, zval *value, int flags ZEPHIR_DEBUG_PARAMS) {
 
 	if (Z_TYPE_P(arr) != IS_ARRAY) {
 		zend_error(E_WARNING, "Cannot use a scalar value as an array in %s on line %d", __FILE__, __LINE__);
@@ -335,7 +335,7 @@ int zephir_array_update_multi_ex(zval *arr, zval *value, const char *types, int 
 		}
 
 		if (i == types_length - 1 && arg == NULL && !use_tmp_arg) {
-			zephir_array_append(p, value, 0);
+			zephir_array_append(p, value, 0 ZEPHIR_DEBUG_PARAMS_DUMMY);
 			continue;
 		}
 
