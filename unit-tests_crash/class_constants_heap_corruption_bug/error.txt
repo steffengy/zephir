@@ -1,0 +1,4 @@
+That test leads to a memory corruption (zend_inheritance of properties somehow WTF)
+It already crashes when only compiling this into the binary (INIT function, inheritance call)
+
+re-enable the code in ConstantsInterfaceTest.php after fixing

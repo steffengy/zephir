@@ -125,7 +125,7 @@ class FetchOperator extends BaseOperator
                         return new CompiledExpression('bool', 'zephir_array_isset_long_fetch(' . $variable->getPointeredName() . ', ' . $evalVariable->getPointeredName() . ', ' . $resolvedExpr->getCode() . ', ' . $flags . ')', $expression);
 
                     case 'string':
-                        return new CompiledExpression('bool', 'zephir_array_isset_string_fetch(' . $variable->getPointeredName() . ', ' . $evalVariable->getPointeredName() . ', SS("' . $resolvedExpr->getCode() . '"), ' . $flags . ')', $expression);
+                        return new CompiledExpression('bool', 'zephir_array_isset_string_fetch(' . $variable->getPointeredName() . ', ' . $evalVariable->getPointeredName() . ', SL("' . $resolvedExpr->getCode() . '"), ' . $flags . ')', $expression);
 
                     case 'variable':
                         $indexVariable = $compilationContext->symbolTable->getVariableForRead($resolvedExpr->getCode(), $compilationContext, $expression['right']['left']);
@@ -134,7 +134,7 @@ class FetchOperator extends BaseOperator
                             case 'int':
                             case 'long':
                             case 'uint':
-                                return new CompiledExpression('bool', 'zephir_array_isset_long_fetch(&' . $variable->getName() . ', ' . $evalVariable->getName() . ', ' . $indexVariable->getName() . ', ' . $flags . ' TSRMLS_CC)', $expression);
+                                return new CompiledExpression('bool', 'zephir_array_isset_long_fetch(' . $variable->getPointeredName() . ', ' . $evalVariable->getPointeredName() . ', ' . $indexVariable->getName() . ', ' . $flags . ')', $expression);
 
                             case 'string':
                             case 'variable':
@@ -210,7 +210,7 @@ class FetchOperator extends BaseOperator
 
                 $compilationContext->headersManager->add('kernel/object');
 
-                return new CompiledExpression('bool', 'zephir_fetch_property_zval(&' . $variable->getName() . ', ' . $evalVariable->getName() . ', ' . $evalVariableProperty->getName() . ', PH_SILENT_CC)', $expression);
+                return new CompiledExpression('bool', 'zephir_read_property_zval(' . $variable->getPointeredName() . ', ' . $evalVariable->getPointeredName() . ', ' . $evalVariableProperty->getPointeredName() . ', PH_SILENT_CC)', $expression);
 
             default:
                 throw new CompilerException('Cannot use this expression for "fetch" operators', $expression);

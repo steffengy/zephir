@@ -118,7 +118,7 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g)
 		for (i = 0; i < active_memory->pointer; ++i) {
 			if (active_memory->addresses[i] != NULL) {
 				zval *var = active_memory->addresses[i];
-				if (Z_TYPE_P(var) > IS_CALLABLE) {
+				if (Z_TYPE_P(var) > IS_CALLABLE && Z_TYPE_P(var) != IS_INDIRECT) {
 					fprintf(stderr, "%s: observed variable #%d (%p) has invalid type %u [%s]\n", __func__, (int)i, var, Z_TYPE_P(var), active_memory->func);
 					assert(0);
 				}

@@ -25,7 +25,7 @@
 #include "php.h"
 #include "php_ext.h"
 #include "kernel/require.h"
-//#include "kernel/backtrace.h"
+#include "kernel/main.h"
 
 #include <main/php_main.h>
 #include <Zend/zend_exceptions.h>
@@ -42,7 +42,7 @@ int zephir_require_ret(zval *return_value_ptr, const char *require_path)
 	zend_bool ret;
 	zend_file_handle file_handle;
 	zend_op_array *retval;
-	char *opened_path = NULL;
+	zend_string *opened_path = NULL;
 
 	file_handle.filename = require_path;
 	file_handle.free_filename = 0;
@@ -53,13 +53,13 @@ int zephir_require_ret(zval *return_value_ptr, const char *require_path)
 	retval = zend_compile_file(&file_handle, ZEND_REQUIRE);
 	if (retval && file_handle.handle.stream.handle) {
 		if (!file_handle.opened_path) {
-			file_handle.opened_path = opened_path = estrdup(require_path);
+			file_handle.opened_path = opened_path = zend_string_init(SL(require_path), 0);
 		}
 
-		zend_hash_str_add_empty_element(&EG(included_files), file_handle.opened_path, strlen(file_handle.opened_path));
+		zend_hash_str_add_empty_element(&EG(included_files), file_handle.opened_path->val, file_handle.opened_path->len);
 
 		if (opened_path) {
-			efree(opened_path);
+			zend_string_release(opened_path);
 		}
 		zend_execute(retval, return_value_ptr);
 		zend_exception_restore();

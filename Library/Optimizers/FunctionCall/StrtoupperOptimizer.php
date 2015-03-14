@@ -67,7 +67,7 @@ class StrtoupperOptimizer extends OptimizerAbstract
         $symbolVariable->setDynamicTypes('string');
 
         $resolvedParams = $call->getReadOnlyResolvedParams($expression['parameters'], $context, $expression);
-        $context->codePrinter->output('zephir_fast_strtoupper(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ');');
+        $context->codePrinter->output('zephir_fast_strtoupper(' . $symbolVariable->getPointeredName() . ', ' . $resolvedParams[0] . ');');
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }
 }

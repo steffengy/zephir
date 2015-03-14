@@ -201,7 +201,9 @@ class ArrayIndex
                 throw new CompilerException("Value: " . $exprIndex->getType() . " cannot be used as array index", $statement);
         }
         
-        $codePrinter->output("\t" . 'ZEPHIR_SET_SYMBOL(&EG(symbol_table), "' . $variable . '", &' . $variable . ');');
+        if ($isGlobalVariable) {
+            $codePrinter->output("\t" . 'ZEPHIR_SET_SYMBOL(&EG(symbol_table), "' . $variable . '", &' . $variable . ');');
+        }
     }
 
     /**

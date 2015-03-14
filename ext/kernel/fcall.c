@@ -269,8 +269,8 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 
 	call_constructor = Z_TYPE_P(function_name) == IS_UNDEF;
 	if (type != zephir_fcall_function && !object_p) {
-		object_p = &(EG(current_execute_data)->This);
-		if (!obj_ce && object_p) {
+		object_p = EG(current_execute_data) ? &(EG(current_execute_data)->This) : NULL;
+		if (!obj_ce && object_p && Z_OBJ_P(object_p)) {
 			obj_ce = Z_OBJCE_P(object_p);
 		}
 	}
@@ -281,7 +281,7 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 
 	if ((!cache_entry || !*cache_entry)) {
 		if (zephir_globals_ptr->cache_enabled) {
-			fcall_key_hash = zephir_make_fcall_key(&fcall_key, &fcall_key_len, (object_p && type != zephir_fcall_ce ? Z_OBJCE_P(object_p) : obj_ce), type, function_name);
+			fcall_key_hash = zephir_make_fcall_key(&fcall_key, &fcall_key_len, (object_p && Z_OBJ_P(object_p) && type != zephir_fcall_ce ? Z_OBJCE_P(object_p) : obj_ce), type, function_name);
 		}
 	}
 
@@ -357,7 +357,20 @@ int zephir_call_user_function(zval *object_p, zend_class_entry *obj_ce, zephir_c
 	}
 
 	status = ZEPHIR_ZEND_CALL_FUNCTION_WRAPPER(&fci, &fcic);
-	if (param_count) efree(param_arr);
+	if (param_count) {
+		/* References are not supported in zephir yet:
+		 * - They are also not supported as parameters to zephir functions yet, so make sure
+		 * that zephir values receive values
+		 */
+		for (arg = 0; arg < param_count; ++arg) {
+			if (params[arg] != NULL) {
+				if (Z_ISREF_P(params[arg])) {
+					ZVAL_COPY(params[arg], Z_REFVAL_P(params[arg]));
+				}
+			}
+		}
+		efree(param_arr);
+	}
 
 	EG(scope) = old_scope;
 
@@ -507,7 +520,6 @@ int zephir_call_class_method_aparams(zval *return_value_ptr, zend_class_entry *c
 
 	status = zephir_call_user_function(object, ce, type, &fn, return_value_ptr, cache_entry, param_count, params);
 	if (status == FAILURE && !EG(exception)) {
-
 		if (ce) {
 			//TODO possible_method = zephir_fcall_possible_method(ce, method_name);
 			possible_method = "TODO!! zephir_fcall_possible_method: Not ported";
@@ -536,14 +548,14 @@ int zephir_call_class_method_aparams(zval *return_value_ptr, zend_class_entry *c
 				break;
 
 			case zephir_fcall_ce:
-				zephir_throw_exception_format(spl_ce_RuntimeException, "Call to undefined method %s::%s()", ce->name, method_name);
+				zephir_throw_exception_format(spl_ce_RuntimeException, "Call to undefined method %s::%s()", ce->name->val, method_name);
 				break;
 
 			case zephir_fcall_method:
 				if (possible_method) {
-					zephir_throw_exception_format(spl_ce_RuntimeException, "Call to undefined method %s::%s(), did you mean '%s'?", ce->name, method_name, possible_method);
+					zephir_throw_exception_format(spl_ce_RuntimeException, "Call to undefined method %s::%s(), did you mean '%s'?", ce->name->val, method_name, possible_method);
 				} else {
-					zephir_throw_exception_format(spl_ce_RuntimeException, "Call to undefined method %s::%s()", ce->name, method_name);
+					zephir_throw_exception_format(spl_ce_RuntimeException, "Call to undefined method %s::%s()", ce->name->val, method_name);
 				}
 				break;
 

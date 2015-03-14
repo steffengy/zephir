@@ -196,7 +196,17 @@ int zephir_greater_long(zval *op1, long op2) {
 int zephir_greater_equal(zval *op1, zval *op2) {
 	zval result;
 	fast_is_smaller_function(&result, op1, op2);
-	return Z_TYPE(result) == IS_TRUE;
+	return Z_TYPE(result) == IS_FALSE;
+}
+
+/**
+ * Check for greater/equal
+ */
+int zephir_greater_equal_long(zval *op1, long op2) {
+	zval result, op2_zval;
+	ZVAL_LONG(&op2_zval, op2);
+	fast_is_smaller_function(&result, op1, &op2_zval);
+	return Z_TYPE(result) == IS_FALSE;
 }
 
 /**
@@ -507,7 +517,7 @@ void zephir_concat_self_char(zval *left, char right)
  */
 void zephir_concat_self(zval *left, zval *right)
 {
-	int use_copy;
+	int use_copy = 0;
 	zval right_copy;
 
 	/* Convert to string, if other type */

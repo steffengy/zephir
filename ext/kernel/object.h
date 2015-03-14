@@ -3,12 +3,14 @@
 #define ZEPHIR_KERNEL_OBJECT_H
 
 void zephir_get_called_class(zval *return_value);
+void zephir_get_class_ns(zval *result, zval *object, int lower);
+void zephir_get_ns_class(zval *result, zval *object, int lower);
 int zephir_instance_of_ev(const zval *object, const zend_class_entry *ce);
 int zephir_is_instance_of(zval *object, const char *class_name, unsigned int class_length);
 int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entry *ce, const char *method_name, uint32_t method_length);
 
 /* _str receives the old char * wrapped in SL */
-#define zephir_fetch_class_str(class_name, fetch_type) zephir_fetch_class_str_ex(class_name, fetch_type);
+#define zephir_fetch_class_str(class_name, fetch_type) zephir_fetch_class_str_ex(class_name, fetch_type)
 #define zephir_fetch_class(class_name, fetch_type) zend_fetch_class(class_name, fetch_type)
 inline zend_class_entry *zephir_fetch_class_str_ex(char *class_name, size_t length, int fetch_type);
 int zephir_class_exists(const zval *class_name, int autoload);
@@ -27,6 +29,7 @@ int zephir_read_property_zval(zval *result, zval *object, zval *property, int fl
 #define zephir_update_static_property_ce(ce, name_str, value) zend_update_static_property(ce, name_str, value)
 #define zephir_update_static_property_null(ce, name_str) zend_update_static_property_null(ce, name_str)
 #define zephir_update_static_property_bool(ce, name_str, value) zend_update_static_property_bool(ce, name_str, value)
+int zephir_update_property_zval_zval(zval *object, zval *property, zval *value);
 
 /* Unset properties */
 int zephir_unset_property(zval* object, const char* name);
@@ -43,6 +46,14 @@ int zephir_update_static_property_array_multi_ce(zend_class_entry *ce, const cha
 int zephir_property_indecr_ex(zval *object, char *property_name, unsigned int property_length, zend_bool increment);
 #define zephir_property_incr(object, property_name) zephir_property_indecr_ex(object, property_name, 1)
 #define zephir_property_decr(object, property_name) zephir_property_indecr_ex(object, property_name, 0)
+
+/* Class constants */
+int zephir_declare_class_constant(zend_class_entry *ce, const char *name, size_t name_length, zval *zv);
+int zephir_declare_class_constant_null(zend_class_entry *ce, const char *name, size_t name_length);
+int zephir_declare_class_constant_bool(zend_class_entry *ce, const char *name, size_t name_length, zend_bool value);
+int zephir_declare_class_constant_long(zend_class_entry *ce, const char *name, size_t name_length, zend_long value);
+int zephir_declare_class_constant_double(zend_class_entry *ce, const char *name, size_t name_length, double value);
+int zephir_declare_class_constant_string(zend_class_entry *ce, const char *name, size_t name_length, const char *value);
 
 #define zephir_fetch_safe_class(destination, var) \
   	{ \

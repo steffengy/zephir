@@ -222,7 +222,7 @@ class CastOperator extends BaseOperator
                         $symbolVariable = $compilationContext->symbolTable->getTempVariable('string', $compilationContext, $expression);
                         $symbolVariable->setMustInitNull(true);
                         $symbolVariable->setIsInitialized(true, $compilationContext, $expression);
-                        $compilationContext->codePrinter->output('zephir_get_strval(' . $symbolVariable->getPointeredName() . ', ' . $resolved->getCode() . ');');
+                        $compilationContext->codePrinter->output('zephir_get_strval(' . $symbolVariable->getPointeredName() . ', &' . $resolved->getCode() . ');');
                         if ($symbolVariable->isTemporal()) {
                             $symbolVariable->setIdle(true);
                         }

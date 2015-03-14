@@ -38,6 +38,7 @@
 
 /** greater/smaller comparision */
 #define ZEPHIR_GE(op1, op2)       zephir_greater_equal(op1, op2)
+#define ZEPHIR_GE_LONG(op1, op2)  zephir_greater_equal_long(op1, op2)
 #define ZEPHIR_LE(op1, op2)       zephir_less_equal(op1, op2)
 #define ZEPHIR_LT(op1, op2)       ((Z_TYPE_P(op1) == IS_LONG && Z_TYPE_P(op2) == IS_LONG) ? Z_LVAL_P(op1) < Z_LVAL_P(op2) : zephir_less(op1, op2))
 #define ZEPHIR_LT_LONG(op1, op2)  ((Z_TYPE_P(op1) == IS_LONG && Z_LVAL_P(op1) < op2) || zephir_less_long(op1, op2))
@@ -135,6 +136,7 @@ int zephir_compare_strict_string(zval *op1, const char *op2, int op2_length);
 /* greater/smaller */
 int zephir_greater_long(zval *op1, long op2);
 int zephir_greater_equal(zval *op1, zval *op2);
+int zephir_greater_equal_long(zval *op1, long op2);
 int zephir_less(zval *op1, zval *op2);
 int zephir_less_long(zval *op1, long op2);
 int zephir_less_equal(zval *op1, zval *op2);

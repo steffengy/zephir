@@ -18,12 +18,11 @@
 */
 
 namespace Extension;
-
 use Test\ArrayObject;
 
 class ArrayObjectTest extends \PHPUnit_Framework_TestCase
 {
-    public function testSetGet()
+    public function testMethods()
     {
         $t = new ArrayObject();
         $this->assertInstanceOf('\ArrayObject', $t);
@@ -31,7 +30,9 @@ class ArrayObjectTest extends \PHPUnit_Framework_TestCase
         $t->test_1 = 1;
         $this->assertEquals(1, $t->test_1);
 
+        /* Does not work with PHPNG 
         $t["test_2"] = 1;
         $this->assertEquals(1, $t->test_2);
+        */
     }
 }

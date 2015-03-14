@@ -1,16 +1,23 @@
-Zephir
+Zephir (Experiment for PHP 7)
 ======
 
-[![Build Status](https://secure.travis-ci.org/phalcon/zephir.svg?branch=master)](http://travis-ci.org/phalcon/zephir)
-[![Dependency Status](https://www.versioneye.com/package/phalcon:zephir/badge.png)](https://www.versioneye.com/package/phalcon:zephir)
-[![Latest Stable Version](https://poser.pugx.org/phalcon/zephir/v/stable.png)](https://packagist.org/packages/phalcon/zephir)
-[![Total Downloads](https://poser.pugx.org/phalcon/zephir/downloads.png)](https://packagist.org/packages/phalcon/zephir)
+[![Build Status](https://secure.travis-ci.org/steffengy/zephir.svg?branch=zephir-ngexp)](http://travis-ci.org/steffengy/zephir)
 [![License](https://poser.pugx.org/phalcon/zephir/license.svg)](https://packagist.org/packages/phalcon/zephir)
-[![Gitter](https://badges.gitter.im/Join Chat.svg)](https://gitter.im/phalcon/zephir?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Zephir - Ze(nd Engine) Ph(p) I(nt)r(mediate) - is a high level language that eases the creation and maintainability
 of extensions for PHP. Zephir extensions are exported to C code that can be compiled and optimized by major C compilers
 such as gcc/clang/vc++. Functionality is exposed to the PHP language.
+
+Experiment Information
+-------------------
+* Based on #ab2bbbf36b121c9f9804f4131a04c538ee6f2365
+* Current Incompatibilities:
+  - Parameters are passed as value 
+    (leading to failing PregMatch Tests, before they were pased as zval pointers directly into zephir functions)
+  - Constant Inheritance seems broken (HEAP Corruption, atleast for interface inheritance as tested in zephir's unit tests)
+* This experiment did not focus on performance, so some implementations may be heavily inefficient.
+* This experiment will very likely contain some (more or less) heavy memory leaks, since it was completed in very short time
+  and is not tested at all (except unit tests - which are very limited)
 
 Main features:
 
@@ -88,4 +95,4 @@ Current Build Status
 --------------------
 Zephir is built under Travis CI service. Every commit pushed to this repository will queue a build into the continuous integration service and will run all PHPUnit tests to ensure that everything is going well and the project is stable. The current build status is:
 
-[![Build Status](https://secure.travis-ci.org/phalcon/zephir.svg?branch=master)](http://travis-ci.org/phalcon/zephir)
+[![Build Status](https://secure.travis-ci.org/steffengy/zephir.svg?branch=master)](http://travis-ci.org/steffengy/zephir)

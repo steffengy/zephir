@@ -496,7 +496,7 @@ class Variable
                         switch ($statement['operator']) {
                             case 'assign':
                                 $symbolVariable->initVariant($compilationContext);
-                                $codePrinter->output('ZVAL_EMPTY_STRING(' . $variable . ');');
+                                $codePrinter->output('ZVAL_EMPTY_STRING(&' . $variable . ');');
                                 break;
                             default:
                                 throw new CompilerException("Operator '" . $statement['operator'] . "' is not supported for variable type: string", $statement);
@@ -603,7 +603,7 @@ class Variable
 
                                     case 'concat-assign':
                                         $compilationContext->headersManager->add('kernel/operators');
-                                        $codePrinter->output('zephir_concat_self(&' . $variable . ', ' . $itemVariable->getName() . ' TSRMLS_CC);');
+                                        $codePrinter->output('zephir_concat_self(&' . $variable . ', ' . $itemVariable->getPointeredName() . ');');
                                         break;
 
                                     default:

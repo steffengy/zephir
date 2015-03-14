@@ -170,10 +170,10 @@ int zephir_array_fetch(zval *return_value, zval *arr, zval *index, int flags ZEP
 		}
 
 		if (result != FAILURE) {
-			ZVAL_COPY_VALUE(return_value, zv);
 			if ((flags & PH_READONLY) != PH_READONLY) {
-				if (Z_REFCOUNTED_P(return_value)) Z_ADDREF_P(return_value);
+				if (Z_REFCOUNTED_P(zv)) Z_ADDREF_P(zv);
 			}
+			ZVAL_DUP(return_value, zv);
 			return SUCCESS;
 		}
 	}
@@ -217,15 +217,15 @@ int zephir_array_fetch_string(zval *return_value, zval *arr, char *index, size_t
 
 	if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
 		if ((zv = zend_symtable_str_find(Z_ARRVAL_P(arr), index, length)) != NULL) {
-			ZVAL_COPY_VALUE(return_value, zv);
 			if ((flags & PH_READONLY) != PH_READONLY) {
-				if (Z_REFCOUNTED_P(return_value)) Z_ADDREF_P(return_value);
+				if (Z_REFCOUNTED_P(zv)) Z_ADDREF_P(zv);
 			}
+			ZVAL_DUP(return_value, zv);
 			return SUCCESS;
 		}
 
 		if ((flags & PH_NOISY) == PH_NOISY) {
-			zend_error(E_NOTICE, "Undefined index: %lu in %s on line %d", index, file, line);
+			zend_error(E_NOTICE, "Undefined index: %s in %s on line %d", index, file, line);
 		}
 	}
 	else {
@@ -442,7 +442,28 @@ int ZEPHIR_FASTCALL zephir_array_isset_string(const zval *arr, const char *index
 int zephir_array_isset_string_fetch(zval *fetched, zval *arr, char *index, uint32_t index_length, int readonly)
 {
 	ZVAL_NULL(fetched);
-	return zephir_array_fetch_string(fetched, arr, index, index_length, readonly ZEPHIR_DEBUG_PARAMS_DUMMY);
+	return zephir_array_fetch_string(fetched, arr, index, index_length, (readonly ? PH_READONLY : 0) ZEPHIR_DEBUG_PARAMS_DUMMY) == SUCCESS;
+}
+
+int zephir_array_isset_long_fetch(zval *fetched, zval *arr, unsigned long index, int readonly)
+{
+	zval *zv;
+
+	if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
+		if ((zv = zend_hash_index_find(Z_ARRVAL_P(arr), index)) != NULL) {
+			ZVAL_COPY_VALUE(fetched, zv);
+			if (!readonly) {
+				Z_ADDREF_P(fetched);
+			}
+			return 1;
+		}
+	}
+
+	ZVAL_NULL(fetched);
+	if (!readonly) {
+		Z_ADDREF_P(fetched);
+	}
+	return 0;
 }
 
 int zephir_array_update_zval(zval *arr, zval *index, zval *value, int flags) {
@@ -478,7 +499,7 @@ int zephir_array_update_zval(zval *arr, zval *index, zval *value, int flags) {
 			*/
 
 		case IS_DOUBLE:
-			return zend_hash_index_update(ht, (ulong)Z_DVAL_P(index), value) != NULL;
+			return zend_hash_index_update(ht, (zend_ulong)Z_DVAL_P(index), value) != NULL;
 
 		case IS_TRUE:
 			return zend_hash_index_update(ht, 1, value) != NULL;
@@ -488,7 +509,7 @@ int zephir_array_update_zval(zval *arr, zval *index, zval *value, int flags) {
 
 		case IS_LONG:
 		case IS_RESOURCE:
-			return zend_hash_index_update(ht, Z_LVAL_P(index), value) != NULL;
+			return zend_hash_index_update(ht, (zend_ulong)Z_LVAL_P(index), value) != NULL;
 
 		case IS_STRING:
 			return zend_symtable_update(ht, Z_STR_P(index), value) != NULL;

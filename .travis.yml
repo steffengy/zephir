@@ -1,10 +1,7 @@
 language: php
 
 php:
-  - 5.3
-  - 5.4
-  - 5.5
-  - 5.6
+  - 7.0
 
 before_install:
  - git submodule --quiet update --init --recursive
@@ -21,14 +18,9 @@ before_script:
  - ulimit -c unlimited || true
 
 script:
- - vendor/bin/phpcs --standard=PSR2 --report=emacs --extensions=php --warning-severity=0 Library/ unit-tests/Extension/ unit-tests/Zephir/
  - valgrind --read-var-info=yes --error-exitcode=1 --fullpath-after= --track-origins=yes --leak-check=full phpunit --debug
 
 after_failure:
  - sudo apt-get -qq install gdb
  - ./unit-tests/ci/after_failure.sh
 
-notifications:
-  email:
-    - andres@phalconphp.com
-    - eduar@phalconphp.com

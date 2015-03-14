@@ -819,7 +819,7 @@ class ForStatement extends StatementAbstract
         
         if (isset($keyVariable)) {
             /* We need to check for numeric/string keys here */
-            $codePrinter->output("\t" . 'if (Z_TYPE(' . $keyVariable->getName() . ') == IS_STRING) { ');
+            $codePrinter->output("\t" . 'if (' . $arrayStrKey->getName() . ' != NULL) { ');
             $codePrinter->output("\t\t" . 'ZVAL_STR(&' . $keyVariable->getName() . ', ' . $arrayStrKey->getName() . ');');
             $codePrinter->output("\t" . '} else {');
             $codePrinter->output("\t\t" . 'ZVAL_LONG(&' . $keyVariable->getName() . ', ' . $arrayNumKey->getName() . ');');

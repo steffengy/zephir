@@ -687,3 +687,110 @@ int zephir_memnstr_str(const zval *haystack, char *needle, unsigned int needle_l
 
 	return 0;
 }
+
+/**
+ * Checks if a zval string starts with a string
+ */
+int zephir_start_with_str(const zval *str, char *compared, unsigned int compared_length)
+{
+	if (Z_TYPE_P(str) != IS_STRING || compared_length > Z_STRLEN_P(str)) {
+		return 0;
+	}
+
+	return !memcmp(Z_STRVAL_P(str), compared, compared_length);
+}
+
+/**
+ * Fast call to php strlen
+ */
+void zephir_fast_strtolower(zval *return_value, zval *str)
+{
+	zval copy;
+	int use_copy = 0;
+	char *lower_str;
+	unsigned int length;
+
+	if (Z_TYPE_P(str) != IS_STRING) {
+		use_copy = zend_make_printable_zval(str, &copy);
+		if (use_copy) {
+			str = &copy;
+		}
+	}
+
+	length = Z_STRLEN_P(str);
+	lower_str = estrndup(Z_STRVAL_P(str), length);
+	php_strtolower(lower_str, length);
+
+	if (use_copy) {
+		zval_dtor(str);
+	}
+
+	ZVAL_STRINGL(return_value, lower_str, length);
+}
+
+/**
+ * Fast call to PHP strtoupper() function
+ */
+void zephir_fast_strtoupper(zval *return_value, zval *str)
+{
+	zval copy;
+	int use_copy = 0;
+	char *lower_str;
+	unsigned int length;
+
+	if (Z_TYPE_P(str) != IS_STRING) {
+		use_copy = zend_make_printable_zval(str, &copy);
+		if (use_copy) {
+			str = &copy;
+		}
+	}
+
+	length = Z_STRLEN_P(str);
+	lower_str = estrndup(Z_STRVAL_P(str), length);
+	php_strtoupper(lower_str, length);
+
+	if (use_copy) {
+		zval_dtor(str);
+	}
+
+	ZVAL_STRINGL(return_value, lower_str, length);
+}
+
+/**
+ * Convert dash/underscored texts returning camelized
+ */
+void zephir_uncamelize(zval *return_value, const zval *str)
+{
+	unsigned int i;
+	smart_str uncamelize_str = {0};
+	char *marker, ch;
+
+	if (Z_TYPE_P(str) != IS_STRING) {
+		zend_error(E_WARNING, "Invalid arguments supplied for camelize()");
+		return;
+	}
+
+	marker = Z_STRVAL_P(str);
+	for (i = 0; i < Z_STRLEN_P(str); i++) {
+		ch = *marker;
+		if (ch == '\0') {
+			break;
+		}
+		if (ch >= 'A' && ch <= 'Z') {
+			if (i > 0) {
+				smart_str_appendc(&uncamelize_str, '_');
+			}
+			smart_str_appendc(&uncamelize_str, (*marker) + 32);
+		} else {
+			smart_str_appendc(&uncamelize_str, (*marker));
+		}
+		marker++;
+	}
+	smart_str_0(&uncamelize_str);
+
+	if (uncamelize_str.s) {
+		RETURN_STR(uncamelize_str.s);
+	} else {
+		RETURN_EMPTY_STRING();
+	}
+}
