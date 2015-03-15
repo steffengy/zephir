@@ -402,7 +402,7 @@ class NativeArray
                                         break;
 
                                     case 'string':
-                                        $codePrinter->output('add_assoc_stringl_ex(&' . $symbolVariable->getPointeredName() . ', Z_STRVAL(' . $resolvedExprKey->getCode() . '), Z_STRLEN(' . $item['key']['value'] . ') + 1, SL("' . $resolvedExpr->getCode() . '"));');
+                                        $codePrinter->output('add_assoc_stringl_ex(' . $symbolVariable->getPointeredName() . ', Z_STRVAL(' . $resolvedExprKey->getCode() . '), Z_STRLEN(' . $item['key']['value'] . ') + 1, SL("' . $resolvedExpr->getCode() . '"));');
                                         break;
 
                                     case 'null':
