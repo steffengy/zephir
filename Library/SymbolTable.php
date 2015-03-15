@@ -184,7 +184,7 @@ class SymbolTable
                 /**
                  * @TODO, injecting globals, initialize to null and check first?
                  */
-                $compilationContext->codePrinter->output('zephir_get_global(&' . $name . ', SS("' . $name . '"));');
+                $compilationContext->codePrinter->output('zephir_get_global(&' . $name . ', SL("' . $name . '"));');
 
                 $superVar = new Variable('variable', $name, $compilationContext->currentBranch);
                 $superVar->setIsInitialized(true, $compilationContext, $statement);
@@ -203,7 +203,7 @@ class SymbolTable
                 }
 
                 if (!$found) {
-                    $compilationContext->codePrinter->output('zephir_get_global(&' . $name . ', SS("' . $name . '"));');
+                    $compilationContext->codePrinter->output('zephir_get_global(&' . $name . ', SL("' . $name . '"));');
                 }
 
             }
@@ -382,7 +382,7 @@ class SymbolTable
                 /**
                  * @TODO, injecting globals, initialize to null and check first?
                  */
-                $compilationContext->codePrinter->output('zephir_get_global(&' . $name . ', SS("' . $name . '"));');
+                $compilationContext->codePrinter->output('zephir_get_global(&' . $name . ', SL("' . $name . '"));');
 
                 $superVar = new Variable('variable', $name, $compilationContext->currentBranch);
                 $superVar->setIsInitialized(true, $compilationContext, $statement);
@@ -438,7 +438,7 @@ class SymbolTable
                 /**
                  * @TODO, injecting globals, initialize to null and check first?
                  */
-                $compilationContext->codePrinter->output('zephir_get_global(&' . $name . ', SS("' . $name . '"));');
+                $compilationContext->codePrinter->output('zephir_get_global(&' . $name . ', SL("' . $name . '"));');
 
                 $superVar = new Variable('variable', $name, $compilationContext->currentBranch);
                 $superVar->setIsInitialized(true, $compilationContext, $statement);

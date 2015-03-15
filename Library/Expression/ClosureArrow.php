@@ -116,7 +116,7 @@ class ClosureArrow extends Closure
         }
 
         $symbolVariable->initVariant($compilationContext);
-        $compilationContext->codePrinter->output('zephir_create_closure_ex(' . $symbolVariable->getPointeredName() . ', NULL, ' . $classDefinition->getClassEntry() . ', SS("__invoke"));');
+        $compilationContext->codePrinter->output('zephir_create_closure_ex(' . $symbolVariable->getPointeredName() . ', NULL, ' . $classDefinition->getClassEntry() . ', SL("__invoke"));');
 
         self::$id++;
 

@@ -532,7 +532,7 @@ int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entr
 {
 	zend_function *function_ptr;
 
-	if ((function_ptr = zend_hash_str_find_ptr(&ce->function_table, method_name, method_length)) != NULL) {
+	if ((function_ptr = zend_hash_str_find_ptr(&ce->function_table, method_name, method_length)) == NULL) {
 		ZVAL_NULL(return_value);
 		return FAILURE;
 	}
