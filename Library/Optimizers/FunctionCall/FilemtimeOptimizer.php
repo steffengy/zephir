@@ -69,7 +69,7 @@ class FilemtimeOptimizer extends OptimizerAbstract
 
         $resolvedParams = $call->getReadOnlyResolvedParams($expression['parameters'], $context, $expression);
 
-        $context->codePrinter->output('zephir_filemtime(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ' TSRMLS_CC);');
+        $context->codePrinter->output('zephir_filemtime(' . $symbolVariable->getPointeredName() . ', ' . $resolvedParams[0] . ');');
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }
 }

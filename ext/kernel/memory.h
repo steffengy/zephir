@@ -8,13 +8,13 @@
 
 #define ZEPHIR_OBSERVE_OR_NULLIFY_ZVAL(z) \
 	do { \
-		zval *tmp = z; \
+		zval *_z_tmp_ptr = z; \
 		if (z) { \
-			zval_ptr_dtor(tmp); \
-			ZVAL_UNDEF(tmp); \
+			zval_ptr_dtor(_z_tmp_ptr); \
+			ZVAL_UNDEF(_z_tmp_ptr); \
 		} \
-		else if (tmp != NULL) { \
-			zephir_memory_observe(z); \
+		else if (_z_tmp_ptr != NULL) { \
+			zephir_memory_observe(_z_tmp_ptr); \
 		} \
 	} while (0)
 

@@ -13,6 +13,8 @@ int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entr
 #define zephir_fetch_class_str(class_name, fetch_type) zephir_fetch_class_str_ex(class_name, fetch_type)
 #define zephir_fetch_class(class_name, fetch_type) zend_fetch_class(class_name, fetch_type)
 zend_class_entry *zephir_fetch_class_str_ex(char *class_name, size_t length, int fetch_type);
+int zephir_fetch_property(zval *result, zval *object, const char *property_name, uint32_t property_length, int silent);
+void zephir_get_class(zval *result, zval *object, int lower);
 int zephir_class_exists(const zval *class_name, int autoload);
 int zephir_interface_exists(const zval *class_name, int autoload);
 int zephir_method_exists(const zval *object, const zval *method_name);
@@ -54,6 +56,8 @@ int zephir_declare_class_constant_bool(zend_class_entry *ce, const char *name, s
 int zephir_declare_class_constant_long(zend_class_entry *ce, const char *name, size_t name_length, zend_long value);
 int zephir_declare_class_constant_double(zend_class_entry *ce, const char *name, size_t name_length, double value);
 int zephir_declare_class_constant_string(zend_class_entry *ce, const char *name, size_t name_length, const char *value);
+
+int zephir_clone(zval *destination, zval *obj);
 
 #define zephir_fetch_safe_class(destination, var) \
   	{ \

@@ -24,7 +24,9 @@ int ZEPHIR_FASTCALL zephir_array_isset_long(const zval *arr, unsigned long index
 
 int zephir_array_append(zval *arr, zval *value, int flags ZEPHIR_DEBUG_PARAMS);
 void zephir_fast_array_merge(zval *return_value, zval *array1, zval *array2);
+int zephir_fast_in_array(zval *needle, zval *haystack);
 void zephir_array_keys(zval *return_value, zval *input);
+int zephir_array_key_exists(zval *arr, zval *key);
 
 int ZEPHIR_FASTCALL zephir_array_unset_string(zval *arr, const char *index, uint32_t index_length, int flags);
 

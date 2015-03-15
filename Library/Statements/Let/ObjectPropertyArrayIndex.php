@@ -216,7 +216,7 @@ class ObjectPropertyArrayIndex extends ArrayIndex
                             case 'bool':
                                 $tempVariable = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
                                 $codePrinter->output('ZVAL_BOOL(&' . $tempVariable->getName() . ', ' . $variableExpr->getName() . ');');
-                                $codePrinter->output('zephir_update_property_array(' . $symbolVariable->getPointeredName() . ', SL("' . $property . '"), ' . $indexVariable->getPointeredName() . ', &' . $tempVariable->getPointeredName() . ');');
+                                $codePrinter->output('zephir_update_property_array(' . $symbolVariable->getPointeredName() . ', SL("' . $property . '"), ' . $indexVariable->getPointeredName() . ', ' . $tempVariable->getPointeredName() . ');');
                                 break;
 
                             case 'int':

@@ -58,9 +58,9 @@ class MethodExistsOptimizer extends OptimizerAbstract
 
         $resolvedParams = $call->getReadOnlyResolvedParams($expression['parameters'], $context, $expression);
         if (isset($str)) {
-            return new CompiledExpression('bool', '(zephir_method_exists_ex(' . $resolvedParams[0] . ', SS("' . strtolower($str) . '") TSRMLS_CC) == SUCCESS)', $expression);
+            return new CompiledExpression('bool', '(zephir_method_exists_ex(' . $resolvedParams[0] . ', SS("' . strtolower($str) . '")) == SUCCESS)', $expression);
         }
 
-        return new CompiledExpression('bool', '(zephir_method_exists(' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ' TSRMLS_CC)  == SUCCESS)', $expression);
+        return new CompiledExpression('bool', '(zephir_method_exists(' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ')  == SUCCESS)', $expression);
     }
 }

@@ -95,7 +95,7 @@ class ObjectDynamicProperty
                 if ($variable == 'this') {
                     $codePrinter->output('zephir_update_property_zval(this_ptr, WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . '), ' . $tempVariable->getPointeredName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 }
                 break;
 
@@ -106,7 +106,7 @@ class ObjectDynamicProperty
                 if ($variable == 'this') {
                     $codePrinter->output('zephir_update_property_zval(this_ptr, WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . '), ' . $tempVariable->getPointeredName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 }
                 break;
 
@@ -116,7 +116,7 @@ class ObjectDynamicProperty
                 if ($variable == 'this') {
                     $codePrinter->output('zephir_update_property_zval(this_ptr, WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . '), ' . $tempVariable->getPointeredName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 }
                 break;
 
@@ -126,7 +126,7 @@ class ObjectDynamicProperty
                 if ($variable == 'this') {
                     $codePrinter->output('zephir_update_property_zval(this_ptr, WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . '), ' . $tempVariable->getPointeredName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 }
                 break;
 
@@ -136,7 +136,7 @@ class ObjectDynamicProperty
                 if ($variable == 'this') {
                     $codePrinter->output('zephir_update_property_zval(this_ptr, WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 } else {
-                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . '), ' . $tempVariable->getPointeredName() . ');');
+                    $codePrinter->output('zephir_update_property_zval(' . $symbolVariable->getPointeredName() . ', WRAP_ARG(Z_STRVAL_P(' . $propertyVariableName->getPointeredName() . '), Z_STRLEN_P(' . $propertyVariableName->getPointeredName() . ')), ' . $tempVariable->getPointeredName() . ');');
                 }
                 break;
 

@@ -152,7 +152,7 @@ void zephir_fast_strpos(zval *return_value, const zval *haystack, const zval *ne
 
 	if (unlikely(Z_TYPE_P(haystack) != IS_STRING || Z_TYPE_P(needle) != IS_STRING)) {
 		ZVAL_NULL(return_value);
-		zend_error(E_WARNING, "Invalid arguments supplied for strpos()");
+		zend_error(E_WARNING, "Invalid arguments supplied for strpos(%d, %d)", Z_TYPE(haystack), Z_TYPE(needle));
 		return;
 	}
 

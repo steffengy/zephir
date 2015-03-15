@@ -86,17 +86,19 @@ ZEPHIR_ATTR_NONNULL static void zephir_fcall_populate_fci_cache(zend_fcall_info_
 			break;
 
 		case zephir_fcall_ce: {
-			zend_class_entry *scope = EG(current_execute_data)->func ? EG(current_execute_data)->func->op_array.scope : NULL;
+			zend_execute_data *ex = EG(current_execute_data);
+			zend_class_entry *scope = ex->func ? ex->func->op_array.scope : NULL;
 
 			fcic->initialized      = 1;
 			fcic->calling_scope    = EG(scope);
 			fcic->object           = NULL;
 
-			if (scope && &(EG(current_execute_data)->This) &&
-					instanceof_function(Z_OBJCE(EG(current_execute_data)->This), scope) &&
+			if (scope && Z_TYPE(ex->This) == IS_OBJECT &&
+					Z_OBJ(ex->This) != NULL &&
+					instanceof_function(Z_OBJCE(ex->This), scope) &&
 					instanceof_function(scope, fcic->calling_scope))
 		    {
-				fcic->object   = Z_OBJ(EG(current_execute_data)->This);
+				fcic->object   = Z_OBJ(ex->This);
 				fcic->called_scope = fcic->object->ce;
 			}
 			else {
@@ -631,6 +633,62 @@ int zephir_call_zval_func_aparams(zval *return_value_ptr, zval *func_name,
 				ZVAL_NULL(return_value_ptr);
 			}
 		}
+	}
+
+	return status;
+}
+
+/**
+ * Replaces call_user_func_array avoiding function lookup
+ * This function does not return FAILURE if an exception has ocurred
+ */
+int zephir_call_user_func_array_noex(zval *return_value, zval *handler, zval *params)
+{
+	zval retval;
+	zend_fcall_info fci;
+	zend_fcall_info_cache fci_cache;
+	char *is_callable_error = NULL;
+	int status = FAILURE;
+
+	ZVAL_UNDEF(&retval);
+
+	if (params && Z_TYPE_P(params) != IS_ARRAY) {
+		ZVAL_NULL(return_value);
+		php_error_docref(NULL, E_WARNING, "Invalid arguments supplied for zephir_call_user_func_array_noex()");
+		return FAILURE;
+	}
+
+	if (zend_fcall_info_init(handler, 0, &fci, &fci_cache, NULL, &is_callable_error TSRMLS_CC) == SUCCESS) {
+		if (is_callable_error) {
+			zend_error(E_STRICT, "%s", is_callable_error);
+			efree(is_callable_error);
+		}
+		status = SUCCESS;
+	} else {
+		if (is_callable_error) {
+			zend_error(E_WARNING, "%s", is_callable_error);
+			efree(is_callable_error);
+		} else {
+			status = SUCCESS;
+		}
+	}
+
+	if (status == SUCCESS) {
+
+		zend_fcall_info_args(&fci, params);
+		fci.retval = &retval;
+
+		if (zend_call_function(&fci, &fci_cache TSRMLS_CC) == SUCCESS && fci.retval) {
+			ZVAL_DUP(return_value, fci.retval);
+		}
+
+		if (fci.params) {
+			efree(fci.params);
+		}
+	}
+
+	if (EG(exception)) {
+		status = SUCCESS;
 	}
 
 	return status;

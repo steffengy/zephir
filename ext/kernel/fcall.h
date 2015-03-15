@@ -73,6 +73,18 @@ typedef zend_function zephir_fcall_cache_entry;
 		} \
 	} while (0)
 
+#define ZEPHIR_CALL_STATIC(return_value_ptr, method, cache, ...) \
+	do { \
+		zval *params_[] = {ZEPHIR_FETCH_VA_ARGS __VA_ARGS__}; \
+		ZEPHIR_OBSERVE_OR_NULLIFY_ZVAL(return_value_ptr); \
+		if (__builtin_constant_p(method)) { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_class_method_aparams(return_value_ptr, NULL, zephir_fcall_static, NULL, method, sizeof(method)-1, cache, ZEPHIR_CALL_NUM_PARAMS(params_), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+		else { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_class_method_aparams(return_value_ptr, NULL, zephir_fcall_static, NULL, method, strlen(method), cache, ZEPHIR_CALL_NUM_PARAMS(params_), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+	} while (0)
+
 #define ZEPHIR_CALL_CE_STATIC(return_value_ptr, class_entry, method, cache, ...) \
 	do { \
 		zval *params_[] = { ZEPHIR_FETCH_VA_ARGS __VA_ARGS__ }; \
@@ -173,6 +185,37 @@ typedef zend_function zephir_fcall_cache_entry;
 			ZEPHIR_LAST_CALL_STATUS = zephir_call_zval_func_aparams(return_value, func_name, cache, ZEPHIR_CALL_NUM_PARAMS(params_), ZEPHIR_PASS_CALL_PARAMS(params_)); \
 		} \
 	} while (0)
+
+#define ZEPHIR_CALL_ZVAL_FUNCTION(return_value_ptr, func_name, cache, ...) \
+	do { \
+		zval *params_[] = { ZEPHIR_FETCH_VA_ARGS __VA_ARGS__ }; \
+		ZEPHIR_OBSERVE_OR_NULLIFY_ZVAL(return_value_ptr); \
+		if (__builtin_constant_p(func_name)) { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_zval_func_aparams(return_value_ptr, func_name, cache, ZEPHIR_CALL_NUM_PARAMS(params_), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+		else { \
+			ZEPHIR_LAST_CALL_STATUS = zephir_call_zval_func_aparams(return_value_ptr, func_name, cache, ZEPHIR_CALL_NUM_PARAMS(params_), ZEPHIR_PASS_CALL_PARAMS(params_)); \
+		} \
+	} while (0)
+
+/** Use these functions to call functions in the PHP userland using an arbitrary zval as callable */
+#define ZEPHIR_CALL_USER_FUNC(return_value, handler) ZEPHIR_CALL_USER_FUNC_ARRAY(return_value, handler, NULL)
+#define ZEPHIR_CALL_USER_FUNC_ARRAY(return_value, handler, params) \
+	do { \
+		ZEPHIR_LAST_CALL_STATUS = zephir_call_user_func_array(return_value, handler, params); \
+	} while (0)
+
+/** Fast call_user_func_array/call_user_func */
+int zephir_call_user_func_array_noex(zval *return_value, zval *handler, zval *params) ZEPHIR_ATTR_WARN_UNUSED_RESULT;
+
+/**
+ * Replaces call_user_func_array avoiding function lookup
+ */
+ZEPHIR_ATTR_WARN_UNUSED_RESULT static inline int zephir_call_user_func_array(zval *return_value, zval *handler, zval *params TSRMLS_DC)
+{
+	int status = zephir_call_user_func_array_noex(return_value, handler, params TSRMLS_CC);
+	return (EG(exception)) ? FAILURE : status;
+}
 
 #define zephir_check_call_status() \
 	do \

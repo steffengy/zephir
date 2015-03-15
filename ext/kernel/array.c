@@ -561,6 +561,56 @@ void zephir_fast_array_merge(zval *return_value, zval *array1, zval *array2)
 	php_array_merge(Z_ARRVAL_P(return_value), Z_ARRVAL_P(array2));
 }
 
+/** wrapper of in_array */
+int zephir_fast_in_array(zval *needle, zval *haystack)
+{
+	zval         *tmp;
+	HashTable      *ht;
+	uint32_t   numelems;
+
+	if (Z_TYPE_P(haystack) != IS_ARRAY) {
+		return 0;
+	}
+
+	ht = Z_ARRVAL_P(haystack);
+	numelems = zend_hash_num_elements(ht);
+
+	if (numelems == 0) {
+		return 0;
+	}
+
+	ZEND_HASH_FOREACH_VAL(ht, tmp) {
+		if (ZEPHIR_IS_EQUAL(needle, tmp)) {
+			return 1;
+		}
+	} ZEND_HASH_FOREACH_END();
+
+	return 0;
+}
+
+int zephir_array_key_exists(zval *arr, zval *key)
+{
+	HashTable *h = HASH_OF(arr);
+	if (h) {
+		switch (Z_TYPE_P(key)) {
+			case IS_STRING:
+				return zend_symtable_exists(h, Z_STR_P(key));
+
+			case IS_LONG:
+				return zend_hash_index_exists(h, Z_LVAL_P(key));
+
+			case IS_NULL:
+				return zend_hash_str_exists(h, "", 1);
+
+			default:
+				zend_error(E_WARNING, "The key should be either a string or an integer");
+				return 0;
+		}
+	}
+
+	return 0;
+}
+
 void zephir_array_keys(zval *return_value, zval *input)
 {
 	zval

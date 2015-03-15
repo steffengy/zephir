@@ -25,6 +25,45 @@ zend_class_entry *zephir_fetch_class_str_ex(char *class_name, size_t length, int
 }
 
 /**
+ * Fetches a property using a const char
+ */
+int zephir_fetch_property(zval *result, zval *object, const char *property_name, uint32_t property_length, int silent)
+{
+	if (zephir_isset_property(object, property_name, property_length + 1)) {
+		zephir_read_property(result, object, property_name, property_length, 0);
+		return 1;
+	}
+
+	ZVAL_NULL(result);
+	return 0;
+}
+
+/**
+ * Returns a class name into a zval result
+ */
+void zephir_get_class(zval *result, zval *object, int lower)
+{
+	zend_class_entry *ce;
+	zend_string *class_name;
+
+	if (Z_TYPE_P(object) == IS_OBJECT) {
+
+		ce = Z_OBJCE_P(object);
+		zval_ptr_dtor(result);
+		class_name = zend_string_init(ce->name->val, ce->name->len, 0);
+		ZVAL_STR(result, class_name);
+
+		if (lower) {
+			zend_str_tolower(Z_STRVAL_P(result), Z_STRLEN_P(result));
+		}
+
+	} else {
+		ZVAL_NULL(result);
+		php_error_docref(NULL, E_WARNING, "zephir_get_class expects an object");
+	}
+}
+
+/**
  * Checks if a class exist
  */
 int zephir_class_exists(const zval *class_name, int autoload)
@@ -548,4 +587,41 @@ int zephir_update_property_zval_zval(zval *object, zval *property, zval *value)
 
 	zephir_update_property_zval(object, WRAP_ARG(Z_STRVAL_P(property), Z_STRLEN_P(property)), value);
 	return 1;
+}
+
+/**
+ * Clones an object from obj to destination
+ */
+int zephir_clone(zval *destination, zval *obj)
+{
+	int status = SUCCESS;
+	zend_class_entry *ce;
+	zend_object_clone_obj_t clone_call;
+
+	if (Z_TYPE_P(obj) != IS_OBJECT) {
+		php_error_docref(NULL, E_ERROR, "__clone method called on non-object");
+		status = FAILURE;
+	} else {
+		ce = Z_OBJCE_P(obj);
+		clone_call =  Z_OBJ_HT_P(obj)->clone_obj;
+		if (!clone_call) {
+			if (ce) {
+				php_error_docref(NULL, E_ERROR, "Trying to clone an uncloneable object of class %s", ce->name);
+			} else {
+				php_error_docref(NULL, E_ERROR, "Trying to clone an uncloneable object");
+			}
+			status = FAILURE;
+		} else {
+			if (!EG(exception)) {
+				ZVAL_OBJ(destination, clone_call(obj));
+				//Z_SET_REFCOUNT_P(destination, 1);
+				//Z_UNSET_ISREF_P(destination);
+				if (EG(exception)) {
+					zval_ptr_dtor(destination);
+				}
+			}
+		}
+	}
+
+	return status;
 }

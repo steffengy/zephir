@@ -40,6 +40,7 @@
 #define ZEPHIR_GE(op1, op2)       zephir_greater_equal(op1, op2)
 #define ZEPHIR_GE_LONG(op1, op2)  zephir_greater_equal_long(op1, op2)
 #define ZEPHIR_LE(op1, op2)       zephir_less_equal(op1, op2)
+#define ZEPHIR_LE_LONG(op1, op2)  ((Z_TYPE_P(op1) == IS_LONG && Z_LVAL_P(op1) <= op2) || zephir_less_equal_long(op1, op2))
 #define ZEPHIR_LT(op1, op2)       ((Z_TYPE_P(op1) == IS_LONG && Z_TYPE_P(op2) == IS_LONG) ? Z_LVAL_P(op1) < Z_LVAL_P(op2) : zephir_less(op1, op2))
 #define ZEPHIR_LT_LONG(op1, op2)  ((Z_TYPE_P(op1) == IS_LONG && Z_LVAL_P(op1) < op2) || zephir_less_long(op1, op2))
 #define ZEPHIR_GT(op1, op2)       zephir_greater(op1, op2)
@@ -139,13 +140,17 @@ int zephir_greater_equal(zval *op1, zval *op2);
 int zephir_greater_equal_long(zval *op1, long op2);
 int zephir_less(zval *op1, zval *op2);
 int zephir_less_long(zval *op1, long op2);
+int zephir_less_equal_long(zval *op1, long op2);
 int zephir_less_equal(zval *op1, zval *op2);
 int zephir_greater(zval *op1, zval *op2);
 
 double zephir_safe_div_long_long(long op1, long op2);
 double zephir_safe_div_long_zval(long op1, zval *op2);
+double zephir_safe_div_zval_long(zval *op1, long op2);
 double zephir_safe_div_long_double(long op1, double op2);
 double zephir_safe_div_double_long(double op1, long op2);
+double zephir_safe_div_double_zval(double op1, zval *op2);
+double zephir_safe_div_zval_double(zval *op1, double op2);
 
 #define zephir_get_boolval(z) (Z_TYPE_P(z) == IS_TRUE ? 1 : (Z_TYPE_P(z) == IS_FALSE ? 0 : zephir_get_boolval_ex(z)))
 #define zephir_get_doubleval(z) (Z_TYPE_P(z) == IS_DOUBLE ? Z_DVAL_P(z) : zephir_get_doubleval_ex(z))
@@ -154,6 +159,9 @@ double zephir_safe_div_double_long(double op1, long op2);
 #define zephir_add_function_ex(result, op1, op2) add_function(result, op1, op2)
 #define zephir_add_function zephir_add_function_ex
 #define zephir_convert_to_object(op) convert_to_object(op)
+
+int zephir_bitwise_or_function(zval *result, zval *op1, zval *op2);
+int zephir_bitwise_and_function(zval *result, zval *op1, zval *op2);
 
 void zephir_negate(zval *z);
 

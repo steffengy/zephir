@@ -257,7 +257,7 @@ class Expression
          */
         $symbolVariable->setDynamicTypes('array');
 
-        $compilationContext->codePrinter->output('array_init(&' . $symbolVariable->getName() . ');');
+        $compilationContext->codePrinter->output('array_init(' . $symbolVariable->getPointeredName() . ');');
 
         return new CompiledExpression('array', $symbolVariable->getRealName(), $expression);
     }

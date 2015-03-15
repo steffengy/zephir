@@ -80,7 +80,7 @@ class CallUserFuncArrayOptimizer extends OptimizerAbstract
          */
         $call->addCallStatusFlag($context);
 
-        $context->codePrinter->output('ZEPHIR_CALL_USER_FUNC_ARRAY(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ');');
+        $context->codePrinter->output('ZEPHIR_CALL_USER_FUNC_ARRAY(' . $symbolVariable->getPointeredName() . ', ' . $resolvedParams[0] . ', ' . $resolvedParams[1] . ');');
         $call->addCallStatusOrJump($context);
 
         return new CompiledExpression('variable', $symbolVariable->getName(), $expression);

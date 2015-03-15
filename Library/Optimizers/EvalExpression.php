@@ -214,7 +214,7 @@ class EvalExpression
                         return $variableRight->getName();
 
                     case 'string':
-                        return $variableRight->getName() . ' && Z_STRLEN_P(' . $variableRight->getName() . ')';
+                        return 'Z_TYPE_P(' . $variableRight->getPointeredName() . ') == IS_STRING && Z_STRLEN_P(' . $variableRight->getPointeredName() . ')';
 
                     case 'bool':
                         return $variableRight->getName();

@@ -404,7 +404,7 @@ class DivOperator extends ArithmeticalBaseOperator
                                         $op2 = '&' . $variableRight->getName();
 
                                         $expected = $this->getExpected($compilationContext, $expression);
-                                        $compilationContext->codePrinter->output($this->_zvalOperator . '(&' . $expected->getName() . ', ' . $op1 . ', ' . $op2 . ' TSRMLS_CC);');
+                                        $compilationContext->codePrinter->output($this->_zvalOperator . '(' . $expected->getPointeredName() . ', ' . $op1 . ', ' . $op2 . ' TSRMLS_CC);');
 
                                         if ($variableLeft->isTemporal()) {
                                             $variableLeft->setIdle(true);
@@ -505,7 +505,7 @@ class DivOperator extends ArithmeticalBaseOperator
                                                 }
 
                                                 $expected = $this->getExpected($compilationContext, $expression);
-                                                $compilationContext->codePrinter->output($this->_zvalOperator . '(' . $expected->getName() . ', ' . $op1 . ', ' . $op2 . ');');
+                                                $compilationContext->codePrinter->output($this->_zvalOperator . '(' . $expected->getPointeredName() . ', ' . $op1 . ', ' . $op2 . ');');
                                                 return new CompiledExpression('variable', $expected->getName(), $expression);
 
                                             default:

@@ -170,11 +170,11 @@ class ArrayIndex
             case 'uint':
             case 'long':
             case 'ulong':
-                $codePrinter->output('zephir_array_update_long(&' . $variable . ', ' . $exprIndex->getCode() . ', &' . $symbolVariable->getName() . ', ' . $flags . ', "' . Compiler::getShortUserPath($statement['index-expr'][0]['file']) . '", ' . $statement['index-expr'][0]['line'] . ');');
+                $codePrinter->output('zephir_array_update_long(&' . $variable . ', ' . $exprIndex->getCode() . ', ' . $symbolVariable->getPointeredName() . ', ' . $flags . ', "' . Compiler::getShortUserPath($statement['index-expr'][0]['file']) . '", ' . $statement['index-expr'][0]['line'] . ');');
                 break;
 
             case 'string':
-                $codePrinter->output('zephir_array_update_string(&' . $variable . ', SL("' . $exprIndex->getCode() . '"), &' . $symbolVariable->getName() . ', ' . $flags . ');');
+                $codePrinter->output('zephir_array_update_string(&' . $variable . ', SL("' . $exprIndex->getCode() . '"), ' . $symbolVariable->getPointeredName() . ', ' . $flags . ');');
                 break;
 
             case 'variable':

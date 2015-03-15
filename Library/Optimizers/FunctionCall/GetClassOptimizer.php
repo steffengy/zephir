@@ -70,7 +70,7 @@ class GetClassOptimizer extends OptimizerAbstract
         $symbolVariable->setDynamicTypes('string');
 
         $resolvedParams = $call->getReadOnlyResolvedParams($expression['parameters'], $context, $expression);
-        $context->codePrinter->output('zephir_get_class(' . $symbolVariable->getName() . ', ' . $resolvedParams[0] . ', 0 TSRMLS_CC);');
+        $context->codePrinter->output('zephir_get_class(' . $symbolVariable->getPointeredName() . ', ' . $resolvedParams[0] . ', 0);');
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);
     }
 }

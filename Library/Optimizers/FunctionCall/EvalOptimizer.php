@@ -64,7 +64,7 @@ class EvalOptimizer extends OptimizerAbstract
 
         $evalContext = str_replace(ZEPHIRPATH, '', $expression['file'] . ':' . $expression['line']);
         $context->codePrinter->output(
-            sprintf('zephir_eval_php(%s, %s, "%s" TSRMLS_CC);', $resolvedParams[0], $symbolVariable->getName(), $evalContext)
+            sprintf('zephir_eval_php(%s, %s, "%s");', $resolvedParams[0], $symbolVariable->getPointeredName(), $evalContext)
         );
 
         return new CompiledExpression('variable', $symbolVariable->getRealName(), $expression);

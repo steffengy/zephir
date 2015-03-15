@@ -164,7 +164,7 @@ class StaticProperty
 
             case 'empty-array':
                 $tempVariable = $compilationContext->symbolTable->getTempNonTrackedVariable('variable', $compilationContext, true);
-                $codePrinter->output('array_init(' . $tempVariable->getName() . ');');
+                $codePrinter->output('array_init(' . $tempVariable->getPointeredName() . ');');
                 $codePrinter->output('zephir_update_static_property_ce(' . $classEntry .', SL("' . $property . '"), &' . $tempVariable->getName() . ' TSRMLS_CC);');
                 if ($tempVariable->isTemporal()) {
                     $tempVariable->setIdle(true);

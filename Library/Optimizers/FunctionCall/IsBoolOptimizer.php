@@ -19,17 +19,37 @@
 
 namespace Zephir\Optimizers\FunctionCall;
 
-use Zephir\Optimizers\IsTypeOptimizerAbstract;
+use Zephir\Optimizers\OptimizerAbstract;
+use Zephir\Call;
+use Zephir\CompilationContext;
+use Zephir\CompiledExpression;
+use Zephir\CompilerException;
 
 /**
  * IsBoolOptimizer
  *
  * Optimizes calls to 'is_bool' using internal function
  */
-class IsBoolOptimizer extends IsTypeOptimizerAbstract
+class IsBoolOptimizer extends OptimizerAbstract
 {
-    protected function getType()
+    /**
+     * @param array $expression
+     * @param Call $call
+     * @param CompilationContext $context
+     * @return bool|CompiledExpression|mixed
+     * @throws CompilerException
+     */
+    public function optimize(array $expression, Call $call, CompilationContext $context)
     {
-        return 'IS_BOOL';
+        if (!isset($expression['parameters'])) {
+            return false;
+        }
+
+        if (count($expression['parameters']) != 1) {
+            return false;
+        }
+
+        $resolvedParams = $call->getReadOnlyResolvedParams($expression['parameters'], $context, $expression);
+        return new CompiledExpression('bool', '(Z_TYPE_P(' . $resolvedParams[0] . ') == IS_TRUE || Z_TYPE_P(' . $resolvedParams[0] . ') == IS_FALSE)', $expression);
     }
 }

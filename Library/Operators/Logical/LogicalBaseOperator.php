@@ -283,36 +283,36 @@ class LogicalBaseOperator extends BaseOperator
                     case 'string':
                         switch ($right->getType()) {
                             case 'int':
-                                return new CompiledExpression('bool', '(' . $variableLeft->getName() . ' && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . $this->_operator . ' ' . $right->getCode(), $expression);
+                                return new CompiledExpression('bool', '(Z_TYPE_P(' . $variableLeft->getPointeredName() . ') == IS_STRING && Z_STRLEN_P(' . $variableLeft->getPointeredName() . ')) ' . $this->_operator . ' ' . $right->getCode(), $expression);
 
                             case 'double':
-                                return new CompiledExpression('bool', '(' . $variableLeft->getName() . ' && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . $this->_operator . ' ' . $right->getCode(), $expression);
+                                return new CompiledExpression('bool', '(Z_TYPE_P(' . $variableLeft->getPointeredName() . ') == IS_STRING && Z_STRLEN_P(' . $variableLeft->getPointeredName() . ')) ' . $this->_operator . ' ' . $right->getCode(), $expression);
 
                             case 'bool':
-                                return new CompiledExpression('bool', '(' . $variableLeft->getName() . ' && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . $this->_bitOperator . '' . $right->getBooleanCode(), $expression);
+                                return new CompiledExpression('bool', '(Z_TYPE_P(' . $variableLeft->getPointeredName() . ') == IS_STRING && Z_STRLEN_P(' . $variableLeft->getPointeredName() . ')) ' . $this->_bitOperator . '' . $right->getBooleanCode(), $expression);
 
                             case 'variable':
                                 $variableRight = $compilationContext->symbolTable->getVariableForRead($right->getCode(), $compilationContext, $expression['right']);
                                 switch ($variableRight->getType()) {
 
                                     case 'int':
-                                        return new CompiledExpression('bool', '(' . $variableLeft->getName() . ' && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . $this->_operator . ' ' . $variableRight->getName(), $expression);
+                                        return new CompiledExpression('bool', '(Z_TYPE_P(' . $variableLeft->getPointeredName() . ') == IS_STRING && Z_STRLEN_P(' . $variableLeft->getPointeredName() . ')) ' . $this->_operator . ' ' . $variableRight->getName(), $expression);
 
                                     case 'double':
-                                        return new CompiledExpression('bool', '(' . $variableLeft->getName() . ' && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . $this->_operator . '  ' . $variableRight->getName(), $expression);
+                                        return new CompiledExpression('bool', '(Z_TYPE_P(' . $variableLeft->getPointeredName() . ') == IS_STRING && Z_STRLEN_P(' . $variableLeft->getPointeredName() . ')) ' . $this->_operator . '  ' . $variableRight->getName(), $expression);
 
                                     case 'string':
-                                        return new CompiledExpression('bool', '(' . $variableLeft->getName() . ' && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . $this->_operator . ' (' . $variableRight->getName() . ' && Z_STRLEN_P(' . $variableRight->getName() . '))', $expression);
+                                        return new CompiledExpression('bool', '(Z_TYPE_P(' . $variableLeft->getPointeredName() . ') == IS_STRING && Z_STRLEN_P(' . $variableLeft->getPointeredName() . ')) ' . $this->_operator . ' (' . $variableRight->getName() . ' && Z_STRLEN_P(' . $variableRight->getName() . '))', $expression);
 
                                     case 'bool':
-                                        return new CompiledExpression('bool', '(' . $variableLeft->getName() . ' && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . $this->_bitOperator . ' ' . $variableRight->getName(), $expression);
+                                        return new CompiledExpression('bool', '(Z_TYPE_P(' . $variableLeft->getPointeredName() . ') == IS_STRING && Z_STRLEN_P(' . $variableLeft->getPointeredName() . ')) ' . $this->_bitOperator . ' ' . $variableRight->getName(), $expression);
 
                                     case 'variable':
                                         $compilationContext->headersManager->add('kernel/operators');
                                         if ($variableRight->isLocalOnly()) {
-                                            return new CompiledExpression('bool', '(' . $variableLeft->getName() . ' && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . ' ' . $this->_operator . ' zephir_is_true(&' . $variableRight->getName() . ')', $expression);
+                                            return new CompiledExpression('bool', '(Z_TYPE_P(' . $variableLeft->getPointeredName() . ' == IS_STRING) && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . ' ' . $this->_operator . ' zephir_is_true(&' . $variableRight->getName() . ')', $expression);
                                         } else {
-                                            return new CompiledExpression('bool', '(' . $variableLeft->getName() . ' && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . ' ' . $this->_operator . ' zephir_is_true(' . $variableRight->getName() . ')', $expression);
+                                            return new CompiledExpression('bool', '(Z_TYPE_P(' . $variableLeft->getPointeredName() . ' == IS_STRING) && Z_STRLEN_P(' . $variableLeft->getName() . ')) ' . ' ' . $this->_operator . ' zephir_is_true(' . $variableRight->getName() . ')', $expression);
                                         }
                                         break;
 

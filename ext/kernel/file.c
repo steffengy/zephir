@@ -219,3 +219,12 @@ int zephir_fclose(zval *stream_zval)
 
 	return 1;
 }
+
+void zephir_filemtime(zval *return_value, zval *path)
+{
+	if (likely(Z_TYPE_P(path) == IS_STRING)) {
+		php_stat(Z_STRVAL_P(path), (php_stat_len)(Z_STRLEN_P(path)), FS_MTIME, return_value);
+	} else {
+		ZVAL_FALSE(return_value);
+	}
+}

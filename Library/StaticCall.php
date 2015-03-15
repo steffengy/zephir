@@ -304,7 +304,7 @@ class StaticCall extends Call
 
         $classEntryVariable = $compilationContext->symbolTable->addTemp('zend_class_entry', $compilationContext);
         $compilationContext->headersManager->add('kernel/object');
-        $codePrinter->output($classEntryVariable->getName() . ' = zephir_fetch_class(Z_STR_P(' . $classNameVariable->getName() . '), ZEND_FETCH_CLASS_AUTO);');
+        $codePrinter->output($classEntryVariable->getName() . ' = zephir_fetch_class(Z_STR_P(' . $classNameVariable->getPointeredName() . '), ZEND_FETCH_CLASS_AUTO);');
         $classEntry = $classEntryVariable->getName();
 
         if (!count($params)) {
@@ -383,7 +383,7 @@ class StaticCall extends Call
          */
         $classEntryVariable = $compilationContext->symbolTable->addTemp('zend_class_entry', $compilationContext);
         $compilationContext->headersManager->add('kernel/object');
-        $codePrinter->output($classEntryVariable->getName() . ' = zephir_fetch_class(Z_STR_P(' . $classNameVariable->getName() . '), ZEND_FETCH_CLASS_AUTO);');
+        $codePrinter->output($classEntryVariable->getName() . ' = zephir_fetch_class(Z_STR_P(' . $classNameVariable->getPointeredName() . '), ZEND_FETCH_CLASS_AUTO);');
         $classEntry = $classEntryVariable->getName();
 
 

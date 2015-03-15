@@ -80,13 +80,13 @@ class Reference
             case 'uint':
             case 'long':
                 $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                $codePrinter->output('ZVAL_LONG(' . $tempVar->getName() . ', ' . $exprCompiled->getCode() . ');');
+                $codePrinter->output('ZVAL_LONG(' . $tempVar->getPointeredName() . ', ' . $exprCompiled->getCode() . ');');
                 return $tempVar;
 
             case 'char':
             case 'uchar':
                 $tempVar = $compilationContext->symbolTable->getTempVariableForWrite('variable', $compilationContext);
-                $codePrinter->output('ZVAL_LONG(' . $tempVar->getName() . ', \'' . $exprCompiled->getCode() . '\');');
+                $codePrinter->output('ZVAL_LONG(' . $tempVar->getPointeredName() . ', \'' . $exprCompiled->getCode() . '\');');
                 return $tempVar;
 
             case 'double':

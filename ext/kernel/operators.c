@@ -389,6 +389,25 @@ double zephir_safe_div_long_zval(long op1, zval *op2)
 }
 
 /**
+ * Do safe divisions between two zval/long
+ */
+double zephir_safe_div_zval_long(zval *op1, long op2)
+{
+	if (!op2) {
+		zend_error(E_WARNING, "Division by zero");
+		return 0;
+	}
+	switch (Z_TYPE_P(op1)) {
+		case IS_ARRAY:
+		case IS_OBJECT:
+		case IS_RESOURCE:
+			zend_error(E_WARNING, "Unsupported operand types");
+			break;
+	}
+	return ((double) zephir_get_numberval(op1)) / (double) op2;
+}
+
+/**
  * Do safe divisions between two long/double
  */
 double zephir_safe_div_long_double(long op1, double op2)
@@ -462,7 +481,15 @@ int zephir_less_long(zval *op1, long op2)
 {
 	zval result, op2_zval;
 	ZVAL_LONG(&op2_zval, op2);
-	is_smaller_function(&result, op1, &op2_zval);
+	fast_is_smaller_function(&result, op1, &op2_zval);
+	return Z_TYPE(result) == IS_TRUE;
+}
+
+int zephir_less_equal_long(zval *op1, long op2)
+{
+	zval result, op2_zval;
+	ZVAL_LONG(&op2_zval, op2);
+	fast_is_smaller_or_equal_function(&result, op1, &op2_zval);
 	return Z_TYPE(result) == IS_TRUE;
 }
 
@@ -532,4 +559,70 @@ void zephir_concat_self(zval *left, zval *right)
 	if (use_copy) {
 		zval_dtor(&right_copy);
 	}
+}
+
+/**
+ * Do safe divisions between two double/zval
+ */
+double zephir_safe_div_double_zval(double op1, zval *op2)
+{
+	if (!zephir_get_numberval(op2)) {
+		zend_error(E_WARNING, "Division by zero");
+		return 0;
+	}
+	switch (Z_TYPE_P(op2)) {
+		case IS_ARRAY:
+		case IS_OBJECT:
+		case IS_RESOURCE:
+			zend_error(E_WARNING, "Unsupported operand types");
+			break;
+	}
+	return op1 / ((double) zephir_get_numberval(op2));
+}
+
+/**
+ * Do safe divisions between two zval/double
+ */
+double zephir_safe_div_zval_double(zval *op1, double op2)
+{
+	if (!op2) {
+		zend_error(E_WARNING, "Division by zero");
+		return 0;
+	}
+	switch (Z_TYPE_P(op1)) {
+		case IS_ARRAY:
+		case IS_OBJECT:
+		case IS_RESOURCE:
+			zend_error(E_WARNING, "Unsupported operand types");
+			break;
+	}
+	return ((double) zephir_get_numberval(op1)) / op2;
+}
+
+/**
+ * Do bitwise_and function keeping ref_count and is_ref
+ */
+int zephir_bitwise_and_function(zval *result, zval *op1, zval *op2)
+{
+	int status;
+	//int ref_count = Z_REFCOUNT_P(result);
+	//int is_ref = Z_ISREF_P(result);
+	status = bitwise_and_function(result, op1, op2);
+	//Z_SET_REFCOUNT_P(result, ref_count);
+	//Z_SET_ISREF_TO_P(result, is_ref);
+	return status;
+}
+
+/**
+ * Do bitwise_or function keeping ref_count and is_ref
+ */
+int zephir_bitwise_or_function(zval *result, zval *op1, zval *op2)
+{
+	int status;
+	//int ref_count = Z_REFCOUNT_P(result);
+	//int is_ref = Z_ISREF_P(result);
+	status = bitwise_or_function(result, op1, op2);
+	//Z_SET_REFCOUNT_P(result, ref_count);
+	//Z_SET_ISREF_TO_P(result, is_ref);
+	return status;
 }

@@ -1032,7 +1032,7 @@ class Variable
                                             $symbolVariable->setClassTypes($itemVariable->getClassTypes());
                                             $symbolVariable->increaseVariantIfNull();
 
-                                            $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', &' . $itemVariable->getName() . ');');
+                                            $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', ' . $itemVariable->getPointeredName() . ');');
                                             if ($itemVariable->isTemporal()) {
                                                 $itemVariable->setIdle(true);
                                             }
@@ -1075,7 +1075,7 @@ class Variable
                                             $symbolVariable->setClassTypes($itemVariable->getClassTypes());
                                             $symbolVariable->increaseVariantIfNull();
 
-                                            $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', &' . $itemVariable->getName() . ');');
+                                            $codePrinter->output('ZEPHIR_CPY_WRT(&' . $variable . ', ' . $itemVariable->getPointeredName() . ');');
                                             if ($itemVariable->isTemporal()) {
                                                 $itemVariable->setIdle(true);
                                             }

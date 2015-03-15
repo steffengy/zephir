@@ -173,7 +173,7 @@ class FetchOperator extends BaseOperator
                 $property = $expression['right']['right']['value'];
 
                 $compilationContext->headersManager->add('kernel/object');
-                return new CompiledExpression('bool', 'zephir_fetch_property(&' . $variable->getName() . ', ' . $evalVariable->getName() . ', SL("' . $property . '"), PH_SILENT_CC)', $expression);
+                return new CompiledExpression('bool', 'zephir_fetch_property(' . $variable->getPointeredName() . ', ' . $evalVariable->getPointeredName() . ', SL("' . $property . '"), PH_SILENT_CC)', $expression);
 
             case 'property-dynamic-access':
 

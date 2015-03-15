@@ -517,10 +517,10 @@ class FunctionCall extends Call
                         $symbolVariable->setMustInitNull(true);
                         $symbolVariable->trackVariant($compilationContext);
                     }
-                    $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(&' . $symbolVariable->getName() . ', ' . $variable->getName() . ', NULL);');
+                    $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(' . $symbolVariable->getPointeredName() . ', ' . $variable->getPointeredName() . ', NULL);');
                 }
             } else {
-                $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(NULL, ' . $variable->getName() . ', NULL);');
+                $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(NULL, ' . $variable->getPointeredName() . ', NULL);');
             }
         } else {
             if (count($params)) {
@@ -532,10 +532,10 @@ class FunctionCall extends Call
                             $symbolVariable->setMustInitNull(true);
                             $symbolVariable->trackVariant($compilationContext);
                         }
-                        $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(&' . $symbolVariable->getName() . ', ' . $variable->getName() . ', NULL, ' . join(', ', $params) . ');');
+                        $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(' . $symbolVariable->getPointeredName() . ', ' . $variable->getPointeredName() . ', NULL, ' . join(', ', $params) . ');');
                     }
                 } else {
-                    $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(NULL, ' . $variable->getName() . ', NULL, ' . join(', ', $params) . ');');
+                    $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(NULL, ' . $variable->getPointeredName() . ', NULL, ' . join(', ', $params) . ');');
                 }
             } else {
                 if ($this->isExpectingReturn()) {
@@ -546,10 +546,10 @@ class FunctionCall extends Call
                             $symbolVariable->setMustInitNull(true);
                             $symbolVariable->trackVariant($compilationContext);
                         }
-                        $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(&' . $symbolVariable->getName() . ', ' . $variable->getName() . ', NULL);');
+                        $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(&' . $symbolVariable->getPointeredName() . ', ' . $variable->getPointeredName() . ', NULL);');
                     }
                 } else {
-                    $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(NULL, ' . $variable->getName() . ', NULL);');
+                    $codePrinter->output('ZEPHIR_CALL_ZVAL_FUNCTION(NULL, ' . $variable->getPointeredName() . ', NULL);');
                 }
             }
         }

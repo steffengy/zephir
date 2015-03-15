@@ -195,7 +195,7 @@ class ComparisonBaseOperator extends BaseOperator
 
                         case 'boolean':
                         case 'bool':
-                            $condition = 'Z_TYPE_P(' . $variableName . ') ' . $operator . ' IS_BOOL';
+                            $condition = 'TRUE ' . $operator . '(Z_TYPE_P(' . $variableName . ') == IS_TRUE || Z_TYPE_P(' . $variableName . ') == IS_FALSE)';
                             break;
 
                         case 'resource':
