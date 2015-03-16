@@ -24,9 +24,9 @@ zval *zephir_array_update_long(zval *arr, zend_ulong index, zval *value, int fla
 
 	if ((flags & PH_CTOR) == PH_CTOR) {
 		zval new_zv;
-		if (Z_REFCOUNTED_P(value)) Z_DELREF_P(value);
+		Z_TRY_DELREF_P(value);
 		ZVAL_NULL(&new_zv);
-		ZVAL_COPY_VALUE(&new_zv, value);
+		ZVAL_DUP(&new_zv, value);
 		value = &new_zv;
 		//zval_copy_ctor(new_zv);
 	}
@@ -36,9 +36,7 @@ zval *zephir_array_update_long(zval *arr, zend_ulong index, zval *value, int fla
 	}
 
 	if ((flags & PH_COPY) == PH_COPY) {
-		if (Z_REFCOUNTED_P(value)) {
-			Z_ADDREF_P(value);
-		}
+		Z_TRY_ADDREF_P(value);
 	}
 
 	return zend_hash_index_update(Z_ARRVAL_P(arr), index, value);
@@ -56,10 +54,11 @@ zval *zephir_array_update_string(zval *arr, const char *index, size_t index_leng
 
 	if ((flags & PH_CTOR) == PH_CTOR) {
 		zval new_zv;
-		if (Z_REFCOUNTED_P(value)) Z_DELREF_P(value);
+		Z_TRY_DELREF_P(value);
 		ZVAL_NULL(&new_zv);
-		ZVAL_COPY_VALUE(&new_zv, value);
+		ZVAL_DUP(&new_zv, value);
 		value = &new_zv;
+		//ZVAL_COPY_VALUE(&new_zv, value);
 		//zval_copy_ctor(new_zv);
 	}
 
@@ -68,7 +67,7 @@ zval *zephir_array_update_string(zval *arr, const char *index, size_t index_leng
 	}
 
 	if ((flags & PH_COPY) == PH_COPY) {
-		if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
+		Z_TRY_ADDREF_P(value);
 	}
 	return zend_symtable_str_update(Z_ARRVAL_P(arr), index, index_length, value);
 }
@@ -173,9 +172,9 @@ int zephir_array_fetch(zval *return_value, zval *arr, zval *index, int flags ZEP
 
 		if (result != FAILURE) {
 			if ((flags & PH_READONLY) != PH_READONLY) {
-				if (Z_REFCOUNTED_P(zv)) Z_ADDREF_P(zv);
+				Z_TRY_ADDREF_P(zv);
 			}
-			ZVAL_DUP(return_value, zv);
+			ZVAL_COPY(return_value, zv);
 			return SUCCESS;
 		}
 	}
@@ -189,9 +188,9 @@ int zephir_array_fetch_long(zval *return_value, zval *arr, unsigned long index, 
 
 	if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
 		if ((zv = zend_hash_index_find(Z_ARRVAL_P(arr), index)) != NULL) {
-			ZVAL_COPY_VALUE(return_value, zv);
+			ZVAL_COPY(return_value, zv);
 			if ((flags & PH_READONLY) != PH_READONLY) {
-				if (Z_REFCOUNTED_P(return_value)) Z_ADDREF_P(return_value);
+				Z_TRY_ADDREF_P(return_value);
 			}
 			return SUCCESS;
 		}
@@ -208,7 +207,7 @@ int zephir_array_fetch_long(zval *return_value, zval *arr, unsigned long index, 
 
 	ZVAL_NULL(return_value);
 	if ((flags & PH_READONLY) != PH_READONLY) {
-		if (Z_REFCOUNTED_P(return_value)) Z_ADDREF_P(return_value);
+		Z_TRY_ADDREF_P(return_value);
 	}
 	return FAILURE;
 }
@@ -220,9 +219,9 @@ int zephir_array_fetch_string(zval *return_value, zval *arr, char *index, size_t
 	if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
 		if ((zv = zend_symtable_str_find(Z_ARRVAL_P(arr), index, length)) != NULL) {
 			if ((flags & PH_READONLY) != PH_READONLY) {
-				if (Z_REFCOUNTED_P(zv)) Z_ADDREF_P(zv);
+				Z_TRY_ADDREF_P(zv);
 			}
-			ZVAL_DUP(return_value, zv);
+			ZVAL_COPY(return_value, zv);
 			return SUCCESS;
 		}
 
@@ -238,7 +237,7 @@ int zephir_array_fetch_string(zval *return_value, zval *arr, char *index, size_t
 
 	ZVAL_NULL(return_value);
 	if ((flags & PH_READONLY) != PH_READONLY) {
-		if (Z_REFCOUNTED_P(return_value)) Z_ADDREF_P(return_value);
+		Z_TRY_ADDREF_P(return_value);
 	}
 	return FAILURE;
 }
@@ -254,7 +253,7 @@ int zephir_array_append(zval *arr, zval *value, int flags ZEPHIR_DEBUG_PARAMS) {
 		SEPARATE_ZVAL_IF_NOT_REF(arr);
 	}
 
-	if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
+	Z_TRY_ADDREF_P(value);
 	return add_next_index_zval(arr, value);
 }
 
@@ -453,9 +452,9 @@ int zephir_array_isset_long_fetch(zval *fetched, zval *arr, unsigned long index,
 
 	if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
 		if ((zv = zend_hash_index_find(Z_ARRVAL_P(arr), index)) != NULL) {
-			ZVAL_COPY_VALUE(fetched, zv);
+			ZVAL_COPY(fetched, zv);
 			if (!readonly) {
-				Z_ADDREF_P(fetched);
+				Z_TRY_ADDREF_P(fetched);
 			}
 			return 1;
 		}
@@ -463,7 +462,7 @@ int zephir_array_isset_long_fetch(zval *fetched, zval *arr, unsigned long index,
 
 	ZVAL_NULL(fetched);
 	if (!readonly) {
-		Z_ADDREF_P(fetched);
+		Z_TRY_ADDREF_P(fetched);
 	}
 	return 0;
 }
@@ -479,10 +478,11 @@ int zephir_array_update_zval(zval *arr, zval *index, zval *value, int flags) {
 
 	if ((flags & PH_CTOR) == PH_CTOR) {
 		zval new_zv;
-		Z_DELREF_P(value);
+		Z_TRY_DELREF_P(value);
 		ZVAL_NULL(&new_zv);
+		ZVAL_DUP(&new_zv, value);
 		value = &new_zv;
-		zval_copy_ctor(&new_zv);
+		//zval_copy_ctor(&new_zv);
 	}
 
 	if ((flags & PH_SEPARATE) == PH_SEPARATE) {
@@ -490,7 +490,7 @@ int zephir_array_update_zval(zval *arr, zval *index, zval *value, int flags) {
 	}
 
 	if ((flags & PH_COPY) == PH_COPY) {
-		if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
+		Z_TRY_ADDREF_P(value);
 	}
 
 	ht = Z_ARRVAL_P(arr);

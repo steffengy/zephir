@@ -528,7 +528,7 @@ class ForStatement extends StatementAbstract
             $compilationContext->symbolTable->mustGrownStack(true);
             $codePrinter->output("\t" . '{ zval *tmp; ');
             $codePrinter->output("\t" . 'tmp = ' . $iteratorVariable->getName() . '->funcs->get_current_data(' . $iteratorVariable->getName() . ');');
-            $codePrinter->output("\t" . 'ZVAL_COPY_VALUE(' . $variable->getPointeredName() . ', tmp);'); //TODO: memleak?
+            $codePrinter->output("\t" . 'ZVAL_COPY(' . $variable->getPointeredName() . ', tmp);'); //TODO: memleak?
             $codePrinter->output("\t" . '}');
         }
 
@@ -826,7 +826,7 @@ class ForStatement extends StatementAbstract
             $codePrinter->output("\t" . '}');
         }
         if (isset($variable)) {
-            $codePrinter->output("\t" . 'ZVAL_COPY_VALUE(&' . $variable->getName() . ', ' . $arrayVal->getName() . ');');
+            $codePrinter->output("\t" . 'ZVAL_COPY(&' . $variable->getName() . ', ' . $arrayVal->getName() . ');');
         }
         
         /**

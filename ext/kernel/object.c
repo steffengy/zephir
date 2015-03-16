@@ -153,9 +153,12 @@ int zephir_unset_property(zval* object, const char* name)
  * Returns the called in class in the current scope
  */
 void zephir_get_called_class(zval *return_value) {
+	zend_string *tmp_str;
+	zend_string *ce_str = EG(current_execute_data)->called_scope->name;
 
 	if (EG(current_execute_data)->called_scope) {
-		RETURN_STR(EG(current_execute_data)->called_scope->name);
+		tmp_str = zend_string_init(ce_str->val, ce_str->len, 0);
+		RETURN_STR(tmp_str);
 	}
 
 	if (!EG(scope))  {
@@ -345,7 +348,19 @@ zval *zephir_read_property(zval *target, zval *src, const char *name, size_t len
 	ZVAL_UNDEF(&tmp);
 
 	ret = zend_read_property(Z_OBJCE_P(src), src, name, length, silent, &tmp);
-	ZVAL_DUP(target, ret);
+	ZVAL_COPY(target, ret);
+	zval_ptr_dtor(&tmp);
+	return ret;
+}
+
+int zephir_read_static_property_ce(zval *target, zend_class_entry *ce, char *property, size_t length)
+{
+	zval tmp;
+	zval *ret;
+	ZVAL_UNDEF(&tmp);
+
+	ret = zend_read_static_property(ce, property, length, 0);
+	ZVAL_COPY(target, ret);
 	zval_ptr_dtor(&tmp);
 	return ret;
 }
@@ -387,7 +402,7 @@ int zephir_update_property_array(zval *object, const char *property, uint32_t pr
 			convert_to_array(&tmp);
 		}
 
-		if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value);
+		Z_TRY_ADDREF_P(value);
 
 		if (Z_TYPE_P(index) == IS_STRING) {
 			zend_symtable_str_update(Z_ARRVAL(tmp), Z_STRVAL_P(index), Z_STRLEN_P(index), value);
@@ -424,7 +439,7 @@ int zephir_property_indecr_ex(zval *object, char *property_name, unsigned int pr
 	}
 
 	if (zephir_read_property(&tmp, object, property_name, property_length, 0)) {
-		if (Z_REFCOUNTED(tmp))  Z_DELREF(tmp);
+		Z_TRY_DELREF(tmp);
 
 		SEPARATE_ZVAL(&tmp);
 

@@ -32,7 +32,7 @@ int ZEPHIR_FASTCALL zephir_array_unset_string(zval *arr, const char *index, uint
 
 #define zephir_array_isset_fetch(return_value, arr, index, flags) zephir_array_fetch(return_value, arr, index, flags ZEPHIR_DEBUG_PARAMS_DUMMY) == SUCCESS
 #define zephir_array_fast_append(arr, value) \
-  if (Z_REFCOUNTED_P(value)) Z_ADDREF_P(value); \
+  Z_TRY_ADDREF_P(value); \
   zend_hash_next_index_insert(Z_ARRVAL_P(arr), value);
 
 #endif

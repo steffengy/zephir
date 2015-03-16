@@ -20,14 +20,17 @@ int zephir_interface_exists(const zval *class_name, int autoload);
 int zephir_method_exists(const zval *object, const zval *method_name);
 
 //zephir_fetch_static_property_ce(zend_class_entry *ce, const char *property, int len)
-#define zephir_read_static_property_ce(target_zval, ce, property_str) ZEPHIR_CPY_WRT_CTOR(target_zval, zend_read_static_property(ce, property_str, 0))
+int zephir_read_static_property_ce(zval *target, zend_class_entry *ce, char *property, size_t length);
 //zephir_read_property(zval *target, zval *src, char *name, size_t length)
 zval *zephir_read_property(zval *target, zval *src, const char *name, size_t length, zend_bool silent);
 #define zephir_return_property(object, name_str) zephir_read_property(return_value, this_ptr, name_str, 0)
 int zephir_read_property_zval(zval *result, zval *object, zval *property, int flags);
 
 /* Update properties */
-#define zephir_update_property_zval(this_ptr, name_str, value) zend_update_property(Z_OBJCE_P(this_ptr), this_ptr, name_str, value)
+#define zephir_update_property_zval(this_ptr, name_str, value) \
+	Z_TRY_ADDREF_P(value); \
+	zend_update_property(Z_OBJCE_P(this_ptr), this_ptr, name_str, value)
+
 #define zephir_update_static_property_ce(ce, name_str, value) zend_update_static_property(ce, name_str, value)
 #define zephir_update_static_property_null(ce, name_str) zend_update_static_property_null(ce, name_str)
 #define zephir_update_static_property_bool(ce, name_str, value) zend_update_static_property_bool(ce, name_str, value)
