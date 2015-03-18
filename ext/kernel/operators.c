@@ -16,7 +16,7 @@
 int zephir_is_equal(zval *op1, zval *op2)
 {
 	zval result;
-	fast_equal_function(&result, op1, op2);
+	is_equal_function(&result, op1, op2);
 	return Z_TYPE(result) == IS_TRUE;
 }
 
@@ -186,7 +186,7 @@ int zephir_compare_strict_string(zval *op1, const char *op2, int op2_length)
 int zephir_greater_long(zval *op1, long op2) {
 	zval result, op2_zval;
 	ZVAL_LONG(&op2_zval, op2);
-	fast_is_smaller_or_equal_function(&result, op1, &op2_zval);
+	is_smaller_or_equal_function(&result, op1, &op2_zval);
 	return Z_TYPE(result) == IS_FALSE;
 }
 
@@ -195,7 +195,7 @@ int zephir_greater_long(zval *op1, long op2) {
  */
 int zephir_greater_equal(zval *op1, zval *op2) {
 	zval result;
-	fast_is_smaller_function(&result, op1, op2);
+	is_smaller_function(&result, op1, op2);
 	return Z_TYPE(result) == IS_FALSE;
 }
 
@@ -205,7 +205,7 @@ int zephir_greater_equal(zval *op1, zval *op2) {
 int zephir_greater_equal_long(zval *op1, long op2) {
 	zval result, op2_zval;
 	ZVAL_LONG(&op2_zval, op2);
-	fast_is_smaller_function(&result, op1, &op2_zval);
+	is_smaller_function(&result, op1, &op2_zval);
 	return Z_TYPE(result) == IS_FALSE;
 }
 
@@ -214,13 +214,13 @@ int zephir_greater_equal_long(zval *op1, long op2) {
  */
 int zephir_less(zval *op1, zval *op2) {
 	zval result;
-	fast_is_smaller_function(&result, op1, op2);
+	is_smaller_function(&result, op1, op2);
 	return Z_TYPE(result) == IS_TRUE;
 }
 
 int zephir_less_equal(zval *op1, zval *op2) {
 	zval result;
-	fast_is_smaller_or_equal_function(&result, op1, op2);
+	is_smaller_or_equal_function(&result, op1, op2);
 	return Z_TYPE(result) == IS_TRUE;
 }
 
@@ -229,7 +229,7 @@ int zephir_less_equal(zval *op1, zval *op2) {
  */
 int zephir_greater(zval *op1, zval *op2) {
 	zval result;
-	fast_is_smaller_or_equal_function(&result, op1, op2);
+	is_smaller_or_equal_function(&result, op1, op2);
 	return Z_TYPE(result) == IS_FALSE;
 }
 
@@ -481,7 +481,7 @@ int zephir_less_long(zval *op1, long op2)
 {
 	zval result, op2_zval;
 	ZVAL_LONG(&op2_zval, op2);
-	fast_is_smaller_function(&result, op1, &op2_zval);
+	is_smaller_function(&result, op1, &op2_zval);
 	return Z_TYPE(result) == IS_TRUE;
 }
 
@@ -489,7 +489,7 @@ int zephir_less_equal_long(zval *op1, long op2)
 {
 	zval result, op2_zval;
 	ZVAL_LONG(&op2_zval, op2);
-	fast_is_smaller_or_equal_function(&result, op1, &op2_zval);
+	is_smaller_or_equal_function(&result, op1, &op2_zval);
 	return Z_TYPE(result) == IS_TRUE;
 }
 

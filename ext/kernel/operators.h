@@ -33,8 +33,8 @@
 	))
 
 /* Increment/Decrement */
-#define zephir_increment(var) fast_increment_function(var)
-#define zephir_decrement(var) fast_decrement_function(var)
+#define zephir_increment(var) increment_function(var)
+#define zephir_decrement(var) decrement_function(var)
 
 /** greater/smaller comparision */
 #define ZEPHIR_GE(op1, op2)       zephir_greater_equal(op1, op2)
