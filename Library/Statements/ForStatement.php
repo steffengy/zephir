@@ -731,7 +731,7 @@ class ForStatement extends StatementAbstract
         /**
          * Create temporary variables for key and value
          */
-        if (isset($keyVariable)) {
+        if (isset($keyVariable) || (!isset($keyVariable) && !isset($variable))) {
             $arrayNumKey = $compilationContext->symbolTable->addTemp('zend_ulong', $compilationContext);
             $arrayStrKey = $compilationContext->symbolTable->addTemp('zend_string', $compilationContext);
         }
@@ -790,6 +790,8 @@ class ForStatement extends StatementAbstract
             }
         } else if (isset($variable)) {
             $macro = 'ZEND_HASH_' . $reverse . 'FOREACH_VAL';
+        } else {
+            $macro = 'ZEND_HASH_FOREACH_KEY';
         }
         
         if (!isset($macro)) {

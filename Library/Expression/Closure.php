@@ -119,7 +119,7 @@ class Closure
 
         $classMethod = new ClassMethod(
             $classDefinition,
-            array('public', 'final'),
+            array('public'),
             '__invoke',
             $parameters,
             new StatementsBlock($block),

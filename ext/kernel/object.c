@@ -362,7 +362,7 @@ int zephir_read_static_property_ce(zval *target, zend_class_entry *ce, char *pro
 	ret = zend_read_static_property(ce, property, length, 0);
 	ZVAL_COPY(target, ret);
 	zval_ptr_dtor(&tmp);
-	return ret;
+	return 1;
 }
 
 /**
@@ -540,19 +540,52 @@ int zephir_update_static_property_array_multi_ce(zend_class_entry *ce, const cha
 	return SUCCESS;
 }
 
+/* From PHP/zend_closure.c */
+typedef struct _zend_closure {
+	zend_object    std;
+	zend_function  func;
+	zval           this_ptr;
+	HashTable     *debug_info;
+} zend_closure;
+
 /**
  * Creates a closure
  */
-int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entry *ce, const char *method_name, uint32_t method_length)
+int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entry *ce, const char *method_name, size_t method_length)
 {
-	zend_function *function_ptr;
+	zval *function_zv;
+	zend_function *func;
+	zend_internal_function *internal_func;
+	zend_closure *closure;
 
-	if ((function_ptr = zend_hash_str_find_ptr(&ce->function_table, method_name, method_length)) == NULL) {
+	if ((function_zv = zend_hash_str_find(&ce->function_table, method_name, method_length)) == NULL) {
 		ZVAL_NULL(return_value);
 		return FAILURE;
 	}
 
-	zend_create_closure(return_value, function_ptr, ce, this_ptr);
+	/*
+	 * the function_table could only contain a zend_internal_function struct,
+	 * create a proper zend_function struct, to prevent access violations
+	 * (because it's a union and not enough space is allocated to use it as zend_function, when dereferenced)
+	 * TODO: Check if this will be still needed in future releases
+	 */
+	func = Z_FUNC_P(function_zv);
+	if (func->type != ZEND_INTERNAL_FUNCTION) {
+		zend_error(E_CORE_ERROR, "Expected an internal function to create a closure");
+		return FAILURE;
+	}
+	internal_func = (zend_internal_function *)func;
+
+	func = emalloc(sizeof(zend_function));
+	memcpy(func, internal_func, sizeof(zend_internal_function));
+	zend_create_closure(return_value, func, ce, this_ptr);
+	efree(func);
+
+	closure = (zend_closure *)Z_OBJ_P(return_value);
+	closure->func.internal_function = *internal_func;
+	closure->func.common.prototype = (zend_function*)closure;
+	closure->func.common.fn_flags |= ZEND_ACC_CLOSURE;
+
 	return SUCCESS;
 }
 

@@ -7,7 +7,7 @@ void zephir_get_class_ns(zval *result, zval *object, int lower);
 void zephir_get_ns_class(zval *result, zval *object, int lower);
 int zephir_instance_of_ev(const zval *object, const zend_class_entry *ce);
 int zephir_is_instance_of(zval *object, const char *class_name, unsigned int class_length);
-int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entry *ce, const char *method_name, uint32_t method_length);
+int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entry *ce, const char *method_name, size_t method_length);
 
 /* _str receives the old char * wrapped in SL */
 #define zephir_fetch_class_str(class_name, fetch_type) zephir_fetch_class_str_ex(class_name, fetch_type)
