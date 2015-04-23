@@ -98,7 +98,11 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 	size_t i;
 	zephir_memory_entry *prev, *active_memory;
 	zephir_symbol_table *active_symbol_table;
+#if PHP_VERSION_ID >= 70000
+	zval *ptr;
+#else
 	zval **ptr;
+#endif
 
 	active_memory = g->active_memory;
 	assert(active_memory != NULL);
@@ -108,9 +112,15 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 		if (g->active_symbol_table) {
 			active_symbol_table = g->active_symbol_table;
 			if (active_symbol_table->scope == active_memory) {
+#if PHP_VERSION_ID >= 70000
+				zend_hash_destroy(EG(current_execute_data)->symbol_table);
+				FREE_HASHTABLE(EG(current_execute_data)->symbol_table);
+				EG(current_execute_data)->symbol_table = active_symbol_table->symbol_table;
+#else
 				zend_hash_destroy(EG(active_symbol_table));
 				FREE_HASHTABLE(EG(active_symbol_table));
 				EG(active_symbol_table) = active_symbol_table->symbol_table;
+#endif
 				g->active_symbol_table = active_symbol_table->prev;
 				efree(active_symbol_table);
 			}
@@ -118,33 +128,48 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 
 		/* Check for non freed hash key zvals, mark as null to avoid string freeing */
 		for (i = 0; i < active_memory->hash_pointer; ++i) {
+#if PHP_VERSION_ID >= 70000
+			assert(active_memory->hash_addresses[i] != NULL);
+			if (Z_REFCOUNT_P(active_memory->hash_addresses[i]) <= 1) {
+				ZVAL_NULL(active_memory->hash_addresses[i]);
+			} else {
+				zval_copy_ctor(active_memory->hash_addresses[i]);
+#else
 			assert(active_memory->hash_addresses[i] != NULL && *(active_memory->hash_addresses[i]) != NULL);
 			if (Z_REFCOUNT_PP(active_memory->hash_addresses[i]) <= 1) {
 				ZVAL_NULL(*active_memory->hash_addresses[i]);
 			} else {
 				zval_copy_ctor(*active_memory->hash_addresses[i]);
+#endif
 			}
 		}
 
 #ifndef ZEPHIR_RELEASE
 		for (i = 0; i < active_memory->pointer; ++i) {
 			if (active_memory->addresses[i] != NULL && *(active_memory->addresses[i]) != NULL) {
+#if PHP_VERSION_ID >= 70000
+				zval *var = active_memory->addresses[i];
+				int type = Z_TYPE_P(var);
+				int refs = Z_REFCOUNT_P(var);
+#else
 				zval **var = active_memory->addresses[i];
+				int type = Z_TYPE_PP(var);
+				int refs = Z_REFCOUNT_PP(var);
+#endif
 #if PHP_VERSION_ID < 50400
-				if (Z_TYPE_PP(var) > IS_CONSTANT_ARRAY) {
-					fprintf(stderr, "%s: observed variable #%d (%p) has invalid type %u [%s]\n", __func__, (int)i, *var, Z_TYPE_PP(var), active_memory->func);
+				if (type > IS_CONSTANT_ARRAY) {
+					fprintf(stderr, "%s: observed variable #%d (%p) has invalid type %u [%s]\n", __func__, (int)i, *var, type, active_memory->func);
 				}
 #else
-				if (Z_TYPE_PP(var) > IS_CALLABLE) {
-					fprintf(stderr, "%s: observed variable #%d (%p) has invalid type %u [%s]\n", __func__, (int)i, *var, Z_TYPE_PP(var), active_memory->func);
+				if (type > IS_CALLABLE) {
+					fprintf(stderr, "%s: observed variable #%d (%p) has invalid type %u [%s]\n", __func__, (int)i, *var, type, active_memory->func);
 				}
 #endif
-
-				if (Z_REFCOUNT_PP(var) == 0) {
-					fprintf(stderr, "%s: observed variable #%d (%p) has 0 references, type=%d [%s]\n", __func__, (int)i, *var, Z_TYPE_PP(var), active_memory->func);
+				if (refs == 0) {
+					fprintf(stderr, "%s: observed variable #%d (%p) has 0 references, type=%d [%s]\n", __func__, (int)i, *var, type, active_memory->func);
 				}
-				else if (Z_REFCOUNT_PP(var) >= 1000000) {
-					fprintf(stderr, "%s: observed variable #%d (%p) has too many references (%u), type=%d  [%s]\n", __func__, (int)i, *var, Z_REFCOUNT_PP(var), Z_TYPE_PP(var), active_memory->func);
+				else if (refs >= 1000000) {
+					fprintf(stderr, "%s: observed variable #%d (%p) has too many references (%u), type=%d  [%s]\n", __func__, (int)i, *var, refs, type, active_memory->func);
 				}
 #if 0
 				/* Skip this check, PDO does return variables with is_ref = 1 and refcount = 1*/
@@ -159,6 +184,19 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 		/* Traverse all zvals allocated, reduce the reference counting or free them */
 		for (i = 0; i < active_memory->pointer; ++i) {
 			ptr = active_memory->addresses[i];
+#if PHP_VERSION_ID >= 70000
+			if (EXPECTED(ptr != NULL)) {
+				if (!Z_REFCOUNTED_P(ptr) || Z_REFCOUNT_P(ptr) == 1) {
+					if (!Z_ISREF_P(ptr) || Z_TYPE_P(ptr) == IS_OBJECT) {
+						zval_ptr_dtor(ptr);
+					} else {
+						efree(ptr);
+					}
+				} else {
+					Z_DELREF_P(ptr);
+				}
+			}
+#else
 			if (EXPECTED(ptr != NULL && *(ptr) != NULL)) {
 				if (Z_REFCOUNT_PP(ptr) == 1) {
 					if (!Z_ISREF_PP(ptr) || Z_TYPE_PP(ptr) == IS_OBJECT) {
@@ -170,6 +208,7 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 					Z_DELREF_PP(ptr);
 				}
 			}
+#endif
 		}
 	}
 
@@ -392,17 +431,21 @@ void zephir_initialize_memory(zend_zephir_globals_def *zephir_globals_ptr TSRMLS
 	zend_hash_init(zephir_globals_ptr->fcache, 128, NULL, NULL, 1); // zephir_fcall_cache_dtor
 
 	/* 'Allocator sizeof operand mismatch' warning can be safely ignored */
+#if PHP_VERSION_ID >= 70000
+	zephir_globals_ptr->global_null  = emalloc(sizeof (zval));
+	zephir_globals_ptr->global_false = emalloc(sizeof (zval));
+	zephir_globals_ptr->global_true  = emalloc(sizeof (zval));
+	ZVAL_NULL(zephir_globals_ptr->global_null);
+#else
 	ALLOC_INIT_ZVAL(zephir_globals_ptr->global_null);
-	Z_SET_REFCOUNT_P(zephir_globals_ptr->global_null, 2);
-
-	/* 'Allocator sizeof operand mismatch' warning can be safely ignored */
 	ALLOC_INIT_ZVAL(zephir_globals_ptr->global_false);
-	Z_SET_REFCOUNT_P(zephir_globals_ptr->global_false, 2);
-	ZVAL_FALSE(zephir_globals_ptr->global_false);
-
-	/* 'Allocator sizeof operand mismatch' warning can be safely ignored */
 	ALLOC_INIT_ZVAL(zephir_globals_ptr->global_true);
+	Z_SET_REFCOUNT_P(zephir_globals_ptr->global_null, 2);
+	Z_SET_REFCOUNT_P(zephir_globals_ptr->global_false, 2);
 	Z_SET_REFCOUNT_P(zephir_globals_ptr->global_true, 2);
+#endif
+	
+	ZVAL_FALSE(zephir_globals_ptr->global_false);
 	ZVAL_TRUE(zephir_globals_ptr->global_true);
 
 	zephir_globals_ptr->initialized = 1;
@@ -415,12 +458,18 @@ int zephir_cleanup_fcache(void *pDest TSRMLS_DC, int num_args, va_list args, zen
 {
 	zephir_fcall_cache_entry **entry = (zephir_fcall_cache_entry**) pDest;
 	zend_class_entry *scope;
+#if PHP_VERSION_ID >= 70000
+	uint len;
+	assert(hash_key->key != NULL);
+	len = hash_key->key->len;
+	assert(len > 2 * sizeof(zend_class_entry**));
+	memcpy(&scope, &hash_key->key->val[(len -1) - 2 * sizeof(zend_class_entry**)], sizeof(zend_class_entry*));
+#else
 	uint len = hash_key->nKeyLength;
-
 	assert(hash_key->arKey != NULL);
-	assert(hash_key->nKeyLength > 2 * sizeof(zend_class_entry**));
-
+	assert(len > 2 * sizeof(zend_class_entry**));
 	memcpy(&scope, &hash_key->arKey[(len -1) - 2 * sizeof(zend_class_entry**)], sizeof(zend_class_entry*));
+#endif
 
 /*
 #ifndef ZEPHIR_RELEASE
@@ -492,9 +541,15 @@ void zephir_deinitialize_memory(TSRMLS_D)
 	zephir_globals_ptr->fcache = NULL;
 
 	for (i = 0; i < 2; i++) {
+#if PHP_VERSION_ID >= 70000
+		zval_ptr_dtor(zephir_globals_ptr->global_null);
+		zval_ptr_dtor(zephir_globals_ptr->global_false);
+		zval_ptr_dtor(zephir_globals_ptr->global_true);
+#else
 		zval_ptr_dtor(&zephir_globals_ptr->global_null);
 		zval_ptr_dtor(&zephir_globals_ptr->global_false);
 		zval_ptr_dtor(&zephir_globals_ptr->global_true);
+#endif
 	}
 
 	zephir_globals_ptr->initialized = 0;
@@ -536,7 +591,11 @@ ZEPHIR_ATTR_NONNULL static void zephir_reallocate_hmemory(const zend_zephir_glob
 #endif
 }
 
+#if PHP_VERSION_ID >= 70000
+ZEPHIR_ATTR_NONNULL1(2) static inline void zephir_do_memory_observe(zval *var, const zend_zephir_globals_def *g)
+#else
 ZEPHIR_ATTR_NONNULL1(2) static inline void zephir_do_memory_observe(zval **var, const zend_zephir_globals_def *g)
+#endif
 {
 	zephir_memory_entry *frame = g->active_memory;
 #ifndef ZEPHIR_RELEASE
@@ -571,11 +630,17 @@ ZEPHIR_ATTR_NONNULL1(2) static inline void zephir_do_memory_observe(zval **var, 
 /**
  * Observes a memory pointer to release its memory at the end of the request
  */
+#if PHP_VERSION_ID >= 70000
+void ZEND_FASTCALL zephir_memory_observe(zval *var TSRMLS_DC)
+#else
 void ZEND_FASTCALL zephir_memory_observe(zval **var TSRMLS_DC)
+#endif
 {
 	zend_zephir_globals_def *g = ZEPHIR_VGLOBAL;
 	zephir_do_memory_observe(var, g);
+#if PHP_VERSION_ID < 70000
 	*var = NULL; /* In case an exception or error happens BEFORE the observed variable gets initialized */
+#endif
 }
 
 /**
@@ -584,13 +649,34 @@ void ZEND_FASTCALL zephir_memory_observe(zval **var TSRMLS_DC)
 void ZEND_FASTCALL zephir_memory_alloc(zval **var TSRMLS_DC)
 {
 	zend_zephir_globals_def *g = ZEPHIR_VGLOBAL;
+#if PHP_VERSION_ID >= 70000
+	zephir_do_memory_observe(*var, g);
+#else
 	zephir_do_memory_observe(var, g);
 	ALLOC_INIT_ZVAL(*var);
+#endif
 }
 
 /**
  * Releases memory for an allocated zval
  */
+#if PHP_VERSION_ID >= 70000
+void ZEND_FASTCALL zephir_ptr_dtor(zval *var)
+{
+
+	if (!Z_ISREF_P(var) || Z_TYPE_P(var) == IS_OBJECT) {
+		zval_ptr_dtor(var);
+	} else {
+		if (!Z_REFCOUNTED_P(var) || Z_REFCOUNT_P(var) == 0) {
+			efree(var);
+		} else {
+			Z_DELREF_P(var);
+			if (Z_REFCOUNT_P(var) == 0) {
+				efree(var);
+			}
+		}
+	}
+#else
 void ZEND_FASTCALL zephir_ptr_dtor(zval **var)
 {
 	if (!Z_ISREF_PP(var) || Z_TYPE_PP(var) == IS_OBJECT) {
@@ -605,6 +691,7 @@ void ZEND_FASTCALL zephir_ptr_dtor(zval **var)
 			}
 		}
 	}
+#endif
 }
 
 /**
@@ -621,7 +708,11 @@ void ZEND_FASTCALL zephir_dtor(zval *var)
  * Observes a variable and allocates memory for it
  * Marks hash key zvals to be nulled before freeing
  */
+#if PHP_VERSION_ID >= 70000
+void ZEND_FASTCALL zephir_memory_alloc_pnull(zval *var TSRMLS_DC)
+#else
 void ZEND_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC)
+#endif
 {
 	zend_zephir_globals_def *g = ZEPHIR_VGLOBAL;
 	zephir_memory_entry *active_memory = g->active_memory;
@@ -635,7 +726,11 @@ void ZEND_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC)
 #endif
 
 	zephir_do_memory_observe(var, g);
+#if PHP_VERSION_ID >= 70000
+	ALLOC_INIT_ZVAL(var);
+#else
 	ALLOC_INIT_ZVAL(*var);
+#endif
 
 	if (active_memory->hash_pointer == active_memory->hash_capacity) {
 		zephir_reallocate_hmemory(g);
@@ -648,9 +743,15 @@ void ZEND_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC)
 /**
  * Removes a memory pointer from the active memory pool
  */
+#if PHP_VERSION_ID >= 70000
+void ZEND_FASTCALL zephir_memory_remove(zval *var TSRMLS_DC) {
+#else
 void ZEND_FASTCALL zephir_memory_remove(zval **var TSRMLS_DC) {
+#endif
 	zval_ptr_dtor(var);
+#if PHP_VERSION_ID < 70000
 	*var = NULL;
+#endif
 }
 
 /**
@@ -697,13 +798,21 @@ void zephir_create_symbol_table(TSRMLS_D) {
 
 	entry = (zephir_symbol_table *) emalloc(sizeof(zephir_symbol_table));
 	entry->scope = zephir_globals_ptr->active_memory;
+#if PHP_VERSION_ID >= 70000
+	entry->symbol_table = EG(current_execute_data)->symbol_table;
+#else
 	entry->symbol_table = EG(active_symbol_table);
+#endif
 	entry->prev = zephir_globals_ptr->active_symbol_table;
 	zephir_globals_ptr->active_symbol_table = entry;
 
 	ALLOC_HASHTABLE(symbol_table);
 	zend_hash_init(symbol_table, 0, NULL, ZVAL_PTR_DTOR, 0);
+#if PHP_VERSION_ID >= 70000
+	EG(current_execute_data)->symbol_table = symbol_table;
+#else
 	EG(active_symbol_table) = symbol_table;
+#endif
 }
 
 /**
@@ -726,20 +835,34 @@ void zephir_clean_symbol_tables(TSRMLS_D) {
  * Exports symbols to the active symbol table
  */
 int zephir_set_symbol(zval *key_name, zval *value TSRMLS_DC) {
-
-	if (!EG(active_symbol_table)) {
+#if PHP_VERSION_ID >= 70000
+	if (!EG(current_execute_data)->symbol_table) {
 		zend_rebuild_symbol_table(TSRMLS_C);
 	}
 
-	if (EG(active_symbol_table)) {
+	if (EG(current_execute_data)->symbol_table) {
 		if (Z_TYPE_P(key_name) == IS_STRING) {
 			Z_ADDREF_P(value);
-			zend_hash_update(EG(active_symbol_table), Z_STRVAL_P(key_name), Z_STRLEN_P(key_name) + 1, &value, sizeof(zval *), NULL);
+			if (zend_hash_update(EG(current_execute_data)->symbol_table, Z_STR_P(key_name), value) == NULL || EG(exception)) {
+				return FAILURE;
+			}
+		}
+	}
+#else
+	if (!EG(current_execute_data)->symbol_table) {
+		zend_rebuild_symbol_table(TSRMLS_C);
+	}
+
+	if (EG(current_execute_data)->symbol_table) {
+		if (Z_TYPE_P(key_name) == IS_STRING) {
+			Z_ADDREF_P(value);
+			zend_hash_update(EG(current_execute_data)->symbol_table, Z_STRVAL_P(key_name), Z_STRLEN_P(key_name) + 1, &value, sizeof(zval *), NULL);
 			if (EG(exception)) {
 				return FAILURE;
 			}
 		}
 	}
+#endif
 
 	return SUCCESS;
 }
@@ -748,7 +871,19 @@ int zephir_set_symbol(zval *key_name, zval *value TSRMLS_DC) {
  * Exports a string symbol to the active symbol table
  */
 int zephir_set_symbol_str(char *key_name, unsigned int key_length, zval *value TSRMLS_DC) {
+#if PHP_VERSION_ID >= 70000
+	if (!EG(current_execute_data)->symbol_table) {
+		zend_rebuild_symbol_table(TSRMLS_C);
+	}
 
+	if (&EG(symbol_table)) {
+		Z_ADDREF_P(value);
+		zend_hash_str_update(&EG(symbol_table), key_name, key_length, value);
+		if (EG(exception)) {
+			return FAILURE;
+		}
+	}
+#else
 	if (!EG(active_symbol_table)) {
 		zend_rebuild_symbol_table(TSRMLS_C);
 	}
@@ -760,22 +895,41 @@ int zephir_set_symbol_str(char *key_name, unsigned int key_length, zval *value T
 			return FAILURE;
 		}
 	}
+#endif
 
 	return SUCCESS;
 }
 
 static inline void zephir_dtor_func(zval *zvalue ZEND_FILE_LINE_DC)
 {
+#if PHP_VERSION_ID >= 70000
+	switch (Z_TYPE_P(zvalue)) {
+#else
 	switch (Z_TYPE_P(zvalue) & IS_CONSTANT_TYPE_MASK) {
+#endif
 		case IS_STRING:
 		case IS_CONSTANT:
+#if PHP_VERSION_ID >= 70000
+			CHECK_ZVAL_STRING_REL(Z_STR_P(zvalue));
+			zend_string_release(Z_STR_P(zvalue));
+#else
 			CHECK_ZVAL_STRING_REL(zvalue);
 			STR_FREE_REL(zvalue->value.str.val);
+#endif
 			break;
 #if PHP_VERSION_ID < 50600
 		case IS_CONSTANT_ARRAY:
 #endif
 		case IS_ARRAY:  {
+				
+#if PHP_VERSION_ID >= 70000
+				zend_array *arr = Z_ARRVAL_P(zvalue);
+
+				/* break possible cycles */
+				GC_REMOVE_FROM_BUFFER(arr);
+				GC_TYPE_INFO(arr) = IS_NULL | (GC_WHITE << 16);
+				zend_array_destroy(arr);
+#else
 				TSRMLS_FETCH();
 				if (zvalue->value.ht && (zvalue->value.ht != &EG(symbol_table))) {
 					/* break possible cycles */
@@ -783,23 +937,37 @@ static inline void zephir_dtor_func(zval *zvalue ZEND_FILE_LINE_DC)
 					zend_hash_destroy(zvalue->value.ht);
 					FREE_HASHTABLE(zvalue->value.ht);
 				}
+#endif
 			}
 			break;
 		case IS_OBJECT:
 			{
 				TSRMLS_FETCH();
+#if PHP_VERSION_ID >= 70000
+				OBJ_RELEASE(Z_OBJ_P(zvalue));
+#else
 				Z_OBJ_HT_P(zvalue)->del_ref(zvalue TSRMLS_CC);
+#endif
 			}
 			break;
 		case IS_RESOURCE:
 			{
 				TSRMLS_FETCH();
+#if PHP_VERSION_ID >= 70000
+				zend_list_delete(Z_RES_P(zvalue));
+#else
 				zend_list_delete(zvalue->value.lval);
+#endif
 			}
 			break;
 		case IS_LONG:
 		case IS_DOUBLE:
+#if PHP_VERSION_ID >= 70000
+		case IS_TRUE:
+		case IS_FALSE:
+#else
 		case IS_BOOL:
+#endif
 		case IS_NULL:
 		default:
 			return;
@@ -809,7 +977,12 @@ static inline void zephir_dtor_func(zval *zvalue ZEND_FILE_LINE_DC)
 
 void zephir_value_dtor(zval *zvalue ZEND_FILE_LINE_DC)
 {
-	if (zvalue->type <= IS_BOOL) {
+#if PHP_VERSION_ID >= 70000
+	if (Z_TYPE_P(zvalue) <= IS_FALSE)
+#else
+	if (zvalue->type <= IS_BOOL)
+#endif
+	{
 		return;
 	}
 	zephir_dtor_func(zvalue ZEND_FILE_LINE_RELAY_CC);

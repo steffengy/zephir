@@ -534,6 +534,18 @@ typedef zend_function zephir_fcall_cache_entry;
 		ZEPHIR_LAST_CALL_STATUS = zephir_call_user_func_array_noex(return_value, handler, params TSRMLS_CC); \
 	} while (0)
 
+#if PHP_VERSION_ID >= 70000
+int zephir_call_func_aparams(zval *return_value_ptr, const char *func_name, uint func_length,
+	zephir_fcall_cache_entry **cache_entry,
+	uint param_count, zval **params TSRMLS_DC);
+
+int zephir_call_zval_func_aparams(zval *return_value_ptr, zval *func_name,
+	zephir_fcall_cache_entry **cache_entry,
+	uint param_count, zval **params TSRMLS_DC) ZEPHIR_ATTR_WARN_UNUSED_RESULT;
+#endif
+
+#if PHP_VERSION_ID < 70000
+
 int zephir_call_func_aparams(zval **return_value_ptr, const char *func_name, uint func_length,
 	zephir_fcall_cache_entry **cache_entry,
 	uint param_count, zval **params TSRMLS_DC);
@@ -541,7 +553,6 @@ int zephir_call_func_aparams(zval **return_value_ptr, const char *func_name, uin
 int zephir_call_zval_func_aparams(zval **return_value_ptr, zval *func_name,
 	zephir_fcall_cache_entry **cache_entry,
 	uint param_count, zval **params TSRMLS_DC) ZEPHIR_ATTR_WARN_UNUSED_RESULT;
-
 /**
  * @ingroup callfuncs
  * @brief Calls a function @a func
@@ -760,6 +771,8 @@ ZEPHIR_ATTR_WARN_UNUSED_RESULT ZEPHIR_ATTR_NONNULL static inline int zephir_has_
 {
 	return Z_TYPE_P(object) == IS_OBJECT ? zephir_has_constructor_ce(Z_OBJCE_P(object)) : 0;
 }
+
+#endif /* end <PHP7 */
 
 /** PHP < 5.3.9 has problems with closures */
 #if PHP_VERSION_ID <= 50309

@@ -27,7 +27,12 @@
 #include "php_ext.h"
 #include "php_main.h"
 
-#include <ext/standard/php_smart_str.h>
+#if PHP_VERSION_ID >= 70000
+	
+#else
+ 	#include <ext/standard/php_smart_str.h>
+#endif
+
 #include <ext/standard/php_string.h>
 #include <ext/standard/php_rand.h>
 #include <ext/standard/php_lcg.h>
@@ -59,6 +64,21 @@
 #define PH_RANDOM_NUMERIC 3
 #define PH_RANDOM_NOZERO 4
 
+/**
+ * This function is not external in the Zend API so we redeclare it here in the extension
+ */
+int zephir_spprintf(char **message, int max_len, char *format, ...)
+{
+	va_list arg;
+	int len;
+
+	va_start(arg, format);
+	len = vspprintf(message, max_len, format, arg);
+	va_end(arg);
+	return len;
+}
+
+#if PHP_VERSION_ID < 70000
 /**
  * Fast call to php strlen
  */
@@ -911,20 +931,6 @@ void zephir_remove_extra_slashes(zval *return_value, const zval *str) {
 }
 
 /**
- * This function is not external in the Zend API so we redeclare it here in the extension
- */
-int zephir_spprintf(char **message, int max_len, char *format, ...)
-{
-	va_list arg;
-	int len;
-
-	va_start(arg, format);
-	len = vspprintf(message, max_len, format, arg);
-	va_end(arg);
-	return len;
-}
-
-/**
  * Makes a substr like the PHP function. This function SUPPORT negative from and length
  */
 void zephir_substr(zval *return_value, zval *str, long f, long l, int flags) {
@@ -1627,6 +1633,7 @@ void zephir_stripcslashes(zval *return_value, zval *str TSRMLS_DC)
 		zval_dtor(&copy);
 	}
 }
+#endif /* <PHP7 TODO */
 
 #if PHP_VERSION_ID < 50400
 

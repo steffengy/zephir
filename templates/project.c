@@ -92,7 +92,11 @@ static void php_zephir_init_globals(zend_%PROJECT_LOWER%_globals *zephir_globals
 static PHP_RINIT_FUNCTION(%PROJECT_LOWER%)
 {
 
-	zend_%PROJECT_LOWER%_globals *zephir_globals_ptr = ZEPHIR_VGLOBAL;
+	zend_%PROJECT_LOWER%_globals *zephir_globals_ptr;
+#if PHP_VERSION_ID >= 70000 && ZTS
+    tsrm_ls = ts_resource(0);
+#endif
+    zephir_globals_ptr = ZEPHIR_VGLOBAL;
 
 	php_zephir_init_globals(zephir_globals_ptr TSRMLS_CC);
 	//zephir_init_interned_strings(TSRMLS_C);

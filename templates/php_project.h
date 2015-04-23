@@ -60,6 +60,9 @@ ZEND_EXTERN_MODULE_GLOBALS(%PROJECT_LOWER%)
 #endif
 
 #ifdef ZTS
+	#if PHP_VERSION_ID >= 70000
+	void ***tsrm_ls;
+	#endif
 	#define ZEPHIR_VGLOBAL ((zend_%PROJECT_LOWER%_globals *) (*((void ***) tsrm_ls))[TSRM_UNSHUFFLE_RSRC_ID(%PROJECT_LOWER%_globals_id)])
 #else
 	#define ZEPHIR_VGLOBAL &(%PROJECT_LOWER%_globals)

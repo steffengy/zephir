@@ -85,6 +85,7 @@ int zephir_fast_count_ev(zval *array TSRMLS_DC);
 int zephir_fast_count_int(zval *value TSRMLS_DC);
 
 /* Utils functions */
+#if PHP_VERSION_ID < 70000
 static inline int zephir_maybe_separate_zval(zval** z)
 {
 	if (Z_REFCOUNT_PP(z) > 1 && !Z_ISREF_PP(z)) {
@@ -100,6 +101,7 @@ static inline int zephir_maybe_separate_zval(zval** z)
 
 	return 0;
 }
+#endif
 
 int zephir_is_iterable_ex(zval *arr, HashTable **arr_hash, HashPosition *hash_position, int duplicate, int reverse);
 void zephir_safe_zval_ptr_dtor(zval *pzval);

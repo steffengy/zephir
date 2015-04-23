@@ -28,6 +28,9 @@
 #if PHP_VERSION_ID < 70000
 int zephir_hash_init(HashTable *ht, uint nSize, hash_func_t pHashFunction, dtor_func_t pDestructor, zend_bool persistent);
 #else
+
+#define IS_CONSISTENT(a) //TODO: static stuff, only in debug mode
+
 void zephir_hash_init(HashTable *ht, uint nSize, dtor_func_t pDestructor, zend_bool persistent);
 #endif
 
@@ -66,7 +69,7 @@ static zend_always_inline zval *zephir_hash_get_current_data_ex(HashTable *ht, H
 	Bucket *p;
 
 	IS_CONSISTENT(ht);
-	if (idx != INVALID_IDX) {
+	if (idx != HT_INVALID_IDX) {
 		p = ht->arData + idx;
 		return &p->val;
 	} else {
@@ -91,7 +94,7 @@ static zend_always_inline int zephir_hash_move_backwards_ex(HashTable *ht, HashP
 
 	IS_CONSISTENT(ht);
 
-	if (idx != INVALID_IDX) {
+	if (idx != HT_INVALID_IDX) {
 		while (idx > 0) {
 			idx--;
 			if (Z_TYPE(ht->arData[idx].val) != IS_UNDEF) {
@@ -99,7 +102,7 @@ static zend_always_inline int zephir_hash_move_backwards_ex(HashTable *ht, HashP
 				return SUCCESS;
 			}
 		}
-		*pos = INVALID_IDX;
+		*pos = HT_INVALID_IDX;
 		return SUCCESS;
 	} else {
 		return FAILURE;

@@ -34,7 +34,11 @@ void zephir_cpy_wrt(zval **dest, zval *var TSRMLS_DC);
 void zephir_cpy_wrt_ctor(zval **dest, zval *var TSRMLS_DC);
 
 void zephir_value_dtor(zval *zvalue ZEND_FILE_LINE_DC);
-void ZEND_FASTCALL zephir_ptr_dtor(zval **var);
+#if PHP_VERSION_ID >= 70000
+	void ZEND_FASTCALL zephir_ptr_dtor(zval *var);
+#else
+	void ZEND_FASTCALL zephir_ptr_dtor(zval **var);
+#endif
 void ZEND_FASTCALL zephir_dtor(zval *var);
 
 /* Memory Frames */
@@ -54,10 +58,17 @@ int ZEPHIR_FASTCALL zephir_memory_restore_stack(TSRMLS_D);
 
 #endif
 
-void ZEPHIR_FASTCALL zephir_memory_observe(zval **var TSRMLS_DC);
-void ZEPHIR_FASTCALL zephir_memory_remove(zval **var TSRMLS_DC);
+
+#if PHP_VERSION_ID >= 70000
+	void ZEPHIR_FASTCALL zephir_memory_remove(zval *var TSRMLS_DC);
+	void ZEPHIR_FASTCALL zephir_memory_observe(zval *var TSRMLS_DC);
+	void ZEPHIR_FASTCALL zephir_memory_alloc_pnull(zval *var TSRMLS_DC);
+#else
+	void ZEPHIR_FASTCALL zephir_memory_remove(zval **var TSRMLS_DC);
+	void ZEPHIR_FASTCALL zephir_memory_observe(zval **var TSRMLS_DC);
+	void ZEPHIR_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC);
+#endif
 void ZEPHIR_FASTCALL zephir_memory_alloc(zval **var TSRMLS_DC);
-void ZEPHIR_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC);
 
 int ZEPHIR_FASTCALL zephir_clean_restore_stack(TSRMLS_D);
 
@@ -77,12 +88,25 @@ int zephir_cleanup_fcache(void *pDest TSRMLS_DC, int num_args, va_list args, zen
 void zephir_deinitialize_memory(TSRMLS_D);
 
 /* Memory macros */
+#if PHP_VERSION_ID >= 70000
+	#define ALLOC_INIT_ZVAL(z) { \
+		zval _z_##z; \
+		z = &(_z_##z); \
+		ZVAL_NULL(z); \
+	}
+#endif
+
 #define ZEPHIR_ALLOC_ZVAL(z) \
 	ALLOC_INIT_ZVAL(z)
 
-#define ZEPHIR_SINIT_VAR(z) \
-	INIT_PZVAL(&z); \
-	ZVAL_NULL(&z);
+#if PHP_VERSION_ID < 70000
+	#define ZEPHIR_SINIT_VAR(z) \
+		INIT_PZVAL(&z); \
+		ZVAL_NULL(&z);
+#else
+	#define ZEPHIR_SINIT_VAR(z) \
+		ZVAL_NULL(&z);
+#endif
 
 #define ZEPHIR_SINIT_NVAR(z) Z_SET_REFCOUNT_P(&z, 1)
 
@@ -91,8 +115,15 @@ void zephir_deinitialize_memory(TSRMLS_D);
 	Z_SET_REFCOUNT_P(z, 0); \
 	Z_UNSET_ISREF_P(z);
 
-#define ZEPHIR_INIT_VAR(z) \
+#if PHP_VERSION_ID >= 70000
+	#define ZEPHIR_INIT_VAR(z) \
+		ZEPHIR_ALLOC_ZVAL(z); \
+		zephir_memory_alloc(&z TSRMLS_CC);
+
+#else
+	#define ZEPHIR_INIT_VAR(z) \
 	zephir_memory_alloc(&z TSRMLS_CC)
+#endif
 
 #define ZEPHIR_INIT_NVAR(z)\
 	if (z) { \
@@ -219,19 +250,31 @@ void zephir_deinitialize_memory(TSRMLS_D);
 		zephir_memory_observe(&z TSRMLS_CC); \
 	}
 
-#define ZEPHIR_OBSERVE_OR_NULLIFY_PPZV(ppzv) \
-	do { \
-		zval **tmp_ = (ppzv); \
-		if (tmp_ != NULL) { \
-			if (*tmp_) { \
+#if PHP_VERSION_ID >= 70000
+	/* TODO: When observe?  */
+	#define ZEPHIR_OBSERVE_OR_NULLIFY_PPZV(ppzv) \
+		do { \
+			zval *tmp_ = (ppzv); \
+			if (tmp_ != NULL) { \
 				zephir_ptr_dtor(tmp_); \
-				*tmp_ = NULL; \
+				ZVAL_NULL(tmp_); \
 			} \
-			else { \
-				zephir_memory_observe((ppzv) TSRMLS_CC); \
+		} while (0)
+#else
+	#define ZEPHIR_OBSERVE_OR_NULLIFY_PPZV(ppzv) \
+		do { \
+			zval **tmp_ = (ppzv); \
+			if (tmp_ != NULL) { \
+				if (*tmp_) { \
+					zephir_ptr_dtor(tmp_); \
+					*tmp_ = NULL; \
+				} \
+				else { \
+					zephir_memory_observe((ppzv) TSRMLS_CC); \
+				} \
 			} \
-		} \
-	} while (0)
+		} while (0)
+#endif
 
 #define ZEPHIR_OBSERVE_OR_NULLIFY_VAR(z) \
 	do { \

@@ -29,10 +29,15 @@
 typedef struct _zephir_memory_entry {
 	size_t pointer;
 	size_t capacity;
-	zval ***addresses;
+#if PHP_VERSION_ID >= 70000
+    zval **addresses;
+    zval **hash_addresses;
+#else
+    zval ***addresses;
+    zval ***hash_addresses;
+#endif
 	size_t hash_pointer;
 	size_t hash_capacity;
-	zval ***hash_addresses;
 	struct _zephir_memory_entry *prev;
 	struct _zephir_memory_entry *next;
 #ifndef ZEPHIR_RELEASE
