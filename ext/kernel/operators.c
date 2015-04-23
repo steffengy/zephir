@@ -33,14 +33,23 @@
 
 #include "Zend/zend_operators.h"
 
-#if PHP_VERSION_ID < 70000
 void zephir_make_printable_zval(zval *expr, zval *expr_copy, int *use_copy){
-	zend_make_printable_zval(expr, expr_copy, use_copy);
+	#if PHP_VERSION_ID >= 70000
+		*use_copy = zend_make_printable_zval(expr, expr_copy);
+	#else
+		zend_make_printable_zval(expr, expr_copy, use_copy);
+	#endif
 	if (use_copy) {
 		Z_SET_REFCOUNT_P(expr_copy, 1);
+#if PHP_VERSION_ID >= 70000	
+		ZVAL_DEREF(expr_copy);
+#else
 		Z_UNSET_ISREF_P(expr_copy);
+#endif
 	}
 }
+
+#if PHP_VERSION_ID < 70000
 
 /**
  * Performs logical AND function operator
@@ -50,6 +59,7 @@ int zephir_and_function(zval *result, zval *left, zval *right){
 	ZVAL_BOOL(result, istrue);
 	return SUCCESS;
 }
+#endif
 
 /**
  * Appends the content of the right operator to the left operator
@@ -57,24 +67,30 @@ int zephir_and_function(zval *result, zval *left, zval *right){
 void zephir_concat_self(zval **left, zval *right TSRMLS_DC){
 
 	zval left_copy, right_copy;
+#if PHP_VERSION_ID < 70000
 	uint length;
+#endif
 	int use_copy_left = 0, use_copy_right = 0;
 
 	if (Z_TYPE_P(right) != IS_STRING) {
 		zephir_make_printable_zval(right, &right_copy, &use_copy_right);
+		
 		if (use_copy_right) {
 			right = &right_copy;
 		}
 	}
 
+#if PHP_VERSION_ID >= 70000
+	if (Z_TYPE_P(*left) == IS_NULL) {
+		ZVAL_STRINGL(*left, Z_STRVAL_P(right), Z_STRLEN_P(right));
+#else
 	if (Z_TYPE_PP(left) == IS_NULL) {
-
 		Z_STRVAL_PP(left) = emalloc(Z_STRLEN_P(right) + 1);
 		memcpy(Z_STRVAL_PP(left), Z_STRVAL_P(right), Z_STRLEN_P(right));
 		Z_STRVAL_PP(left)[Z_STRLEN_P(right)] = 0;
 		Z_STRLEN_PP(left) = Z_STRLEN_P(right);
 		Z_TYPE_PP(left) = IS_STRING;
-
+#endif
 		if (use_copy_right) {
 			zval_dtor(&right_copy);
 		}
@@ -82,15 +98,27 @@ void zephir_concat_self(zval **left, zval *right TSRMLS_DC){
 		return;
 	}
 
+#if PHP_VERSION_ID >= 70000
+	if (Z_TYPE_P(*left) != IS_STRING) {
+#else
 	if (Z_TYPE_PP(left) != IS_STRING) {
+#endif
 		zephir_make_printable_zval(*left, &left_copy, &use_copy_left);
 		if (use_copy_left) {
 			ZEPHIR_CPY_WRT_CTOR(*left, (&left_copy));
 		}
 	}
 
+#if PHP_VERSION_ID >= 70000
+	SEPARATE_STRING(*left);
+	do {
+		zend_string *tmp = zend_string_extend(Z_STR_P(*left), Z_STRLEN_P(*left) + Z_STRLEN_P(right), 0);
+		memcpy(tmp->val + Z_STRLEN_P(*left), Z_STRVAL_P(right), Z_STRLEN_P(right));
+		zend_string_forget_hash_val(Z_STR_P(*left));
+		ZVAL_STR(*left, tmp);
+	} while(0);
+#else
 	SEPARATE_ZVAL_IF_NOT_REF(left);
-
 	length = Z_STRLEN_PP(left) + Z_STRLEN_P(right);
 	Z_STRVAL_PP(left) = str_erealloc(Z_STRVAL_PP(left), length + 1);
 
@@ -98,6 +126,7 @@ void zephir_concat_self(zval **left, zval *right TSRMLS_DC){
 	Z_STRVAL_PP(left)[length] = 0;
 	Z_STRLEN_PP(left) = length;
 	Z_TYPE_PP(left) = IS_STRING;
+#endif
 
 	if (use_copy_left) {
 		zval_dtor(&left_copy);
@@ -114,9 +143,15 @@ void zephir_concat_self(zval **left, zval *right TSRMLS_DC){
 void zephir_concat_self_str(zval **left, const char *right, int right_length TSRMLS_DC){
 
 	zval left_copy;
+#if PHP_VERSION_ID < 70000
 	uint length;
+#endif
 	int use_copy = 0;
 
+#if PHP_VERSION_ID >= 70000
+	if (Z_TYPE_P(*left) == IS_NULL) {
+		ZVAL_STRINGL(*left, right, right_length);
+#else
 	if (Z_TYPE_PP(left) == IS_NULL) {
 
 		Z_STRVAL_PP(left) = emalloc(right_length + 1);
@@ -124,17 +159,30 @@ void zephir_concat_self_str(zval **left, const char *right, int right_length TSR
 		Z_STRVAL_PP(left)[right_length] = 0;
 		Z_STRLEN_PP(left) = right_length;
 		Z_TYPE_PP(left) = IS_STRING;
-
+#endif
 		return;
 	}
 
+#if PHP_VERSION_ID >= 70000
+	if (Z_TYPE_P(*left) != IS_STRING) {
+#else
 	if (Z_TYPE_PP(left) != IS_STRING) {
+#endif
 		zephir_make_printable_zval(*left, &left_copy, &use_copy);
 		if (use_copy) {
 			ZEPHIR_CPY_WRT_CTOR(*left, (&left_copy));
 		}
 	}
 
+#if PHP_VERSION_ID >= 70000
+	SEPARATE_STRING(*left);
+	do {
+		zend_string *tmp = zend_string_extend(Z_STR_P(*left), Z_STRLEN_P(*left) + right_length, 0);
+		memcpy(tmp->val + Z_STRLEN_P(*left), right, right_length);
+		zend_string_forget_hash_val(Z_STR_P(*left));
+		ZVAL_STR(*left, tmp);
+	} while(0);
+#else
 	SEPARATE_ZVAL_IF_NOT_REF(left);
 
 	length = Z_STRLEN_PP(left) + right_length;
@@ -144,11 +192,14 @@ void zephir_concat_self_str(zval **left, const char *right, int right_length TSR
 	Z_STRVAL_PP(left)[length] = 0;
 	Z_STRLEN_PP(left) = length;
 	Z_TYPE_PP(left) = IS_STRING;
+#endif
 
 	if (use_copy) {
 		zval_dtor(&left_copy);
 	}
 }
+
+#if PHP_VERSION_ID < 70000
 
 /**
  * Appends the content of the right operator to the left operator

@@ -206,6 +206,20 @@ void zephir_deinitialize_memory(TSRMLS_D);
 	} \
 	d = v;
 
+#if PHP_VERSION_ID >= 70000
+	#define ZEPHIR_CPY_WRT_CTOR(d, v) \
+	do { \
+		if (d) { \
+			if (Z_REFCOUNTED_P(d) && Z_REFCOUNT_P(d) > 0) { \
+				zephir_ptr_dtor(d); \
+			} \
+		} else { \
+			zephir_memory_observe(d); \
+		} \
+		ZVAL_DUP(d, v); \
+		ZVAL_UNREF(d); \
+	} while(0)
+#else
 #define ZEPHIR_CPY_WRT_CTOR(d, v) \
 	if (d) { \
 		if (Z_REFCOUNT_P(d) > 0) { \
@@ -219,6 +233,7 @@ void zephir_deinitialize_memory(TSRMLS_D);
 	zval_copy_ctor(d); \
 	Z_SET_REFCOUNT_P(d, 1); \
 	Z_UNSET_ISREF_P(d);
+#endif
 
 #define ZEPHIR_MAKE_REFERENCE(d, v)	\
 	if (d) { \

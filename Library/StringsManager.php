@@ -136,7 +136,11 @@ class StringsManager
 
             foreach ($zvars as $zvar) {
                 $code .= "\t" . 'if (Z_TYPE_P(op' . $zvar . ') != IS_STRING) {' . PHP_EOL;
+/* PHP 7  */    $code .= '#if PHP_VERSION_ID >= 70000' . PHP_EOL;
+                $code .= "\t" . '   use_copy' . $zvar . ' = zend_make_printable_zval(op' . $zvar . ', &op' . $zvar . '_copy);' . PHP_EOL;
+/* <PHP7  */    $code .= '#else' . PHP_EOL;
                 $code .= "\t" . '   zend_make_printable_zval(op' . $zvar . ', &op' . $zvar . '_copy, &use_copy' . $zvar . ');' . PHP_EOL;
+/* /END   */    $code .= '#endif' . PHP_EOL;
                 $code .= "\t" . '   if (use_copy' . $zvar . ') {' . PHP_EOL;
                 $code .= "\t" . '       op' . $zvar . ' = &op' . $zvar . '_copy;' . PHP_EOL;
                 $code .= "\t" . '   }' . PHP_EOL;
@@ -146,12 +150,26 @@ class StringsManager
             $code .= "\t" . 'length = ' . join(' + ', $lengths) . ';' . PHP_EOL;
             $code .= "\t" . 'if (self_var) {' . PHP_EOL;
             $code .= '' .PHP_EOL;
+/* PHP 7  */$code .= '#if PHP_VERSION_ID >= 70000' . PHP_EOL;
+            $code .= "\t\t" . 'if (Z_TYPE_P(*result) != IS_STRING) {' . PHP_EOL;
+            $code .= "\t\t\t" . 'use_copy = zend_make_printable_zval(*result, &result_copy);' . PHP_EOL;
+/* <PHP7  */$code .= '#else' . PHP_EOL;
             $code .= "\t\t" . 'if (Z_TYPE_PP(result) != IS_STRING) {' . PHP_EOL;
             $code .= "\t\t\t" . 'zend_make_printable_zval(*result, &result_copy, &use_copy);' . PHP_EOL;
+/* /END   */$code .= '#endif' . PHP_EOL;
             $code .= "\t\t\t" . 'if (use_copy) {' . PHP_EOL;
             $code .= "\t\t\t\t" .'ZEPHIR_CPY_WRT_CTOR(*result, (&result_copy));' . PHP_EOL;
             $code .= "\t\t\t" .'}'. PHP_EOL;
             $code .= "\t\t" . '}'. PHP_EOL . PHP_EOL;
+/* PHP 7  */$code .= '#if PHP_VERSION_ID >= 70000' . PHP_EOL;
+            $code .= "\t\t" . 'offset = Z_STRLEN_P(*result);' . PHP_EOL;
+            $code .= "\t\t" . 'length += offset;' . PHP_EOL;
+            $code .= "\t\t" . 'ZVAL_STR(*result, zend_string_extend(Z_STR_P(*result), length, 0));' . PHP_EOL;
+            $code .= '' . PHP_EOL;
+            $code .= "\t" .'} else {' . PHP_EOL;
+            $code .= "\t\t" . 'ZVAL_STR(*result, zend_string_alloc(length, 0));' . PHP_EOL;
+            $code .= "\t" . '}' . PHP_EOL . PHP_EOL;
+/* <PHP7  */$code .= '#else' . PHP_EOL;
             $code .= "\t\t" . 'offset = Z_STRLEN_PP(result);' . PHP_EOL;
             $code .= "\t\t" . 'length += offset;' . PHP_EOL;
             $code .= "\t\t" . 'Z_STRVAL_PP(result) = (char *) str_erealloc(Z_STRVAL_PP(result), length + 1);' . PHP_EOL;
@@ -159,21 +177,35 @@ class StringsManager
             $code .= "\t" .'} else {' . PHP_EOL;
             $code .= "\t\t" . 'Z_STRVAL_PP(result) = (char *) emalloc(length + 1);' . PHP_EOL;
             $code .= "\t" . '}' . PHP_EOL . PHP_EOL;
+/* /END   */$code .= '#endif' . PHP_EOL;
 
             $position = '';
             foreach ($avars as $n => $type) {
                 if ($type == 's') {
+/* PHP 7  */        $code .= '#if PHP_VERSION_ID >= 70000' . PHP_EOL;
+                    $code .= "\t" . 'memcpy(Z_STRVAL_P(*result) + offset' . $position . ', op' . $n . ', op' . $n . '_len);' . PHP_EOL;
+/* <PHP7  */        $code .= '#else' . PHP_EOL;
                     $code .= "\t" . 'memcpy(Z_STRVAL_PP(result) + offset' . $position . ', op' . $n . ', op' . $n . '_len);' . PHP_EOL;
+/* /END   */        $code .= '#endif' . PHP_EOL;
                     $position .= ' + op' . $n . '_len';
                 } else {
+/* PHP 7  */        $code .= '#if PHP_VERSION_ID >= 70000' . PHP_EOL;
+                    $code .= "\t" . 'memcpy(Z_STRVAL_P(*result) + offset' . $position . ', Z_STRVAL_P(op' . $n . '), Z_STRLEN_P(op' . $n . '));' . PHP_EOL;
+/* <PHP7  */        $code .= '#else' . PHP_EOL;
                     $code .= "\t" . 'memcpy(Z_STRVAL_PP(result) + offset' . $position . ', Z_STRVAL_P(op' . $n . '), Z_STRLEN_P(op' . $n . '));' . PHP_EOL;
+/* /END   */        $code .= '#endif' . PHP_EOL;
                     $position .= ' + Z_STRLEN_P(op' . $n . ')';
                 }
             }
 
+/* PHP 7  */$code .= '#if PHP_VERSION_ID >= 70000' . PHP_EOL;
+            $code .= "\t" . 'Z_STRVAL_P(*result)[length] = 0;' . PHP_EOL;
+            $code .= "\t" . 'zend_string_forget_hash_val(Z_STR_P(*result));' . PHP_EOL;
+/* <PHP7  */$code .= '#else' . PHP_EOL;
             $code .= "\t" . 'Z_STRVAL_PP(result)[length] = 0;' . PHP_EOL;
             $code .= "\t" . 'Z_TYPE_PP(result) = IS_STRING;' . PHP_EOL;
             $code .= "\t" . 'Z_STRLEN_PP(result) = length;' . PHP_EOL . PHP_EOL;
+/* /END   */$code .= '#endif' . PHP_EOL;
 
             foreach ($zvars as $zvar) {
                 $code .= "\t" . 'if (use_copy' . $zvar . ') {' . PHP_EOL;
