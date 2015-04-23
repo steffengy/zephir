@@ -102,10 +102,6 @@ static inline ulong zephir_update_hash(const char *arKey, uint nKeyLength, ulong
 }
 #endif
 
-#if PHP_VERSION_ID >= 70000
-#define zephir_throw_exception_format() 			zend_error(E_ERROR, "TBI zephir_throw_exception_format TODO"); //ONLY until implemented
-#endif
-
 #if PHP_VERSION_ID < 70000 //TBI
 static char *zephir_fcall_possible_method(zend_class_entry *ce, const char *wrong_name TSRMLS_DC)
 {

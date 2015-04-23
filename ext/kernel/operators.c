@@ -33,6 +33,7 @@
 
 #include "Zend/zend_operators.h"
 
+#if PHP_VERSION_ID < 70000
 void zephir_make_printable_zval(zval *expr, zval *expr_copy, int *use_copy){
 	zend_make_printable_zval(expr, expr_copy, use_copy);
 	if (use_copy) {
@@ -264,7 +265,7 @@ int zephir_compare_strict_string(zval *op1, const char *op2, int op2_length) {
 
 	return 0;
 }
-
+#endif
 /**
  * Natural compare with long operandus on right
  */
@@ -279,18 +280,29 @@ int zephir_compare_strict_long(zval *op1, long op2 TSRMLS_DC) {
 			return Z_DVAL_P(op1) == (double) op2;
 		case IS_NULL:
 			return 0 == op2;
+#if PHP_VERSION_ID >= 70000
+		case IS_TRUE:
+			return 1;
+		case IS_FALSE:
+			return 0;
+#else
 		case IS_BOOL:
 			if (Z_BVAL_P(op1)) {
 				return 1 == op2;
 			} else {
 				return 0 == op2;
 			}
+#endif
 		default:
 			{
 				zval result, op2_tmp;
 				ZVAL_LONG(&op2_tmp, op2);
 				is_equal_function(&result, op1, &op2_tmp TSRMLS_CC);
+#if PHP_VERSION_ID >= 70000
+				bool_result = Z_TYPE(result) == IS_TRUE ? 1 : 0;
+#else
 				bool_result = Z_BVAL(result);
+#endif
 				return bool_result;
 			}
 	}
@@ -298,6 +310,7 @@ int zephir_compare_strict_long(zval *op1, long op2 TSRMLS_DC) {
 	return 0;
 }
 
+#if PHP_VERSION_ID < 70000
 /**
  * Natural compare with double operandus on right
  */
@@ -1116,4 +1129,6 @@ void zephir_pow_function_ex(zval *return_value, zval *zbase, zval *zexp TSRMLS_D
 
 	RETURN_DOUBLE(pow(Z_DVAL_P(zbase), Z_DVAL_P(zexp)));
 }
+#endif
+
 #endif

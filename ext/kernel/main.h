@@ -73,7 +73,12 @@ int zephir_get_global(zval **arr, const char *global, unsigned int global_length
 int zephir_is_callable(zval *var TSRMLS_DC);
 int zephir_function_exists(const zval *function_name TSRMLS_DC);
 int zephir_function_exists_ex(const char *func_name, unsigned int func_len TSRMLS_DC);
-int zephir_function_quick_exists_ex(const char *func_name, unsigned int func_len, unsigned long key TSRMLS_DC);
+#if PHP_VERSION_ID >= 70000
+	int zephir_function_quick_exists_ex(const char *func_name, unsigned int func_len TSRMLS_DC);
+#else
+	int zephir_function_quick_exists_ex(const char *func_name, unsigned int func_len, unsigned long key TSRMLS_DC);
+#endif
+
 zend_class_entry* zephir_get_internal_ce(const char *class_name, unsigned int class_name_len TSRMLS_DC);
 
 /* types */
@@ -320,6 +325,11 @@ int zephir_fetch_parameters(int num_args TSRMLS_DC, int required_args, int optio
 #define RETURN_MM_TRUE              { RETVAL_TRUE; ZEPHIR_MM_RESTORE(); return; }
 
 /** Return string restoring memory frame */
+#if PHP_VERSION_ID >= 70000
+  #define RETURN_COPY_STRING(str) { RETVAL_STRING(str); }
+#else
+  #define RETURN_COPY_STRING(str) { RETVAL_STRING(str, 1); }
+#endif
 #define RETURN_MM_STRING(str, copy) { RETVAL_STRING(str, copy); ZEPHIR_MM_RESTORE(); return; }
 #define RETURN_MM_EMPTY_STRING()    { RETVAL_EMPTY_STRING(); ZEPHIR_MM_RESTORE(); return; }
 

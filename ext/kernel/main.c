@@ -33,6 +33,9 @@
 
 #include "Zend/zend_exceptions.h"
 #include "Zend/zend_interfaces.h"
+#if PHP_VERSION_ID >= 70000
+ #include "Zend/zend_inheritance.h"
+#endif
 
 /**
  * Initializes internal interface with extends
@@ -54,16 +57,20 @@ zend_class_entry *zephir_register_internal_interface_ex(zend_class_entry *orig_c
  */
 int zephir_init_global(char *global, unsigned int global_length TSRMLS_DC) {
 
-	#if PHP_VERSION_ID < 50400
+#if PHP_VERSION_ID < 50400
 	zend_bool jit_initialization = (PG(auto_globals_jit) && !PG(register_globals) && !PG(register_long_arrays));
 	if (jit_initialization) {
 		return zend_is_auto_global(global, global_length - 1 TSRMLS_CC);
 	}
-	#else
+#else
 	if (PG(auto_globals_jit)) {
+ #if PHP_VERSION_ID >= 70000
+		return zend_is_auto_global_str(global, global_length - 1);
+ #else
 		return zend_is_auto_global(global, global_length - 1 TSRMLS_CC);
+ #endif
 	}
-	#endif
+#endif
 
 	return SUCCESS;
 }
@@ -72,15 +79,30 @@ int zephir_init_global(char *global, unsigned int global_length TSRMLS_DC) {
  * Gets the global zval into PG macro
  */
 int zephir_get_global(zval **arr, const char *global, unsigned int global_length TSRMLS_DC) {
-
+#if PHP_VERSION_ID >= 70000
+	zval *gv;
+#else
 	zval **gv;
+#endif
 
 	zend_bool jit_initialization = PG(auto_globals_jit);
 	if (jit_initialization) {
+ #if PHP_VERSION_ID >= 70000
+		zend_is_auto_global_str(global, global_length - 1);
+ #else
 		zend_is_auto_global(global, global_length - 1 TSRMLS_CC);
+ #endif
 	}
 
 	if (&EG(symbol_table)) {
+#if PHP_VERSION_ID >= 70000
+		if ((gv = zend_hash_str_find(&EG(symbol_table), global, global_length - 1)) != NULL) {
+			if (Z_TYPE_P(gv) == IS_ARRAY) {
+				*arr = gv;
+			} else {
+				zend_error(E_ERROR, "Zephir: zephir_get_global not fully implemented for PHP7");
+			}
+#else
 		if (zend_hash_find(&EG(symbol_table), global, global_length, (void **) &gv) == SUCCESS) {
 			if (Z_TYPE_PP(gv) == IS_ARRAY) {
 				*arr = *gv;
@@ -92,12 +114,17 @@ int zephir_get_global(zval **arr, const char *global, unsigned int global_length
 				ZEPHIR_INIT_VAR(*arr);
 				array_init(*arr);
 			}
+#endif
 			return SUCCESS;
 		}
 	}
 
+#if PHP_VERSION_ID >= 70000
+	zend_error(E_ERROR, "Zephir: zephir_get_global not fully implemented for PHP7");
+#else
 	ZEPHIR_INIT_VAR(*arr);
 	array_init(*arr);
+#endif
 
 	return SUCCESS;
 }
@@ -114,9 +141,13 @@ void zephir_fast_count(zval *result, zval *value TSRMLS_DC) {
 
 	if (Z_TYPE_P(value) == IS_OBJECT) {
 
-		#ifdef HAVE_SPL
+#ifdef HAVE_SPL
+  #if PHP_VERSION_ID >= 70000
+		zval retval;
+  #else
 		zval *retval = NULL;
-		#endif
+  #endif
+#endif
 
 		if (Z_OBJ_HT_P(value)->count_elements) {
 			ZVAL_LONG(result, 1);
@@ -125,7 +156,17 @@ void zephir_fast_count(zval *result, zval *value TSRMLS_DC) {
 			}
 		}
 
-		#ifdef HAVE_SPL
+#ifdef HAVE_SPL
+ #if PHP_VERSION_ID >= 70000
+		if (instanceof_function(Z_OBJCE_P(value), spl_ce_Countable)) {
+			zend_call_method_with_0_params(value, NULL, NULL, "count", &retval);
+			if (Z_TYPE(retval) != IS_UNDEF) {
+				ZVAL_LONG(result, zval_get_long(&retval));
+				zval_ptr_dtor(&retval);
+			}
+			return;
+		}
+ #else
 		if (Z_OBJ_HT_P(value)->get_class_entry && instanceof_function(Z_OBJCE_P(value), spl_ce_Countable TSRMLS_CC)) {
 			zend_call_method_with_0_params(&value, NULL, NULL, "count", &retval);
 			if (retval) {
@@ -135,7 +176,8 @@ void zephir_fast_count(zval *result, zval *value TSRMLS_DC) {
 			}
 			return;
 		}
-		#endif
+ #endif
+#endif
 
 		ZVAL_LONG(result, 0);
 		return;
@@ -151,47 +193,10 @@ void zephir_fast_count(zval *result, zval *value TSRMLS_DC) {
 
 /**
  * Makes fast count on implicit array types without creating a return zval value
+ * (seems unused)
  */
 int zephir_fast_count_ev(zval *value TSRMLS_DC) {
-
-	long count = 0;
-
-	if (Z_TYPE_P(value) == IS_ARRAY) {
-		return zend_hash_num_elements(Z_ARRVAL_P(value)) > 0;
-	}
-
-	if (Z_TYPE_P(value) == IS_OBJECT) {
-
-		#ifdef HAVE_SPL
-		zval *retval = NULL;
-		#endif
-
-		if (Z_OBJ_HT_P(value)->count_elements) {
-			Z_OBJ_HT(*value)->count_elements(value, &count TSRMLS_CC);
-			return (int) count > 0;
-		}
-
-		#ifdef HAVE_SPL
-		if (Z_OBJ_HT_P(value)->get_class_entry && instanceof_function(Z_OBJCE_P(value), spl_ce_Countable TSRMLS_CC)) {
-			zend_call_method_with_0_params(&value, NULL, NULL, "count", &retval);
-			if (retval) {
-				convert_to_long_ex(&retval);
-				count = Z_LVAL_P(retval);
-				zval_ptr_dtor(&retval);
-				return (int) count > 0;
-			}
-			return 0;
-		}
-		#endif
-
-		return 0;
-	}
-
-	if (Z_TYPE_P(value) == IS_NULL) {
-		return 0;
-	}
-
-	return 1;
+	return zephir_fast_count_int(value TSRMLS_CC) > 0;
 }
 
 /**
@@ -207,16 +212,31 @@ int zephir_fast_count_int(zval *value TSRMLS_DC) {
 
 	if (Z_TYPE_P(value) == IS_OBJECT) {
 
-		#ifdef HAVE_SPL
+#ifdef HAVE_SPL
+  #if PHP_VERSION_ID >= 70000
+		zval retval;
+  #else
 		zval *retval = NULL;
-		#endif
+  #endif
+#endif
 
 		if (Z_OBJ_HT_P(value)->count_elements) {
 			Z_OBJ_HT(*value)->count_elements(value, &count TSRMLS_CC);
 			return (int) count;
 		}
 
-		#ifdef HAVE_SPL
+#ifdef HAVE_SPL
+ #if PHP_VERSION_ID >= 70000
+		if (instanceof_function(Z_OBJCE_P(value), spl_ce_Countable)) {
+			zend_call_method_with_0_params(value, NULL, NULL, "count", &retval);
+			if (Z_TYPE(retval) != IS_UNDEF) {
+				count = zval_get_long(&retval);
+				zval_ptr_dtor(&retval);
+				return (int) count;
+			}
+			return 0;
+		}
+ #else
 		if (Z_OBJ_HT_P(value)->get_class_entry && instanceof_function(Z_OBJCE_P(value), spl_ce_Countable TSRMLS_CC)) {
 			zend_call_method_with_0_params(&value, NULL, NULL, "count", &retval);
 			if (retval) {
@@ -227,7 +247,8 @@ int zephir_fast_count_int(zval *value TSRMLS_DC) {
 			}
 			return 0;
 		}
-		#endif
+ #endif
+#endif
 
 		return 0;
 	}
@@ -246,8 +267,10 @@ int zephir_function_exists(const zval *function_name TSRMLS_DC) {
 
 	return zephir_function_quick_exists_ex(
 		Z_STRVAL_P(function_name),
-		Z_STRLEN_P(function_name) + 1,
-		zend_inline_hash_func(Z_STRVAL_P(function_name), Z_STRLEN_P(function_name) + 1) TSRMLS_CC
+		Z_STRLEN_P(function_name) + 1
+#if PHP_VERSION_ID < 70000
+		,zend_inline_hash_func(Z_STRVAL_P(function_name), Z_STRLEN_P(function_name) + 1) TSRMLS_CC
+#endif
 	);
 }
 
@@ -258,16 +281,24 @@ int zephir_function_exists(const zval *function_name TSRMLS_DC) {
  * @param function_len strlen(function_name)+1
  */
 int zephir_function_exists_ex(const char *function_name, unsigned int function_len TSRMLS_DC) {
-
-	return zephir_function_quick_exists_ex(function_name, function_len, zend_inline_hash_func(function_name, function_len) TSRMLS_CC);
+	return zephir_function_quick_exists_ex(function_name, function_len
+#if PHP_VERSION_ID < 70000
+		, zend_inline_hash_func(function_name, function_len) TSRMLS_CC
+#endif
+	);
 }
 
 /**
  * Check if a function exists using explicit char param (using precomputed hash key)
  */
-int zephir_function_quick_exists_ex(const char *method_name, unsigned int method_len, unsigned long key TSRMLS_DC) {
 
+#if PHP_VERSION_ID >= 70000
+ int zephir_function_quick_exists_ex(const char *method_name, unsigned int method_len TSRMLS_DC) {
+	if (zend_hash_str_exists(CG(function_table), method_name, method_len)) {
+#else
+ int zephir_function_quick_exists_ex(const char *method_name, unsigned int method_len, unsigned long key TSRMLS_DC) {
 	if (zend_hash_quick_exists(CG(function_table), method_name, method_len, key)) {
+#endif
 		return SUCCESS;
 	}
 
@@ -282,7 +313,12 @@ int zephir_is_callable(zval *var TSRMLS_DC) {
 	char *error = NULL;
 	zend_bool retval;
 
+#if PHP_VERSION_ID >= 70000
+	retval = zend_is_callable_ex(var, NULL, 0, NULL, NULL, &error TSRMLS_CC);
+#else
 	retval = zend_is_callable_ex(var, NULL, 0, NULL, NULL, NULL, &error TSRMLS_CC);
+#endif
+	
 	if (error) {
 		efree(error);
 	}
@@ -293,6 +329,7 @@ int zephir_is_callable(zval *var TSRMLS_DC) {
 /**
  * Initialize an array to start an iteration over it
  */
+#if PHP_VERSION_ID < 70000
 int zephir_is_iterable_ex(zval *arr, HashTable **arr_hash, HashPosition *hash_position, int duplicate, int reverse) {
 
 	if (unlikely(Z_TYPE_P(arr) != IS_ARRAY)) {
@@ -323,11 +360,16 @@ int zephir_is_iterable_ex(zval *arr, HashTable **arr_hash, HashPosition *hash_po
 
 	return 1;
 }
+#endif
 
 void zephir_safe_zval_ptr_dtor(zval *pzval)
 {
 	if (pzval) {
+#if PHP_VERSION_ID >= 70000
+		zval_ptr_dtor(pzval);
+#else
 		zval_ptr_dtor(&pzval);
+#endif
 	}
 }
 
@@ -337,8 +379,15 @@ void zephir_safe_zval_ptr_dtor(zval *pzval)
 int zephir_fetch_parameters(int num_args TSRMLS_DC, int required_args, int optional_args, ...)
 {
 	va_list va;
+#if PHP_VERSION_ID >= 70000
+	int arg_count = ZEND_CALL_NUM_ARGS(EG(current_execute_data));
+	zval *arg;
+#else
 	int arg_count = (int) (zend_uintptr_t) *(zend_vm_stack_top(TSRMLS_C) - 1);
-	zval **arg, **p;
+	zval **arg;
+#endif
+
+	zval **p;
 	int i;
 
 	if (num_args < required_args || (num_args > (required_args + optional_args))) {
@@ -360,10 +409,15 @@ int zephir_fetch_parameters(int num_args TSRMLS_DC, int required_args, int optio
 	i = 0;
 	while (num_args-- > 0) {
 
+#if PHP_VERSION_ID >= 70000
+		arg = ZEND_CALL_ARG(EG(current_execute_data), i + 1);
+		p = va_arg(va, zval **);
+		*p = arg;
+#else
 		arg = (zval **) (zend_vm_stack_top(TSRMLS_C) - 1 - (arg_count - i));
-
 		p = va_arg(va, zval **);
 		*p = *arg;
+#endif
 
 		i++;
 	}
@@ -381,52 +435,65 @@ void zephir_gettype(zval *return_value, zval *arg TSRMLS_DC) {
 	switch (Z_TYPE_P(arg)) {
 
 		case IS_NULL:
-			RETVAL_STRING("NULL", 1);
+			RETURN_COPY_STRING("NULL");
 			break;
-
+#if PHP_VERSION_ID >= 70000
+		case IS_TRUE:
+		case IS_FALSE:
+#else
 		case IS_BOOL:
-			RETVAL_STRING("boolean", 1);
+#endif
+			RETURN_COPY_STRING("boolean");
 			break;
 
 		case IS_LONG:
-			RETVAL_STRING("integer", 1);
+			RETURN_COPY_STRING("integer");
 			break;
 
 		case IS_DOUBLE:
-			RETVAL_STRING("double", 1);
+			RETURN_COPY_STRING("double");
 			break;
 
 		case IS_STRING:
-			RETVAL_STRING("string", 1);
+			RETURN_COPY_STRING("string");
 			break;
 
 		case IS_ARRAY:
-			RETVAL_STRING("array", 1);
+			RETURN_COPY_STRING("array");
 			break;
 
 		case IS_OBJECT:
-			RETVAL_STRING("object", 1);
+			RETURN_COPY_STRING("object");
 			break;
 
 		case IS_RESOURCE:
 			{
+#if PHP_VERSION_ID >= 70000
+				const char *type_name = zend_rsrc_list_get_rsrc_type(Z_RES_P(arg));
+#else
 				const char *type_name = zend_rsrc_list_get_rsrc_type(Z_LVAL_P(arg) TSRMLS_CC);
-
+#endif
+				
 				if (type_name) {
-					RETVAL_STRING("resource", 1);
+					RETURN_COPY_STRING("resource");
 					break;
 				}
 			}
 
 		default:
-			RETVAL_STRING("unknown type", 1);
+			RETURN_COPY_STRING("unknown type");
 	}
 }
 
 zend_class_entry* zephir_get_internal_ce(const char *class_name, unsigned int class_name_len TSRMLS_DC) {
     zend_class_entry** temp_ce;
 
+#if PHP_VERSION_ID >= 70000
+    if ((temp_ce = zend_hash_str_find_ptr(CG(class_table), class_name, class_name_len)) == NULL) {
+#else
     if (zend_hash_find(CG(class_table), class_name, class_name_len, (void **)&temp_ce) == FAILURE) {
+#endif
+    
         zend_error(E_ERROR, "Class '%s' not found", class_name);
         return NULL;
     }

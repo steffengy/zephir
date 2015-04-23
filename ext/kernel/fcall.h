@@ -542,15 +542,24 @@ int zephir_call_func_aparams(zval *return_value_ptr, const char *func_name, uint
 int zephir_call_zval_func_aparams(zval *return_value_ptr, zval *func_name,
 	zephir_fcall_cache_entry **cache_entry,
 	uint param_count, zval **params TSRMLS_DC) ZEPHIR_ATTR_WARN_UNUSED_RESULT;
+
+int zephir_call_class_method_aparams(zval *return_value_ptr, zend_class_entry *ce, zephir_call_type type, zval *object,
+	const char *method_name, uint method_len,
+	zephir_fcall_cache_entry **cache_entry,
+	uint param_count, zval **params TSRMLS_DC) ZEPHIR_ATTR_WARN_UNUSED_RESULT;
 #endif
 
 #if PHP_VERSION_ID < 70000
-
 int zephir_call_func_aparams(zval **return_value_ptr, const char *func_name, uint func_length,
 	zephir_fcall_cache_entry **cache_entry,
 	uint param_count, zval **params TSRMLS_DC);
 
 int zephir_call_zval_func_aparams(zval **return_value_ptr, zval *func_name,
+	zephir_fcall_cache_entry **cache_entry,
+	uint param_count, zval **params TSRMLS_DC) ZEPHIR_ATTR_WARN_UNUSED_RESULT;
+
+int zephir_call_class_method_aparams(zval **return_value_ptr, zend_class_entry *ce, zephir_call_type type, zval *object,
+	const char *method_name, uint method_len,
 	zephir_fcall_cache_entry **cache_entry,
 	uint param_count, zval **params TSRMLS_DC) ZEPHIR_ATTR_WARN_UNUSED_RESULT;
 /**
@@ -626,11 +635,6 @@ ZEPHIR_ATTR_WARN_UNUSED_RESULT static inline int zephir_return_call_zval_functio
 
 	return SUCCESS;
 }
-
-int zephir_call_class_method_aparams(zval **return_value_ptr, zend_class_entry *ce, zephir_call_type type, zval *object,
-	const char *method_name, uint method_len,
-	zephir_fcall_cache_entry **cache_entry,
-	uint param_count, zval **params TSRMLS_DC) ZEPHIR_ATTR_WARN_UNUSED_RESULT;
 
 ZEPHIR_ATTR_WARN_UNUSED_RESULT static inline int zephir_return_call_class_method(zval *return_value,
 	zval **return_value_ptr, zend_class_entry *ce, zephir_call_type type, zval *object,
@@ -809,8 +813,12 @@ int zephir_call_function(zend_fcall_info *fci, zend_fcall_info_cache *fci_cache 
 	}
 
 #ifdef ZEPHIR_RELEASE
-#define ZEPHIR_TEMP_PARAM_COPY 0
-#define zephir_check_temp_parameter(param) do { if (Z_REFCOUNT_P(param) > 1) zval_copy_ctor(param); else ZVAL_NULL(param); } while(0)
+ #define ZEPHIR_TEMP_PARAM_COPY 0
+  #if PHP_VERSION_ID >= 70000
+   #define zephir_check_temp_parameter(param) do { if (Z_REFCOUNT_P(param) > 1) zval_copy_ctor(param); else { zval_ptr_dtor(param); ZVAL_NULL(param); } } while(0)
+  #else
+   #define zephir_check_temp_parameter(param) do { if (Z_REFCOUNT_P(param) > 1) zval_copy_ctor(param); else ZVAL_NULL(param); } while(0)
+  #endif
 #else
 #define ZEPHIR_TEMP_PARAM_COPY 1
 #define zephir_check_temp_parameter(param)

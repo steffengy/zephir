@@ -49,7 +49,12 @@ void zephir_throw_exception_debug(zval *object, const char *file, zend_uint line
 
 	zend_class_entry *default_exception_ce;
 	int ZEPHIR_LAST_CALL_STATUS = 0;
-	zval *curline = NULL, *object_copy = NULL;
+	zval *object_copy = NULL;
+#if PHP_VERSION_ID >= 70000
+	zval curline;
+#else
+	zval *curline = NULL;
+#endif
 
 	ZEPHIR_MM_GROW();
 
@@ -63,10 +68,18 @@ void zephir_throw_exception_debug(zval *object, const char *file, zend_uint line
 	Z_ADDREF_P(object);
 
 	if (line > 0) {
+#if PHP_VERSION_ID >= 70000
+		ZVAL_NULL(&curline);
+#else
 		curline = 0;
+#endif
 		ZEPHIR_CALL_METHOD(&curline, object, "getline", NULL);
 		zephir_check_call_status();
+#if PHP_VERSION_ID >= 70000
+		if (ZEPHIR_IS_LONG(&curline, 0)) {
+#else
 		if (ZEPHIR_IS_LONG(curline, 0)) {
+#endif	
 			default_exception_ce = zend_exception_get_default(TSRMLS_C);
 			zend_update_property_string(default_exception_ce, object, "file", sizeof("file") - 1, file TSRMLS_CC);
 			zend_update_property_long(default_exception_ce, object, "line", sizeof("line") - 1, line TSRMLS_CC);
@@ -90,7 +103,11 @@ void zephir_throw_exception_string_debug(zend_class_entry *ce, const char *messa
 	object_init_ex(object, ce);
 
 	ALLOC_INIT_ZVAL(msg);
+#if PHP_VERSION_ID >= 70000
+	ZVAL_STRINGL(msg, message, message_len);
+#else
 	ZVAL_STRINGL(msg, message, message_len, 1);
+#endif
 
 	ZEPHIR_CALL_METHOD(NULL, object, "__construct", NULL, msg);
 	zephir_check_call_status();
@@ -103,7 +120,11 @@ void zephir_throw_exception_string_debug(zend_class_entry *ce, const char *messa
 
 	zend_throw_exception_object(object TSRMLS_CC);
 
+#if PHP_VERSION_ID >= 70000
+	zval_ptr_dtor(msg);
+#else
 	zval_ptr_dtor(&msg);
+#endif
 }
 
 /**
@@ -118,14 +139,22 @@ void zephir_throw_exception_string(zend_class_entry *ce, const char *message, ze
 	object_init_ex(object, ce);
 
 	ALLOC_INIT_ZVAL(msg);
+#if PHP_VERSION_ID >= 70000
+	ZVAL_STRINGL(msg, message, message_len);
+#else
 	ZVAL_STRINGL(msg, message, message_len, 1);
+#endif
 
 	ZEPHIR_CALL_METHOD(NULL, object, "__construct", NULL, msg);
 	zephir_check_call_status();
 
 	zend_throw_exception_object(object TSRMLS_CC);
 
+#if PHP_VERSION_ID >= 70000
+	zval_ptr_dtor(msg);
+#else
 	zval_ptr_dtor(&msg);
+#endif
 }
 
 /**
@@ -146,14 +175,24 @@ void zephir_throw_exception_format(zend_class_entry *ce TSRMLS_DC, const char *f
 	va_end(args);
 
 	ALLOC_INIT_ZVAL(msg);
+
+#if PHP_VERSION_ID >= 70000
+	ZVAL_STRINGL(msg, buffer, len);
+	efree(buffer);
+#else
 	ZVAL_STRINGL(msg, buffer, len, 0);
+#endif
 
 	ZEPHIR_CALL_METHOD(NULL, object, "__construct", NULL, msg);
 	zephir_check_call_status();
 
 	zend_throw_exception_object(object TSRMLS_CC);
 
+#if PHP_VERSION_ID >= 70000
+	zval_ptr_dtor(msg);
+#else
 	zval_ptr_dtor(&msg);
+#endif
 }
 
 /**
