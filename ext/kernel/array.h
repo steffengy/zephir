@@ -53,7 +53,11 @@ int zephir_array_append_string(zval **arr, char *value, uint value_length, int s
 
 /** Modify arrays */
 int zephir_array_update_zval(zval **arr, zval *index, zval **value, int flags);
-int zephir_array_update_string(zval **arr, const char *index, uint index_length, zval **value, int flags);
+#if PHP_VERSION_ID >= 70000
+  zval *zephir_array_update_string(zval **arr, const char *index, uint index_length, zval **value, int flags);
+#else
+  int zephir_array_update_string(zval **arr, const char *index, uint index_length, zval **value, int flags);
+#endif
 int zephir_array_update_long(zval **arr, unsigned long index, zval **value, int flags ZEPHIR_DEBUG_PARAMS);
 
 /** Fetch items from arrays */

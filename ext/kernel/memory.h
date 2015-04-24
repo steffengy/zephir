@@ -125,14 +125,15 @@ void zephir_deinitialize_memory(TSRMLS_D);
 			if (Z_REFCOUNTED_P(z)) { \
 				if (!Z_ISREF_P(z)) { \
 					if (Z_REFCOUNT_P(z) > 1) { \
-						Z_DELREF_P(z); \
-						ZEPHIR_ALLOC_ZVAL(z); \
+						ZEPHIR_INIT_VAR(z); \
 					} else { \
 						zephir_dtor(z); \
 					} \
 				} \
 			} \
 			ZVAL_NULL(z); \
+		} else { \
+			ZEPHIR_INIT_VAR(z); \
 		}
 #else
 	#define ZEPHIR_INIT_VAR(z) zephir_memory_alloc(&z TSRMLS_CC)

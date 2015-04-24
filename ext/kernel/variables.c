@@ -108,5 +108,9 @@ void zephir_var_export_ex(zval *return_value, zval **var TSRMLS_DC) {
  * var_dump outputs php variables without using the PHP userland
  */
 void zephir_var_dump(zval **var TSRMLS_DC) {
+#if PHP_VERSION_ID >= 70000
     php_var_dump(*var, 1 TSRMLS_CC);
+#else
+    php_var_dump(var, 1 TSRMLS_CC);
+#endif
 }

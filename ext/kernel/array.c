@@ -105,33 +105,58 @@ int zephir_array_isset_fetch(zval **fetched, const zval *arr, zval *index, int r
 	}
 	return 0;
 }
+#endif
 
-int zephir_array_isset_quick_string_fetch(zval **fetched, zval *arr, char *index, uint index_length, unsigned long key, int readonly TSRMLS_DC) {
+#if PHP_VERSION_ID >= 70000
+	int zephir_array_isset_string_fetch(zval **fetched, zval *arr, char *index, uint index_length, int readonly TSRMLS_DC) {
+		zval *zv;
 
-	zval **zv;
-
-	if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
-		if (zephir_hash_quick_find(Z_ARRVAL_P(arr), index, index_length, key, (void**) &zv) == SUCCESS) {
-			*fetched = *zv;
-			if (!readonly) {
-				Z_ADDREF_P(*fetched);
+		if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
+			if ((zv = zend_symtable_str_find(Z_ARRVAL_P(arr), index, index_length)) != NULL) {
+				if (!readonly) {
+					assert(Z_REFCOUNTED_P(zv));
+					Z_TRY_ADDREF_P(zv);
+				}
+				*fetched = zv;
+				return 1;
 			}
-			return 1;
 		}
+
+		*fetched = ZEPHIR_GLOBAL(global_null);
+		if (!readonly) {
+			Z_TRY_ADDREF_P(*fetched);
+		}
+		return 0;
+	}
+#else
+	int zephir_array_isset_quick_string_fetch(zval **fetched, zval *arr, char *index, uint index_length, unsigned long key, int readonly TSRMLS_DC) {
+
+		zval **zv;
+
+		if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
+			if (zephir_hash_quick_find(Z_ARRVAL_P(arr), index, index_length, key, (void**) &zv) == SUCCESS) {
+				*fetched = *zv;
+				if (!readonly) {
+					Z_ADDREF_P(*fetched);
+				}
+				return 1;
+			}
+		}
+
+		*fetched = ZEPHIR_GLOBAL(global_null);
+		if (!readonly) {
+			Z_ADDREF_P(*fetched);
+		}
+		return 0;
 	}
 
-	*fetched = ZEPHIR_GLOBAL(global_null);
-	if (!readonly) {
-		Z_ADDREF_P(*fetched);
+	int zephir_array_isset_string_fetch(zval **fetched, zval *arr, char *index, uint index_length, int readonly TSRMLS_DC) {
+
+		return zephir_array_isset_quick_string_fetch(fetched, arr, index, index_length, zend_inline_hash_func(index, index_length), readonly TSRMLS_CC);
 	}
-	return 0;
-}
+#endif
 
-int zephir_array_isset_string_fetch(zval **fetched, zval *arr, char *index, uint index_length, int readonly TSRMLS_DC) {
-
-	return zephir_array_isset_quick_string_fetch(fetched, arr, index, index_length, zend_inline_hash_func(index, index_length), readonly TSRMLS_CC);
-}
-
+#if PHP_VERSION_ID < 70000
 int zephir_array_isset_long_fetch(zval **fetched, zval *arr, unsigned long index, int readonly TSRMLS_DC) {
 
 	zval **zv;
@@ -335,6 +360,7 @@ int ZEPHIR_FASTCALL zephir_array_unset_long(zval **arr, unsigned long index, int
 
 	return zend_hash_index_del(Z_ARRVAL_PP(arr), index);
 }
+#endif
 
 /**
  * @brief Pushes @a value onto the end of @a arr
@@ -347,20 +373,32 @@ int ZEPHIR_FASTCALL zephir_array_unset_long(zval **arr, unsigned long index, int
  * @throw @c E_WARNING if @a is not an array
  */
 int zephir_array_append(zval **arr, zval *value, int flags ZEPHIR_DEBUG_PARAMS) {
-
+#if PHP_VERSION_ID >= 70000
+	if (Z_TYPE_P(*arr) != IS_ARRAY) {
+#else
 	if (Z_TYPE_PP(arr) != IS_ARRAY) {
+#endif
 		zend_error(E_WARNING, "Cannot use a scalar value as an array in %s on line %d", file, line);
 		return FAILURE;
 	}
 
 	if ((flags & PH_SEPARATE) == PH_SEPARATE) {
-		SEPARATE_ZVAL_IF_NOT_REF(arr);
+#if PHP_VERSION_ID >= 70000
+	SEPARATE_ZVAL_IF_NOT_REF(*arr);
+#else
+	SEPARATE_ZVAL_IF_NOT_REF(arr);
+#endif
 	}
 
+#if PHP_VERSION_ID >= 70000
+	Z_TRY_ADDREF_P(value);
+#else
 	Z_ADDREF_P(value);
+#endif
 	return add_next_index_zval(*arr, value);
 }
 
+#if PHP_VERSION_ID < 70000
 /**
  * @brief Appends a long integer @a value to @a arr
  * @param[in,out] arr Array
@@ -588,6 +626,38 @@ int zephir_array_update_zval_long(zval **arr, zval *index, long value, int flags
  * @arg @c PH_SEPARATE: separate @a arr if its reference count is greater than 1; @c *arr will contain the separated version
  * @arg @c PH_COPY: increment the reference count on @c **value
  */
+#endif
+
+#if PHP_VERSION_ID >= 70000
+
+zval *zephir_array_update_string(zval **arr, const char *index, uint index_length, zval **value, int flags) {
+
+	if (Z_TYPE_P(*arr) != IS_ARRAY) {
+		zend_error(E_WARNING, "Cannot use a scalar value as an array (3)");
+		return NULL;
+	}
+
+	if ((flags & PH_CTOR) == PH_CTOR) {
+		zval new_zv;
+		Z_TRY_DELREF_P(*value); //WHY?
+		ZVAL_NULL(&new_zv);
+		ZVAL_DUP(&new_zv, *value);
+		*arr = &new_zv;
+	}
+
+	if ((flags & PH_SEPARATE) == PH_SEPARATE) {
+		SEPARATE_ZVAL_IF_NOT_REF(*arr);
+	}
+
+	if ((flags & PH_COPY) == PH_COPY) {
+		Z_TRY_ADDREF_P(*value);
+	}
+
+	return zend_symtable_str_update(Z_ARRVAL_P(*arr), index, index_length, *value);
+}
+#endif
+
+#if PHP_VERSION_ID < 70000
 int zephir_array_update_quick_string(zval **arr, const char *index, uint index_length, unsigned long key, zval **value, int flags){
 
 	if (Z_TYPE_PP(arr) != IS_ARRAY) {
@@ -1262,10 +1332,56 @@ int zephir_array_is_associative(zval *arr) {
 
 	return 0;
 }
+#endif
 
 /**
  * Implementation of Multiple array-offset update
  */
+#if PHP_VERSION_ID >= 70000
+/**
+ * Hopefully this implementation works, if not port the "old" implementation
+ */
+void zephir_array_update_multi_ex(zval **arr, zval **value, const char *types, int types_length, int types_count, va_list ap TSRMLS_DC)
+{
+	zval *fetched = NULL, *p;
+	char *s;
+	int i, l, last;
+	int must_continue = 0;
+	assert(types_length < ZEPHIR_MAX_ARRAY_LEVELS);
+	p = *arr;
+
+	for (i = 0; i < types_length; ++i) {
+		last = (i == types_length - 1);
+		must_continue = 0;
+
+		switch(types[i]) {
+			case 's':
+				s = va_arg(ap, char*);
+				l = va_arg(ap, int);
+				if (zephir_array_isset_string_fetch(&fetched, p, s, l, 1 TSRMLS_CC)) {
+					if (Z_TYPE_P(fetched) == IS_ARRAY) {
+						if (last) {
+							zephir_array_update_string(&p, s, l, value, PH_COPY | PH_SEPARATE);
+						} else {
+							p = fetched;
+						}
+						must_continue = 1;
+					}
+				}
+				if (!must_continue) {
+					zval tmp, *tmp_ptr = &tmp;
+					if (last) {
+						zephir_array_update_string(&p, s, l, value, PH_COPY | PH_SEPARATE);
+						break;
+					}
+					array_init(tmp_ptr);
+					p = zephir_array_update_string(&p, s, l, &tmp_ptr, PH_SEPARATE);
+				}
+				break;
+		}
+	}
+}
+#else
 void zephir_array_update_multi_ex(zval **arr, zval **value, const char *types, int types_length, int types_count, va_list ap TSRMLS_DC)
 {
 	long old_l[ZEPHIR_MAX_ARRAY_LEVELS], old_ll[ZEPHIR_MAX_ARRAY_LEVELS];
@@ -1449,13 +1565,18 @@ void zephir_array_update_multi_ex(zval **arr, zval **value, const char *types, i
 		}
 	}
 }
+#endif
 
 int zephir_array_update_multi(zval **arr, zval **value TSRMLS_DC, const char *types, int types_length, int types_count, ...)
 {
 	va_list ap;
 
 	va_start(ap, types_count);
+#if PHP_VERSION_ID >= 70000
+	SEPARATE_ZVAL_IF_NOT_REF(*arr);
+#else
 	SEPARATE_ZVAL_IF_NOT_REF(arr);
+#endif
 
 /*
 	memset(old_type, '\0', ZEPHIR_MAX_ARRAY_LEVELS);
@@ -1469,7 +1590,6 @@ int zephir_array_update_multi(zval **arr, zval **value TSRMLS_DC, const char *ty
 
 	return 0;
 }
-#endif
 
 void ZEPHIR_FASTCALL zephir_create_array(zval *return_value, uint size, int initialize TSRMLS_DC) {
 
