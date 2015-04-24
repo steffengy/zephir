@@ -120,29 +120,43 @@ void zephir_deinitialize_memory(TSRMLS_D);
 		ZEPHIR_ALLOC_ZVAL(z); \
 		zephir_memory_alloc(&z TSRMLS_CC);
 
-#else
-	#define ZEPHIR_INIT_VAR(z) \
-	zephir_memory_alloc(&z TSRMLS_CC)
-#endif
-
-#define ZEPHIR_INIT_NVAR(z)\
-	if (z) { \
-		if (!Z_ISREF_P(z)) { \
-			if (Z_REFCOUNT_P(z) > 1) { \
-				Z_DELREF_P(z); \
-				ALLOC_ZVAL(z); \
-				Z_SET_REFCOUNT_P(z, 1); \
-				Z_UNSET_ISREF_P(z); \
-			} else { \
-				zephir_dtor(z); \
-				Z_SET_REFCOUNT_P(z, 1); \
-				Z_UNSET_ISREF_P(z); \
+	#define ZEPHIR_INIT_NVAR(z) \
+		if (z) { \
+			if (Z_REFCOUNTED_P(z)) { \
+				if (!Z_ISREF_P(z)) { \
+					if (Z_REFCOUNT_P(z) > 1) { \
+						Z_DELREF_P(z); \
+						ZEPHIR_ALLOC_ZVAL(z); \
+					} else { \
+						zephir_dtor(z); \
+					} \
+				} \
 			} \
 			ZVAL_NULL(z); \
-		} \
-	} else { \
-		zephir_memory_alloc(&z TSRMLS_CC); \
-	}
+		}
+#else
+	#define ZEPHIR_INIT_VAR(z) zephir_memory_alloc(&z TSRMLS_CC)
+
+	#define ZEPHIR_INIT_NVAR(z)\
+		if (z) { \
+			if (!Z_ISREF_P(z)) { \
+				if (Z_REFCOUNT_P(z) > 1) { \
+					Z_DELREF_P(z); \
+					ALLOC_ZVAL(z); \
+					Z_SET_REFCOUNT_P(z, 1); \
+					Z_UNSET_ISREF_P(z); \
+				} else { \
+					zephir_dtor(z); \
+					Z_SET_REFCOUNT_P(z, 1); \
+					Z_UNSET_ISREF_P(z); \
+				} \
+				ZVAL_NULL(z); \
+			} \
+		} else { \
+			zephir_memory_alloc(&z TSRMLS_CC); \
+		}
+#endif
+
 
 /**
  * Second allocation, assumes the variable was allocated for the first time in the branch zero

@@ -35,6 +35,7 @@
 #include "kernel/hash.h"
 #include "kernel/backtrace.h"
 
+#if PHP_VERSION_ID < 70000
 /**
  * @brief Fetches @a index if it exists from the array @a arr
  * @param[out] fetched <code>&$arr[$index]</code>; @a fetched is modified only when the function returns 1
@@ -1468,32 +1469,49 @@ int zephir_array_update_multi(zval **arr, zval **value TSRMLS_DC, const char *ty
 
 	return 0;
 }
+#endif
 
 void ZEPHIR_FASTCALL zephir_create_array(zval *return_value, uint size, int initialize TSRMLS_DC) {
 
 	uint i;
+#if PHP_VERSION_ID >= 70000
+	zval null_value;
+#else
 	zval *null_value;
+#endif
+	
 	HashTable *hashTable;
 
 	if (size > 0) {
 
 		hashTable = (HashTable *) emalloc(sizeof(HashTable));
+#if PHP_VERSION_ID >= 70000
+		zephir_hash_init(hashTable, size, ZVAL_PTR_DTOR, 0);
+#else
 		zephir_hash_init(hashTable, size, NULL, ZVAL_PTR_DTOR, 0);
+#endif
+		
 
 		if (initialize) {
-
+#if PHP_VERSION_ID >= 70000
+			ZVAL_NULL(&null_value);
+			Z_SET_REFCOUNT_P(&null_value, size);
+			for (i = 0; i < size; i++) {
+				zend_hash_next_index_insert(hashTable, &null_value);
+			}
+		}
+		ZVAL_ARR(return_value, hashTable);
+#else
 			MAKE_STD_ZVAL(null_value);
 			ZVAL_NULL(null_value);
 			Z_SET_REFCOUNT_P(null_value, size);
-
 			for (i = 0; i < size; i++) {
 				zend_hash_next_index_insert(hashTable, &null_value, sizeof(zval *), NULL);
 			}
 		}
-
 		Z_ARRVAL_P(return_value) = hashTable;
 		Z_TYPE_P(return_value) = IS_ARRAY;
-
+#endif
 	} else {
 		array_init(return_value);
 	}

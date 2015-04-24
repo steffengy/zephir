@@ -31,7 +31,7 @@ int zephir_hash_init(HashTable *ht, uint nSize, hash_func_t pHashFunction, dtor_
 
 #define IS_CONSISTENT(a) //TODO: static stuff, only in debug mode
 
-void zephir_hash_init(HashTable *ht, uint nSize, dtor_func_t pDestructor, zend_bool persistent);
+#define zephir_hash_init(ht, nSize, pDestructor, persistent) zend_hash_init(ht, nSize, NULL, pDestructor, persistent)
 #endif
 
 int zephir_hash_exists(const HashTable *ht, const char *arKey, uint nKeyLength);

@@ -25,9 +25,10 @@
 #include "php.h"
 #include "php_ext.h"
 
-#include "ext/standard/php_smart_str.h"
 #include "ext/standard/php_var.h"
 
+#if PHP_VERSION_ID < 70000
+#include "ext/standard/php_smart_str.h"
 /**
  * Serializes php variables without using the PHP userland
  */
@@ -101,10 +102,11 @@ void zephir_var_export_ex(zval *return_value, zval **var TSRMLS_DC) {
     smart_str_0(&buf);
     ZVAL_STRINGL(return_value, buf.c, buf.len, 0);
 }
+#endif
 
 /**
  * var_dump outputs php variables without using the PHP userland
  */
 void zephir_var_dump(zval **var TSRMLS_DC) {
-    php_var_dump(var, 1 TSRMLS_CC);
+    php_var_dump(*var, 1 TSRMLS_CC);
 }

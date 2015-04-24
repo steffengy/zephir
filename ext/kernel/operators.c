@@ -110,7 +110,7 @@ void zephir_concat_self(zval **left, zval *right TSRMLS_DC){
 	}
 
 #if PHP_VERSION_ID >= 70000
-	SEPARATE_STRING(*left);
+	SEPARATE_ZVAL_IF_NOT_REF(*left);
 	do {
 		zend_string *tmp = zend_string_extend(Z_STR_P(*left), Z_STRLEN_P(*left) + Z_STRLEN_P(right), 0);
 		memcpy(tmp->val + Z_STRLEN_P(*left), Z_STRVAL_P(right), Z_STRLEN_P(right));
@@ -143,14 +143,15 @@ void zephir_concat_self(zval **left, zval *right TSRMLS_DC){
 void zephir_concat_self_str(zval **left, const char *right, int right_length TSRMLS_DC){
 
 	zval left_copy;
-#if PHP_VERSION_ID < 70000
 	uint length;
-#endif
+
 	int use_copy = 0;
 
 #if PHP_VERSION_ID >= 70000
 	if (Z_TYPE_P(*left) == IS_NULL) {
 		ZVAL_STRINGL(*left, right, right_length);
+		Z_STRVAL_P(*left)[right_length] = 0;
+		zend_string_forget_hash_val(Z_STR_P(*left));
 #else
 	if (Z_TYPE_PP(left) == IS_NULL) {
 
@@ -175,11 +176,13 @@ void zephir_concat_self_str(zval **left, const char *right, int right_length TSR
 	}
 
 #if PHP_VERSION_ID >= 70000
-	SEPARATE_STRING(*left);
+	SEPARATE_ZVAL_IF_NOT_REF(*left);
 	do {
-		zend_string *tmp = zend_string_extend(Z_STR_P(*left), Z_STRLEN_P(*left) + right_length, 0);
-		memcpy(tmp->val + Z_STRLEN_P(*left), right, right_length);
-		zend_string_forget_hash_val(Z_STR_P(*left));
+		zend_string *tmp;
+		length = Z_STRLEN_P(*left);
+		tmp = zend_string_extend(Z_STR_P(*left), length + right_length, 0);
+		memcpy(tmp->val + length, right, right_length);
+		tmp->val[tmp->len] = 0;
 		ZVAL_STR(*left, tmp);
 	} while(0);
 #else

@@ -43,7 +43,12 @@
 #endif
 
 #define SL(str) ZEND_STRL(str)
-#define SS(str) ZEND_STRS(str)
+#if PHP_VERSION_ID >= 70000
+  /* TODO: This may cause bugs? If so, code generation has to be modified at specific places (e.g. array keys) */
+  #define SS(str) SL(str) 
+#else
+  #define SS(str) ZEND_STRS(str)
+#endif
 #define ISL(str) (zephir_interned_##str), (sizeof(#str)-1)
 #define ISS(str) (zephir_interned_##str), (sizeof(#str))
 
