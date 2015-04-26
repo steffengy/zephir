@@ -126,11 +126,20 @@ ZEPHIR_ATTR_NONNULL static inline int zephir_read_property_this_quick(zval **res
   zval *tmp = zephir_fetch_property_this_quick(object, property_name, property_length, key, silent TSRMLS_CC);
   if (EXPECTED(tmp != NULL)) {
 	*result = tmp;
-	Z_ADDREF_PP(result);
+#if PHP_VERSION_ID >= 70000
+  Z_ADDREF_P(*result);
+#else
+  Z_ADDREF_PP(result);
+#endif
 	return SUCCESS;
   }
 
+#if PHP_VERSION_ID >= 70000
+  ALLOC_INIT_ZVAL(tmp);
+  *result = tmp;
+#else
   ALLOC_INIT_ZVAL(*result);
+#endif
   return FAILURE;
 }
 
@@ -159,7 +168,12 @@ ZEPHIR_ATTR_NONNULL static inline zval* zephir_fetch_nproperty_this_quick(zval *
 #endif
 
   zval *result = zephir_fetch_property_this_quick(object, property_name, property_length, key, silent TSRMLS_CC);
+#if PHP_VERSION_ID >= 70000
+  return result ? result : &EG(uninitialized_zval);
+#else
   return result ? result : EG(uninitialized_zval_ptr);
+#endif
+  
 }
 
 ZEPHIR_ATTR_NONNULL static inline zval* zephir_fetch_nproperty_this(zval *object, const char *property_name, zend_uint property_length, int silent TSRMLS_DC)

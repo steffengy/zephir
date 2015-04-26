@@ -110,12 +110,9 @@ void zephir_deinitialize_memory(TSRMLS_D);
 
 #define ZEPHIR_SINIT_NVAR(z) Z_SET_REFCOUNT_P(&z, 1)
 
-#define ZEPHIR_INIT_ZVAL_NREF(z) \
-	ALLOC_ZVAL(z); \
-	Z_SET_REFCOUNT_P(z, 0); \
-	Z_UNSET_ISREF_P(z);
-
 #if PHP_VERSION_ID >= 70000
+	#define ZEPHIR_INIT_ZVAL_NREF(z) ZEPHIR_INIT_VAR(z)
+
 	#define ZEPHIR_INIT_VAR(z) \
 		ZEPHIR_ALLOC_ZVAL(z); \
 		zephir_memory_alloc(&z TSRMLS_CC);
@@ -136,6 +133,11 @@ void zephir_deinitialize_memory(TSRMLS_D);
 			ZEPHIR_INIT_VAR(z); \
 		}
 #else
+	#define ZEPHIR_INIT_ZVAL_NREF(z) \
+		ALLOC_ZVAL(z); \
+		Z_SET_REFCOUNT_P(z, 0); \
+		Z_UNSET_ISREF_P(z);
+
 	#define ZEPHIR_INIT_VAR(z) zephir_memory_alloc(&z TSRMLS_CC)
 
 	#define ZEPHIR_INIT_NVAR(z)\
@@ -222,7 +224,7 @@ void zephir_deinitialize_memory(TSRMLS_D);
 	d = v;
 
 #if PHP_VERSION_ID >= 70000
-	#define ZEPHIR_CPY_WRT_CTOR(d, v) \
+  #define ZEPHIR_CPY_WRT_CTOR(d, v) \
 	do { \
 		if (d) { \
 			if (Z_REFCOUNTED_P(d) && Z_REFCOUNT_P(d) > 0) { \
@@ -235,7 +237,7 @@ void zephir_deinitialize_memory(TSRMLS_D);
 		ZVAL_UNREF(d); \
 	} while(0)
 #else
-#define ZEPHIR_CPY_WRT_CTOR(d, v) \
+  #define ZEPHIR_CPY_WRT_CTOR(d, v) \
 	if (d) { \
 		if (Z_REFCOUNT_P(d) > 0) { \
 			zephir_ptr_dtor(&d); \
@@ -265,6 +267,7 @@ void zephir_deinitialize_memory(TSRMLS_D);
 	Z_SET_ISREF_P(d);
 
 /* */
+
 #define ZEPHIR_OBS_VAR(z) \
 	zephir_memory_observe(&z TSRMLS_CC)
 

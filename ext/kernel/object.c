@@ -36,7 +36,7 @@
 #include "kernel/array.h"
 #include "kernel/operators.h"
 
-
+#if PHP_VERSION_ID < 70000
 /**
  * Reads class constant from string name and returns its value
  */
@@ -443,6 +443,7 @@ int zephir_isset_property_zval(zval *object, const zval *property TSRMLS_DC) {
 	return 0;
 }
 
+#endif
 /*
  * Lookup exact class where a property is defined (precomputed key)
  *
@@ -452,7 +453,11 @@ static inline zend_class_entry *zephir_lookup_class_ce_quick(zend_class_entry *c
 	zend_class_entry *original_ce = ce;
 
 	while (ce) {
+#if PHP_VERSION_ID >= 70000
+		if (zend_hash_str_exists(&ce->properties_info, property_name, property_length)) {
+#else
 		if (zephir_hash_quick_exists(&ce->properties_info, property_name, property_length + 1, hash)) {
+#endif
 			return ce;
 		}
 		ce = ce->parent;
@@ -469,6 +474,7 @@ static inline zend_class_entry *zephir_lookup_class_ce(zend_class_entry *ce, con
 	return zephir_lookup_class_ce_quick(ce, property_name, property_length, zend_inline_hash_func(property_name, property_length + 1) TSRMLS_CC);
 }
 
+#if PHP_VERSION_ID < 70000
 /**
  * Reads a property from an object
  */
@@ -782,6 +788,7 @@ int zephir_update_property_bool(zval *object, char *property_name, unsigned int 
 int zephir_update_property_null(zval *object, char *property_name, unsigned int property_length TSRMLS_DC) {
 	return zephir_update_property_zval(object, property_name, property_length, ZEPHIR_GLOBAL(global_null) TSRMLS_CC);
 }
+#endif
 
 /**
  * Checks whether obj is an object and updates property with another zval
@@ -789,7 +796,11 @@ int zephir_update_property_null(zval *object, char *property_name, unsigned int 
 int zephir_update_property_zval(zval *object, const char *property_name, unsigned int property_length, zval *value TSRMLS_DC){
 
 	zend_class_entry *ce, *old_scope;
+#if PHP_VERSION_ID >= 70000
+	zval property;
+#else
 	zval *property;
+#endif
 
 	old_scope = EG(scope);
 	if (Z_TYPE_P(object) != IS_OBJECT) {
@@ -812,24 +823,37 @@ int zephir_update_property_zval(zval *object, const char *property_name, unsigne
 #endif
 		zend_uint class_name_len;
 
+#if PHP_VERSION_ID >= 70000
+		class_name = Z_OBJ_P(object) ? Z_OBJCE_P(object)->name->val : "";
+#else
 		zend_get_object_classname(object, &class_name, &class_name_len TSRMLS_CC);
+#endif
 		zend_error(E_CORE_ERROR, "Property %s of class %s cannot be updated", property_name, class_name);
 	}
 
+#if PHP_VERSION_ID >= 70000
+	ZVAL_STRINGL(&property, property_name, property_length);
+#else
 	MAKE_STD_ZVAL(property);
 	ZVAL_STRINGL(property, property_name, property_length, 0);
+#endif
+	
 
-#if PHP_VERSION_ID < 50400
+#if PHP_VERSION_ID >= 70000
+	Z_OBJ_HT_P(object)->write_property(object, &property, value, NULL TSRMLS_CC);
+#elif PHP_VERSION_ID < 50400
 	Z_OBJ_HT_P(object)->write_property(object, property, value TSRMLS_CC);
 #else
 	Z_OBJ_HT_P(object)->write_property(object, property, value, 0 TSRMLS_CC);
 #endif
 
+#if PHP_VERSION_ID < 70000
 	if (Z_REFCOUNT_P(property) > 1) {
 		ZVAL_STRINGL(property, property_name, property_length, 1);
 	} else {
 		ZVAL_NULL(property);
 	}
+#endif
 
 	zval_ptr_dtor(&property);
 
@@ -837,6 +861,7 @@ int zephir_update_property_zval(zval *object, const char *property_name, unsigne
 	return SUCCESS;
 }
 
+#if PHP_VERSION_ID < 70000
 /**
  * Updates properties on this_ptr (quick)
  * Variables must be defined in the class definition. This function ignores magic methods or dynamic properties
@@ -1324,6 +1349,7 @@ int zephir_method_quick_exists_ex(const zval *object, const char *method_name, u
 	return FAILURE;
 }
 
+#endif
 zval* zephir_fetch_static_property_ce(zend_class_entry *ce, const char *property, int len TSRMLS_DC) {
 	assert(ce != NULL);
 	return zend_read_static_property(ce, property, len, (zend_bool) ZEND_FETCH_CLASS_SILENT TSRMLS_CC);
@@ -1335,30 +1361,55 @@ int zephir_read_static_property_ce(zval **result, zend_class_entry *ce, const ch
 	if (tmp) {
 		if (!Z_ISREF_P(tmp)) {
 			*result = tmp;
+#if PHP_VERSION_ID >= 70000
+			Z_ADDREF_P(*result);
+#else
 			Z_ADDREF_PP(result);
+#endif
 		} else {
+#if PHP_VERSION_ID >= 70000
+			ZVAL_COPY(*result, tmp);
+#else
 			ALLOC_INIT_ZVAL(*result);
 			ZVAL_ZVAL(*result, tmp, 1, 0);
+#endif
 		}
 		return SUCCESS;
 	}
+#if PHP_VERSION_ID >= 70000
+	ZVAL_NULL(*result);
+#else
 	ALLOC_INIT_ZVAL(*result);
+#endif
 	return FAILURE;
 }
 
 #if PHP_VERSION_ID >= 50400
-static zval **zephir_std_get_static_property(zend_class_entry *ce, const char *property_name, int property_name_len, ulong hash_value, zend_bool silent, zend_property_info **
+#if PHP_VERSION_ID >= 70000
+ static zval *zephir_std_get_static_property(zend_class_entry *ce, const char *property_name, int property_name_len, 
+#else
+ static zval **zephir_std_get_static_property(zend_class_entry *ce, const char *property_name, int property_name_len, 
+	ulong hash_value,
+#endif
+	zend_bool silent, zend_property_info **
 	property_info TSRMLS_DC)
 {
 	zend_property_info *temp_property_info;
 
+#if PHP_VERSION_ID < 70000
 	if (!hash_value) {
 		hash_value = zend_hash_func(property_name, property_name_len + 1);
 	}
+#endif
 
 	if (!property_info || !*property_info) {
 
+#if PHP_VERSION_ID >= 70000
+		if (UNEXPECTED((temp_property_info = zend_hash_str_find_ptr(&ce->properties_info, property_name, property_name_len)) == NULL)) {
+#else
 		if (UNEXPECTED(zend_hash_quick_find(&ce->properties_info, property_name, property_name_len + 1, hash_value, (void **) &temp_property_info)==FAILURE)) {
+#endif
+		
 			if (!silent) {
 				zend_error_noreturn(E_ERROR, "Access to undeclared static property: %s::$%s", ce->name, property_name);
 			}
@@ -1391,20 +1442,36 @@ static zval **zephir_std_get_static_property(zend_class_entry *ce, const char *p
 		temp_property_info = *property_info;
 	}
 
+#if PHP_VERSION_ID >= 70000
+	if (UNEXPECTED(CE_STATIC_MEMBERS(ce) == NULL)) {
+#else
 	if (UNEXPECTED(CE_STATIC_MEMBERS(ce) == NULL) || UNEXPECTED(CE_STATIC_MEMBERS(ce)[temp_property_info->offset] == NULL)) {
+#endif
+	
 		if (!silent) {
 			zend_error_noreturn(E_ERROR, "Access to undeclared static property: %s::$%s", ce->name, property_name);
 		}
 		return NULL;
 	}
 
+#if PHP_VERSION_ID >= 70000
+	return CE_STATIC_MEMBERS(ce) + temp_property_info->offset;
+#else
 	return &CE_STATIC_MEMBERS(ce)[temp_property_info->offset];
+#endif
+	
 }
 #endif
 
 static int zephir_update_static_property_ex(zend_class_entry *scope, const char *name, int name_length, zval **value, zend_property_info **property_info TSRMLS_DC)
 {
-	zval **property; zval *tmp, **safe_value;
+#if PHP_VERSION_ID >= 70000
+	zval *property; 
+#else
+	zval **property; 
+#endif
+	
+	zval *tmp, **safe_value;
 	zend_zephir_globals_def *zephir_globals_ptr = ZEPHIR_VGLOBAL;
 	zend_class_entry *old_scope = EG(scope);
 
@@ -1412,23 +1479,37 @@ static int zephir_update_static_property_ex(zend_class_entry *scope, const char 
 	 * We have to protect super globals to avoid them make converted to references
 	 */
 	if (*value == zephir_globals_ptr->global_null) {
+#if PHP_VERSION_ID >= 70000
+		ZEPHIR_ALLOC_ZVAL(tmp);
+#else
 		ALLOC_ZVAL(tmp);
 		Z_UNSET_ISREF_P(tmp);
 		Z_SET_REFCOUNT_P(tmp, 0);
+#endif
+
 		ZVAL_NULL(tmp);
 		safe_value = &tmp;
 	} else {
 		if (*value == zephir_globals_ptr->global_true) {
+#if PHP_VERSION_ID >= 70000
+			ZEPHIR_ALLOC_ZVAL(tmp);
+#else
 			ALLOC_ZVAL(tmp);
 			Z_UNSET_ISREF_P(tmp);
 			Z_SET_REFCOUNT_P(tmp, 0);
+#endif
 			ZVAL_BOOL(tmp, 1);
 			safe_value = &tmp;
 		} else {
 			if (*value == zephir_globals_ptr->global_false) {
+#if PHP_VERSION_ID >= 70000
+				ZEPHIR_ALLOC_ZVAL(tmp);
+#else
 				ALLOC_ZVAL(tmp);
 				Z_UNSET_ISREF_P(tmp);
 				Z_SET_REFCOUNT_P(tmp, 0);
+#endif
+				
 				ZVAL_BOOL(tmp, 0);
 				safe_value = &tmp;
 			} else {
@@ -1438,7 +1519,9 @@ static int zephir_update_static_property_ex(zend_class_entry *scope, const char 
 	}
 
 	EG(scope) = scope;
-#if PHP_VERSION_ID < 50400
+#if PHP_VERSION_ID >= 70000
+	property = zephir_std_get_static_property(scope, name, name_length, 0, property_info TSRMLS_CC);
+#elif PHP_VERSION_ID < 50400
 	property = zend_std_get_static_property(scope, name, name_length, 0 TSRMLS_CC);
 #else
 	property = zephir_std_get_static_property(scope, name, name_length, zend_inline_hash_func(name, name_length + 1), 0, property_info TSRMLS_CC);
@@ -1448,6 +1531,29 @@ static int zephir_update_static_property_ex(zend_class_entry *scope, const char 
 	if (!property) {
 		return FAILURE;
 	} else {
+#if PHP_VERSION_ID >= 70000
+		if (property != *safe_value) {
+			if (Z_REFCOUNTED_P(property) && Z_ISREF_P(property)) {
+				zval_dtor(property);
+				ZVAL_COPY_VALUE(property, *safe_value);
+				if (Z_REFCOUNT_P(*safe_value) > 0) {
+					zval_opt_copy_ctor(property);
+				}
+			} else {
+				zval garbage;
+
+				ZVAL_COPY_VALUE(&garbage, property);
+				if (Z_REFCOUNTED_P(*safe_value)) {
+					Z_ADDREF_P(*safe_value);
+					if (Z_ISREF_P(*safe_value)) {
+						SEPARATE_ZVAL(*safe_value);
+					}
+				}
+				ZVAL_COPY_VALUE(property, *safe_value);
+				zval_ptr_dtor(&garbage);
+			}
+		}
+#else
 		if (*property != *safe_value) {
 			if (PZVAL_IS_REF(*property)) {
 				zval_dtor(*property);
@@ -1470,6 +1576,8 @@ static int zephir_update_static_property_ex(zend_class_entry *scope, const char 
 				zval_ptr_dtor(&garbage);
 			}
 		}
+#endif
+		
 		return SUCCESS;
 	}
 }
@@ -1479,10 +1587,24 @@ static int zephir_update_static_property_ex(zend_class_entry *scope, const char 
  */
 int zephir_read_static_property(zval **result, const char *class_name, unsigned int class_length, char *property_name,
 	unsigned int property_length TSRMLS_DC) {
+	
+#if PHP_VERSION_ID >= 70000
+	zend_class_entry *ce;
+	zend_string *tmp = zend_string_init(class_name, class_length, 0);
+	if ((ce = zend_lookup_class(tmp)) != NULL) {
+		zend_string_free(tmp);
+		return zephir_read_static_property_ce(result, ce, property_name, property_length TSRMLS_CC);
+	}
+#else
 	zend_class_entry **ce;
 	if (zend_lookup_class(class_name, class_length, &ce TSRMLS_CC) == SUCCESS) {
 		return zephir_read_static_property_ce(result, *ce, property_name, property_length TSRMLS_CC);
 	}
+#endif
+
+#if PHP_VERSION_ID >= 70000
+	zend_string_free(tmp);
+#endif
 	return FAILURE;
 }
 
@@ -1496,6 +1618,7 @@ int zephir_update_static_property_ce_cache(zend_class_entry *ce, const char *nam
 	return zephir_update_static_property_ex(ce, name, len, value, property_info TSRMLS_CC);
 }
 
+#if PHP_VERSION_ID < 70000
 /*
  * Multiple array-offset update
  */
@@ -1822,4 +1945,4 @@ int zephir_create_closure_ex(zval *return_value, zval *this_ptr, zend_class_entr
 #endif
 	return SUCCESS;
 }
-
+#endif

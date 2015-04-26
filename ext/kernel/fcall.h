@@ -757,6 +757,8 @@ ZEPHIR_ATTR_WARN_UNUSED_RESULT static inline int zephir_call_user_func_array(zva
 	return (EG(exception)) ? FAILURE : status;
 }
 
+#endif /* end <PHP7 */
+
 /**
  * @brief Checks if the class defines a constructor
  * @param ce Class entry
@@ -776,7 +778,6 @@ ZEPHIR_ATTR_WARN_UNUSED_RESULT ZEPHIR_ATTR_NONNULL static inline int zephir_has_
 	return Z_TYPE_P(object) == IS_OBJECT ? zephir_has_constructor_ce(Z_OBJCE_P(object)) : 0;
 }
 
-#endif /* end <PHP7 */
 
 /** PHP < 5.3.9 has problems with closures */
 #if PHP_VERSION_ID <= 50309
