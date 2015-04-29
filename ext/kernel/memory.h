@@ -58,16 +58,9 @@ int ZEPHIR_FASTCALL zephir_memory_restore_stack(TSRMLS_D);
 
 #endif
 
-
-#if PHP_VERSION_ID >= 70000
-	void ZEPHIR_FASTCALL zephir_memory_remove(zval *var TSRMLS_DC);
-	void ZEPHIR_FASTCALL zephir_memory_observe(zval *var TSRMLS_DC);
-	void ZEPHIR_FASTCALL zephir_memory_alloc_pnull(zval *var TSRMLS_DC);
-#else
-	void ZEPHIR_FASTCALL zephir_memory_remove(zval **var TSRMLS_DC);
-	void ZEPHIR_FASTCALL zephir_memory_observe(zval **var TSRMLS_DC);
-	void ZEPHIR_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC);
-#endif
+void ZEPHIR_FASTCALL zephir_memory_remove(zval **var TSRMLS_DC);
+void ZEPHIR_FASTCALL zephir_memory_observe(zval **var TSRMLS_DC);
+void ZEPHIR_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC);
 void ZEPHIR_FASTCALL zephir_memory_alloc(zval **var TSRMLS_DC);
 
 int ZEPHIR_FASTCALL zephir_clean_restore_stack(TSRMLS_D);
@@ -111,7 +104,15 @@ void zephir_deinitialize_memory(TSRMLS_D);
 #define ZEPHIR_SINIT_NVAR(z) Z_SET_REFCOUNT_P(&z, 1)
 
 #if PHP_VERSION_ID >= 70000
-	#define ZEPHIR_INIT_ZVAL_NREF(z) ZEPHIR_INIT_VAR(z)
+	#define ZEPHIR_INIT_ZVAL_NREF(z) \
+		ZEPHIR_ALLOC_ZVAL(z);
+
+	/* In PHP7 we cannot set the refcount flag before a value has been assigned
+	   since refcount is a property of the refcounted type
+	   so we have to do it after ZEPHIR_INIT_ZVAL_NREF and the initialization
+	 */
+	#define ZEPHIR_APPLY_NREF(z) \
+		if (Z_REFCOUNTED_P(z)) Z_DELREF_P(z);
 
 	#define ZEPHIR_INIT_VAR(z) \
 		ZEPHIR_ALLOC_ZVAL(z); \
@@ -137,6 +138,8 @@ void zephir_deinitialize_memory(TSRMLS_D);
 		ALLOC_ZVAL(z); \
 		Z_SET_REFCOUNT_P(z, 0); \
 		Z_UNSET_ISREF_P(z);
+
+	#define ZEPHIR_APPLY_NREF(z)
 
 	#define ZEPHIR_INIT_VAR(z) zephir_memory_alloc(&z TSRMLS_CC)
 
@@ -231,7 +234,7 @@ void zephir_deinitialize_memory(TSRMLS_D);
 				zephir_ptr_dtor(d); \
 			} \
 		} else { \
-			zephir_memory_observe(d); \
+			zephir_memory_observe(&d); \
 		} \
 		ZVAL_DUP(d, v); \
 		ZVAL_UNREF(d); \

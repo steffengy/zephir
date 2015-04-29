@@ -130,6 +130,7 @@ class ObjectProperty
                     case 'assign':
                         $tempVariable->initNonReferenced($compilationContext);
                         $codePrinter->output('ZVAL_LONG(' . $tempVariable->getName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
+                        $codePrinter->output('ZEPHIR_APPLY_NREF(' . $tempVariable->getName() . ');');
                         break;
 
                     default:
@@ -152,6 +153,7 @@ class ObjectProperty
                     case 'assign':
                         $tempVariable->initNonReferenced($compilationContext);
                         $codePrinter->output('ZVAL_LONG(' . $tempVariable->getName() . ', \'' . $resolvedExpr->getBooleanCode() . '\');');
+                        $codePrinter->output('ZEPHIR_APPLY_NREF(' . $tempVariable->getName() . ');');
                         break;
 
                     default:
@@ -193,6 +195,7 @@ class ObjectProperty
                     case 'assign':
                         $tempVariable->initNonReferenced($compilationContext);
                         $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getName() . ', ' . $resolvedExpr->getBooleanCode() . ');');
+                        $codePrinter->output('ZEPHIR_APPLY_NREF(' . $tempVariable->getName() . ');');
                         break;
 
                     default:
@@ -217,6 +220,7 @@ class ObjectProperty
                     case 'assign':
                         $tempVariable->initNonReferenced($compilationContext);
                         $codePrinter->output('ZVAL_STRING(' . $tempVariable->getName() . ', "' . $resolvedExpr->getCode() . '", 1);');
+                        $codePrinter->output('ZEPHIR_APPLY_NREF(' . $tempVariable->getName() . ');');
                         break;
                 }
 
@@ -267,6 +271,7 @@ class ObjectProperty
                     case 'uchar':
                         $tempVariable = $compilationContext->symbolTable->getTempNonTrackedVariable('variable', $compilationContext, true);
                         $codePrinter->output('ZVAL_LONG(' . $tempVariable->getName() . ', ' . $variableVariable->getName() . ');');
+                        $codePrinter->output('ZEPHIR_APPLY_NREF(' . $tempVariable->getName() . ');');
                         if ($variable == 'this') {
                             $codePrinter->output('zephir_update_property_this(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ' TSRMLS_CC);');
                         } else {
@@ -278,6 +283,7 @@ class ObjectProperty
                     case 'double':
                         $tempVariable = $compilationContext->symbolTable->getTempNonTrackedVariable('variable', $compilationContext, true);
                         $codePrinter->output('ZVAL_DOUBLE(' . $tempVariable->getName() . ', ' . $variableVariable->getName() . ');');
+                        $codePrinter->output('ZEPHIR_APPLY_NREF(' . $tempVariable->getName() . ');');
                         if ($variable == 'this') {
                             $codePrinter->output('zephir_update_property_this(this_ptr, SL("' . $propertyName . '"), ' . $tempVariable->getName() . ' TSRMLS_CC);');
                         } else {

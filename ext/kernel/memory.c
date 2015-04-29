@@ -98,11 +98,7 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 	size_t i;
 	zephir_memory_entry *prev, *active_memory;
 	zephir_symbol_table *active_symbol_table;
-#if PHP_VERSION_ID >= 70000
-	zval *ptr;
-#else
 	zval **ptr;
-#endif
 
 	active_memory = g->active_memory;
 	assert(active_memory != NULL);
@@ -129,11 +125,11 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 		/* Check for non freed hash key zvals, mark as null to avoid string freeing */
 		for (i = 0; i < active_memory->hash_pointer; ++i) {
 #if PHP_VERSION_ID >= 70000
-			assert(active_memory->hash_addresses[i] != NULL);
-			if (Z_REFCOUNT_P(active_memory->hash_addresses[i]) <= 1) {
-				ZVAL_NULL(active_memory->hash_addresses[i]);
+			assert(active_memory->hash_addresses[i] != NULL && *(active_memory->hash_addresses[i]) != NULL);
+			if (Z_REFCOUNT_P(*active_memory->hash_addresses[i]) <= 1) {
+				ZVAL_NULL(*active_memory->hash_addresses[i]);
 			} else {
-				zval_copy_ctor(active_memory->hash_addresses[i]);
+				zval_copy_ctor(*active_memory->hash_addresses[i]);
 #else
 			assert(active_memory->hash_addresses[i] != NULL && *(active_memory->hash_addresses[i]) != NULL);
 			if (Z_REFCOUNT_PP(active_memory->hash_addresses[i]) <= 1) {
@@ -148,7 +144,7 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 		for (i = 0; i < active_memory->pointer; ++i) {
 			if (active_memory->addresses[i] != NULL && *(active_memory->addresses[i]) != NULL) {
 #if PHP_VERSION_ID >= 70000
-				zval *var = active_memory->addresses[i];
+				zval *var = *(active_memory->addresses[i]);
 				int type = Z_TYPE_P(var);
 				int refs = Z_REFCOUNT_P(var);
 #else
@@ -185,15 +181,18 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 		for (i = 0; i < active_memory->pointer; ++i) {
 			ptr = active_memory->addresses[i];
 #if PHP_VERSION_ID >= 70000
-			if (EXPECTED(ptr != NULL)) {
-				if (!Z_REFCOUNTED_P(ptr) || Z_REFCOUNT_P(ptr) == 1) {
-					if (!Z_ISREF_P(ptr) || Z_TYPE_P(ptr) == IS_OBJECT) {
-						zval_ptr_dtor(ptr);
+			if (EXPECTED(ptr != NULL && *(ptr) != NULL)) {
+				if (!Z_REFCOUNTED_P(*ptr)) {
+					efree(*ptr);
+				}
+				else if (Z_REFCOUNT_P(*ptr) == 1) {
+					if (!Z_ISREF_P(*ptr) || Z_TYPE_P(*ptr) == IS_OBJECT) {
+						zval_ptr_dtor(*ptr);
 					} else {
-						efree(ptr);
+						efree(*ptr);
 					}
 				} else {
-					Z_DELREF_P(ptr);
+					Z_DELREF_P(*ptr);
 				}
 			}
 #else
@@ -542,9 +541,9 @@ void zephir_deinitialize_memory(TSRMLS_D)
 
 	for (i = 0; i < 2; i++) {
 #if PHP_VERSION_ID >= 70000
-		zval_ptr_dtor(zephir_globals_ptr->global_null);
-		zval_ptr_dtor(zephir_globals_ptr->global_false);
-		zval_ptr_dtor(zephir_globals_ptr->global_true);
+		efree(zephir_globals_ptr->global_null);
+		efree(zephir_globals_ptr->global_false);
+		efree(zephir_globals_ptr->global_true);
 #else
 		zval_ptr_dtor(&zephir_globals_ptr->global_null);
 		zval_ptr_dtor(&zephir_globals_ptr->global_false);
@@ -591,11 +590,7 @@ ZEPHIR_ATTR_NONNULL static void zephir_reallocate_hmemory(const zend_zephir_glob
 #endif
 }
 
-#if PHP_VERSION_ID >= 70000
-ZEPHIR_ATTR_NONNULL1(2) static inline void zephir_do_memory_observe(zval *var, const zend_zephir_globals_def *g)
-#else
 ZEPHIR_ATTR_NONNULL1(2) static inline void zephir_do_memory_observe(zval **var, const zend_zephir_globals_def *g)
-#endif
 {
 	zephir_memory_entry *frame = g->active_memory;
 #ifndef ZEPHIR_RELEASE
@@ -630,17 +625,11 @@ ZEPHIR_ATTR_NONNULL1(2) static inline void zephir_do_memory_observe(zval **var, 
 /**
  * Observes a memory pointer to release its memory at the end of the request
  */
-#if PHP_VERSION_ID >= 70000
-void ZEND_FASTCALL zephir_memory_observe(zval *var TSRMLS_DC)
-#else
 void ZEND_FASTCALL zephir_memory_observe(zval **var TSRMLS_DC)
-#endif
 {
 	zend_zephir_globals_def *g = ZEPHIR_VGLOBAL;
 	zephir_do_memory_observe(var, g);
-#if PHP_VERSION_ID < 70000
 	*var = NULL; /* In case an exception or error happens BEFORE the observed variable gets initialized */
-#endif
 }
 
 /**
@@ -649,10 +638,8 @@ void ZEND_FASTCALL zephir_memory_observe(zval **var TSRMLS_DC)
 void ZEND_FASTCALL zephir_memory_alloc(zval **var TSRMLS_DC)
 {
 	zend_zephir_globals_def *g = ZEPHIR_VGLOBAL;
-#if PHP_VERSION_ID >= 70000
-	zephir_do_memory_observe(*var, g);
-#else
 	zephir_do_memory_observe(var, g);
+#if PHP_VERSION_ID < 70000
 	ALLOC_INIT_ZVAL(*var);
 #endif
 }
@@ -708,11 +695,7 @@ void ZEND_FASTCALL zephir_dtor(zval *var)
  * Observes a variable and allocates memory for it
  * Marks hash key zvals to be nulled before freeing
  */
-#if PHP_VERSION_ID >= 70000
-void ZEND_FASTCALL zephir_memory_alloc_pnull(zval *var TSRMLS_DC)
-#else
 void ZEND_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC)
-#endif
 {
 	zend_zephir_globals_def *g = ZEPHIR_VGLOBAL;
 	zephir_memory_entry *active_memory = g->active_memory;
@@ -726,9 +709,7 @@ void ZEND_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC)
 #endif
 
 	zephir_do_memory_observe(var, g);
-#if PHP_VERSION_ID >= 70000
-	ALLOC_INIT_ZVAL(var);
-#else
+#if PHP_VERSION_ID < 70000
 	ALLOC_INIT_ZVAL(*var);
 #endif
 
@@ -743,15 +724,11 @@ void ZEND_FASTCALL zephir_memory_alloc_pnull(zval **var TSRMLS_DC)
 /**
  * Removes a memory pointer from the active memory pool
  */
-#if PHP_VERSION_ID >= 70000
-void ZEND_FASTCALL zephir_memory_remove(zval *var TSRMLS_DC) {
-#else
 void ZEND_FASTCALL zephir_memory_remove(zval **var TSRMLS_DC) {
+#if PHP_VERSION_ID >= 70000
+	zval_ptr_dtor(*var);
 #endif
-	zval_ptr_dtor(var);
-#if PHP_VERSION_ID < 70000
 	*var = NULL;
-#endif
 }
 
 /**
