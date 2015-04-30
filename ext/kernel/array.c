@@ -128,6 +128,33 @@ int zephir_array_isset_fetch(zval **fetched, const zval *arr, zval *index, int r
 		}
 		return 0;
 	}
+
+	int zephir_array_fetch_string(zval **return_value, zval *arr, const char *index, uint index_length, int flags ZEPHIR_DEBUG_PARAMS TSRMLS_DC) {
+		zval *zv;
+
+		if (likely(Z_TYPE_P(arr) == IS_ARRAY)) {
+			if ((zv = zend_symtable_str_find(Z_ARRVAL_P(arr), index, index_length)) != NULL) {
+				if ((flags & PH_READONLY) != PH_READONLY) {
+					Z_TRY_ADDREF_P(zv);
+				}
+				*return_value = zv;
+				return SUCCESS;
+			}
+			if ((flags & PH_NOISY) == PH_NOISY) {
+				zend_error(E_NOTICE, "Undefined index: %s", index);
+			}
+		} else {
+			if ((flags & PH_NOISY) == PH_NOISY) {
+				zend_error(E_NOTICE, "Cannot use a scalar value as an array in %s on line %d", file, line);
+			}
+		}
+
+		*return_value = ZEPHIR_GLOBAL(global_null);
+		if ((flags & PH_READONLY) != PH_READONLY) {
+			Z_TRY_ADDREF_P(*return_value);
+		}
+		return FAILURE;
+	}
 #else
 	int zephir_array_isset_quick_string_fetch(zval **fetched, zval *arr, char *index, uint index_length, unsigned long key, int readonly TSRMLS_DC) {
 

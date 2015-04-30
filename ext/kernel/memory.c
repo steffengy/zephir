@@ -183,13 +183,11 @@ static void zephir_memory_restore_stack_common(zend_zephir_globals_def *g TSRMLS
 #if PHP_VERSION_ID >= 70000
 			if (EXPECTED(ptr != NULL && *(ptr) != NULL)) {
 				if (!Z_REFCOUNTED_P(*ptr)) {
-					efree(*ptr);
+					continue; /* zval is allocated on stack */
 				}
 				else if (Z_REFCOUNT_P(*ptr) == 1) {
-					if (!Z_ISREF_P(*ptr) || Z_TYPE_P(*ptr) == IS_OBJECT) {
+					if (!Z_ISREF_P(*ptr)) {
 						zval_ptr_dtor(*ptr);
-					} else {
-						efree(*ptr);
 					}
 				} else {
 					Z_DELREF_P(*ptr);
@@ -650,18 +648,13 @@ void ZEND_FASTCALL zephir_memory_alloc(zval **var TSRMLS_DC)
 #if PHP_VERSION_ID >= 70000
 void ZEND_FASTCALL zephir_ptr_dtor(zval *var)
 {
-
-	if (!Z_ISREF_P(var) || Z_TYPE_P(var) == IS_OBJECT) {
+	if (!Z_REFCOUNTED_P(var)) {
+		return;
+	}
+	if (!Z_ISREF_P(var)) {
 		zval_ptr_dtor(var);
-	} else {
-		if (!Z_REFCOUNTED_P(var) || Z_REFCOUNT_P(var) == 0) {
-			efree(var);
-		} else {
-			Z_DELREF_P(var);
-			if (Z_REFCOUNT_P(var) == 0) {
-				efree(var);
-			}
-		}
+	} else if (Z_REFCOUNT_P(var) > 0) {
+		Z_DELREF_P(var);
 	}
 #else
 void ZEND_FASTCALL zephir_ptr_dtor(zval **var)
@@ -686,7 +679,11 @@ void ZEND_FASTCALL zephir_ptr_dtor(zval **var)
  */
 void ZEND_FASTCALL zephir_dtor(zval *var)
 {
+#if PHP_VERSION_ID >= 70000
+	if (Z_REFCOUNTED_P(var) && !Z_ISREF_P(var)) {
+#else
 	if (!Z_ISREF_P(var)) {
+#endif
 		zval_dtor(var);
 	}
 }

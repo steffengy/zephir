@@ -474,13 +474,17 @@ static inline zend_class_entry *zephir_lookup_class_ce(zend_class_entry *ce, con
 	return zephir_lookup_class_ce_quick(ce, property_name, property_length, zend_inline_hash_func(property_name, property_length + 1) TSRMLS_CC);
 }
 
-#if PHP_VERSION_ID < 70000
 /**
  * Reads a property from an object
  */
-int zephir_read_property(zval **result, zval *object, const char *property_name, zend_uint property_length, int silent TSRMLS_DC) {
-
-	zval *property;
+#if PHP_VERSION_ID >= 70000
+ int zephir_read_property_ex(zval **result, zval *rv, zval *object, const char *property_name, zend_uint property_length, int silent TSRMLS_DC) {
+ 	zval property;
+#else
+ int zephir_read_property(zval **result, zval *object, const char *property_name, zend_uint property_length, int silent TSRMLS_DC) {
+ 	zval *property;
+#endif
+	
 	zend_class_entry *ce, *old_scope;
 
 	if (Z_TYPE_P(object) != IS_OBJECT) {
@@ -489,8 +493,14 @@ int zephir_read_property(zval **result, zval *object, const char *property_name,
 			php_error_docref(NULL TSRMLS_CC, E_NOTICE, "Trying to get property \"%s\" of non-object", property_name);
 		}
 
+#if PHP_VERSION_ID >= 70000
+		ZVAL_NULL(rv);
+		*result = rv;
+#else
 		ALLOC_INIT_ZVAL(*result);
 		ZVAL_NULL(*result);
+#endif
+		
 		return FAILURE;
 	}
 
@@ -509,34 +519,44 @@ int zephir_read_property(zval **result, zval *object, const char *property_name,
 		const char *class_name;
 #endif
 		zend_uint class_name_len;
-
+#if PHP_VERSION_ID >= 70000
+		class_name = Z_OBJ_P(object) ? Z_OBJCE_P(object)->name->val : "";
+#else
 		zend_get_object_classname(object, &class_name, &class_name_len TSRMLS_CC);
+#endif
 		zend_error(E_CORE_ERROR, "Property %s of class %s cannot be read", property_name, class_name);
 	}
 
+#if PHP_VERSION_ID >= 70000
+	ZVAL_STRINGL(&property, property_name, property_length);
+#else
 	MAKE_STD_ZVAL(property);
 	ZVAL_STRINGL(property, property_name, property_length, 0);
+#endif
 
-#if PHP_VERSION_ID < 50400
+#if PHP_VERSION_ID >= 70000
+	*result = Z_OBJ_HT_P(object)->read_property(object, &property, silent ? BP_VAR_IS : BP_VAR_R, NULL, rv);
+#elif PHP_VERSION_ID < 50400
 	*result = Z_OBJ_HT_P(object)->read_property(object, property, silent ? BP_VAR_IS : BP_VAR_R TSRMLS_CC);
 #else
 	*result = Z_OBJ_HT_P(object)->read_property(object, property, silent ? BP_VAR_IS : BP_VAR_R, 0 TSRMLS_CC);
 #endif
 
-	Z_ADDREF_PP(result);
-
+#if PHP_VERSION_ID < 70000
 	if (Z_REFCOUNT_P(property) > 1) {
 		ZVAL_STRINGL(property, property_name, property_length, 1);
 	} else {
 		ZVAL_NULL(property);
 	}
-
+	Z_ADDREF_PP(result);
+#endif
 	zval_ptr_dtor(&property);
 
 	EG(scope) = old_scope;
 	return SUCCESS;
 }
 
+#if PHP_VERSION_ID < 70000
 zval* zephir_fetch_property_this_quick(zval *object, const char *property_name, zend_uint property_length, ulong key, int silent TSRMLS_DC) {
 
 	zval **zv = NULL;
@@ -1048,22 +1068,42 @@ int zephir_update_property_array(zval *object, const char *property, zend_uint p
 
 	return SUCCESS;
 }
+#endif
 
 /**
  * Multiple array-offset update
  */
 int zephir_update_property_array_multi(zval *object, const char *property, zend_uint property_length, zval **value TSRMLS_DC, const char *types, int types_length, int types_count, ...) {
 	va_list ap;
+#if PHP_VERSION_ID >= 70000
+	zval tmp_zv;
 	zval *tmp_arr;
+#else
+	zval *tmp_arr;
+#endif
+	
 	int separated = 0;
 
 	if (Z_TYPE_P(object) == IS_OBJECT) {
 
+#if PHP_VERSION_ID >= 70000
+		zephir_read_property_ex(&tmp_arr, &tmp_zv, object, property, property_length, PH_NOISY TSRMLS_CC);
+#else
 		zephir_read_property(&tmp_arr, object, property, property_length, PH_NOISY TSRMLS_CC);
-
 		Z_DELREF_P(tmp_arr);
-
+#endif
 		/** Separation only when refcount > 1 */
+#if PHP_VERSION_ID >= 70000
+		if (Z_REFCOUNTED_P(tmp_arr) && Z_REFCOUNT_P(tmp_arr) > 1) {
+			if (!Z_ISREF_P(tmp_arr)) {
+				zval new_zv;
+				ZVAL_DUP(&new_zv, tmp_arr);
+				tmp_arr = &new_zv;
+				Z_SET_REFCOUNT_P(tmp_arr, 0);
+				separated = 1;
+			}
+		}
+#else
 		if (Z_REFCOUNT_P(tmp_arr) > 1) {
 			if (!Z_ISREF_P(tmp_arr)) {
 				zval *new_zv;
@@ -1076,12 +1116,20 @@ int zephir_update_property_array_multi(zval *object, const char *property, zend_
 				separated = 1;
 			}
 		}
+#endif
 
 		/** Convert the value to array if not is an array */
 		if (Z_TYPE_P(tmp_arr) != IS_ARRAY) {
 			if (separated) {
 				convert_to_array(tmp_arr);
 			} else {
+#if PHP_VERSION_ID >= 70000
+				zval new_zv;
+				ZVAL_DUP(&new_zv, tmp_arr);
+				tmp_arr = &new_zv;
+				Z_SET_REFCOUNT_P(tmp_arr, 0);
+				array_init(tmp_arr);
+#else
 				zval *new_zv;
 				ALLOC_ZVAL(new_zv);
 				INIT_PZVAL_COPY(new_zv, tmp_arr);
@@ -1090,6 +1138,7 @@ int zephir_update_property_array_multi(zval *object, const char *property, zend_
 				Z_SET_REFCOUNT_P(tmp_arr, 0);
 				Z_UNSET_ISREF_P(tmp_arr);
 				array_init(tmp_arr);
+#endif
 				separated = 1;
 			}
 		}
@@ -1106,6 +1155,7 @@ int zephir_update_property_array_multi(zval *object, const char *property, zend_
 	return SUCCESS;
 }
 
+#if PHP_VERSION_ID < 70000
 /**
  * Updates an array property using a string index
  */

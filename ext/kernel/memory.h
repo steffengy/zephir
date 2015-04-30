@@ -123,7 +123,8 @@ void zephir_deinitialize_memory(TSRMLS_D);
 			if (Z_REFCOUNTED_P(z)) { \
 				if (!Z_ISREF_P(z)) { \
 					if (Z_REFCOUNT_P(z) > 1) { \
-						ZEPHIR_INIT_VAR(z); \
+						Z_DELREF_P(z); \
+						ZEPHIR_ALLOC_ZVAL(z); \
 					} else { \
 						zephir_dtor(z); \
 					} \
@@ -215,18 +216,18 @@ void zephir_deinitialize_memory(TSRMLS_D);
 		zephir_memory_alloc(&z TSRMLS_CC); \
 	}
 
-#define ZEPHIR_CPY_WRT(d, v) \
+#if PHP_VERSION_ID >= 70000
+  #define ZEPHIR_CPY_WRT(d, v) \
 	Z_ADDREF_P(v); \
 	if (d) { \
-		if (Z_REFCOUNT_P(d) > 0) { \
-			zephir_ptr_dtor(&d); \
+		if (Z_REFCOUNTED_P(d) && Z_REFCOUNT_P(d) > 0) { \
+			zephir_ptr_dtor(d); \
 		} \
 	} else { \
 		zephir_memory_observe(&d TSRMLS_CC); \
 	} \
 	d = v;
 
-#if PHP_VERSION_ID >= 70000
   #define ZEPHIR_CPY_WRT_CTOR(d, v) \
 	do { \
 		if (d) { \
@@ -240,6 +241,17 @@ void zephir_deinitialize_memory(TSRMLS_D);
 		ZVAL_UNREF(d); \
 	} while(0)
 #else
+  #define ZEPHIR_CPY_WRT(d, v) \
+	Z_ADDREF_P(v); \
+	if (d) { \
+		if (Z_REFCOUNT_P(d) > 0) { \
+			zephir_ptr_dtor(&d); \
+		} \
+	} else { \
+		zephir_memory_observe(&d TSRMLS_CC); \
+	} \
+	d = v;
+
   #define ZEPHIR_CPY_WRT_CTOR(d, v) \
 	if (d) { \
 		if (Z_REFCOUNT_P(d) > 0) { \

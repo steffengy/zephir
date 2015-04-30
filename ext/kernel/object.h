@@ -69,7 +69,16 @@ int zephir_isset_property_zval(zval *object, const zval *property TSRMLS_DC);
 
 /** Reading properties */
 zval* zephir_fetch_property_this_quick(zval *object, const char *property_name, zend_uint property_length, ulong key, int silent TSRMLS_DC);
-int zephir_read_property(zval **result, zval *object, const char *property_name, zend_uint property_length, int silent TSRMLS_DC);
+#if PHP_VERSION_ID >= 70000
+  #define zephir_read_property(result, object, property_str, silent) { \
+    zval _result_var; \
+    ZVAL_NULL(&_result_var); \
+    zephir_read_property_ex(result, &_result_var, object, property_str, silent); \
+  }
+  int zephir_read_property_ex(zval **result, zval *rv, zval *object, const char *property_name, zend_uint property_length, int silent TSRMLS_DC);
+#else
+  int zephir_read_property(zval **result, zval *object, const char *property_name, zend_uint property_length, int silent TSRMLS_DC);
+#endif
 int zephir_read_property_zval(zval **result, zval *object, zval *property, int silent TSRMLS_DC);
 int zephir_return_property(zval *return_value, zval **return_value_ptr, zval *object, char *property_name, unsigned int property_length TSRMLS_DC);
 int zephir_return_property_quick(zval *return_value, zval **return_value_ptr, zval *object, char *property_name, unsigned int property_length, unsigned long key TSRMLS_DC);
