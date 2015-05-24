@@ -184,4 +184,9 @@ class Utils
     {
         return strncasecmp(PHP_OS, 'WIN', 3) == 0;
     }
+    
+    public static function isNG()
+    {
+        return version_compare(phpversion(), '7.0', '>=');
+    }
 }

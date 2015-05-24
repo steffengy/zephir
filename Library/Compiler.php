@@ -683,7 +683,11 @@ class Compiler
         }
 
         // Copy the latest kernel files
-        $this->recursiveProcess(realpath(__DIR__ . '/../ext/kernel'), 'ext/kernel');
+        $kernelSourcePath = 'ext/kernel';
+        if (Utils::isNG()) {
+            $kernelSourcePath = 'ext/kernel-ng';
+        }
+        $this->recursiveProcess(realpath(__DIR__ . '/../'.$kernelSourcePath), 'ext/kernel');
     }
 
     /**
@@ -1117,7 +1121,11 @@ class Compiler
         }
 
         $kernelPath = realpath($kernelPath);
-        $sourceKernelPath = realpath(__DIR__ . '/../ext/kernel');
+        if (Utils::isNG()) {
+            $sourceKernelPath = realpath(__DIR__ . '/../ext/kernel-ng');
+        } else {
+            $sourceKernelPath = realpath(__DIR__ . '/../ext/kernel');
+        }
 
         $configured = $this->recursiveProcess($sourceKernelPath, $kernelPath, '@.*\.[ch]$@', array($this, 'checkKernelFile'));
         if (!$configured) {

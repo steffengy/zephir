@@ -45,13 +45,58 @@ class StringsManager
     {
         $this->concatKeys[$key] = true;
     }
-
+    
     /**
      * Generates the concatenation code
      *
      * @return array
      */
     public function genConcatCode()
+    {
+        if (Utils::isNG()) {
+            return $this->genConcatCodeNG();
+        }
+        $this->genConcatCodeLegacy();
+    }
+    
+    public function genConcatCodeNG()
+    {
+        $code = '
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <php.h>
+#include "php_ext.h"
+#include <ext/standard/php_string.h>
+#include "ext.h"
+
+#include "kernel/main.h"
+#include "kernel/memory.h"
+#include "kernel/concat.h"' . PHP_EOL . PHP_EOL;
+
+        $pcodeh = '
+#ifndef ZEPHIR_KERNEL_CONCAT_H
+#define ZEPHIR_KERNEL_CONCAT_H
+
+#include <php.h>
+#include <Zend/zend.h>
+
+#include "kernel/main.h"
+
+';
+        $codeh = '';
+        $macros = array();
+        
+        
+        $codeh .= "void zephir_concat_function(zval *result, zval *op1, zval *op2 TSRMLS_DC);
+#endif /* ZEPHIR_KERNEL_CONCAT_H */
+";
+        Utils::checkAndWriteIfNeeded($pcodeh . join(PHP_EOL, $macros) . PHP_EOL . PHP_EOL . $codeh, 'ext/kernel/concat.h');
+        Utils::checkAndWriteIfNeeded($code, 'ext/kernel/concat.c');
+    }
+
+    public function genConcatCodeLegacy()
     {
         $code = '
 #ifdef HAVE_CONFIG_H
