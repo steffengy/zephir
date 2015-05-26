@@ -39,8 +39,3 @@ do
     exit 0
   fi
 done
-
-
-if [ -d "/etc/bash_completion.d/" ]; then
-  sudo cp bin/bash_completion /etc/bash_completion.d/zephir
-fi
