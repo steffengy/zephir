@@ -711,6 +711,12 @@ int xx_get_token(xx_scanner_state *s, xx_scanner_token *token) {
 			token->opcode = XX_T_NOT;
 			return 0;
 		}
+        
+        "~" {
+            s->active_char++;
+            token->opcode = XX_T_BITWISE_NOT;
+            return 0;
+        }
 
 		"&&" {
 			s->active_char += 2;
