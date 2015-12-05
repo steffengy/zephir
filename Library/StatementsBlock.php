@@ -318,6 +318,9 @@ class StatementsBlock
          */
         $compilationContext->symbolTable->markTemporalVariablesIdle($compilationContext);
 
+        if (!$this->unreachable) {
+            $compilationContext->symbolTable->destroyTrackedVariables($currentBranch);
+        }
         $compilationContext->branchManager->removeBranch($currentBranch);
 
         $compilationContext->currentBranch--;

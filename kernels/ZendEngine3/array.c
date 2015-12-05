@@ -279,7 +279,7 @@ int zephir_array_fetch(zval *return_value, zval *arr, zval *index, int flags ZEP
 {
 	zval *zv;
 	HashTable *ht;
-	int result;
+	int found = 0;
 	ulong uidx = 0;
 	char *sidx = NULL;
 
@@ -287,45 +287,44 @@ int zephir_array_fetch(zval *return_value, zval *arr, zval *index, int flags ZEP
 		ht = Z_ARRVAL_P(arr);
 		switch (Z_TYPE_P(index)) {
 			case IS_NULL:
-				result = (zv = zend_hash_str_find(ht, SL(""))) != NULL;
+				found = (zv = zend_hash_str_find(ht, SL(""))) != NULL;
 				sidx   = "";
 				break;
 
 			case IS_DOUBLE:
 				uidx   = (ulong)Z_DVAL_P(index);
-				result = (zv = zend_hash_index_find(ht, uidx)) != NULL;
+				found = (zv = zend_hash_index_find(ht, uidx)) != NULL;
 				break;
 
 			case IS_LONG:
 			case IS_RESOURCE:
 				uidx   = Z_LVAL_P(index);
-				result = (zv = zend_hash_index_find(ht, uidx)) != NULL;
+				found = (zv = zend_hash_index_find(ht, uidx)) != NULL;
 				break;
 
 			case IS_FALSE:
 				uidx = 0;
-				result = (zv = zend_hash_index_find(ht, uidx)) != NULL;
+				found = (zv = zend_hash_index_find(ht, uidx)) != NULL;
 				break;
 
 			case IS_TRUE:
 				uidx = 1;
-				result = (zv = zend_hash_index_find(ht, uidx)) != NULL;
+				found = (zv = zend_hash_index_find(ht, uidx)) != NULL;
 				break;
 
 			case IS_STRING:
 				sidx   = Z_STRLEN_P(index) ? Z_STRVAL_P(index) : "";
-				result = (zv = zend_symtable_str_find(ht, Z_STRVAL_P(index), Z_STRLEN_P(index))) != NULL;
+				found = (zv = zend_symtable_str_find(ht, Z_STRVAL_P(index), Z_STRLEN_P(index))) != NULL;
 				break;
 
 			default:
 				if ((flags & PH_NOISY) == PH_NOISY) {
 					zend_error(E_WARNING, "Illegal offset type in %s on line %d", file, line);
 				}
-				result = FAILURE;
 				break;
 		}
 
-		if (result != FAILURE) {
+		if (found) {
 			if ((flags & PH_READONLY) == PH_READONLY) {
 				ZVAL_COPY_VALUE(return_value, zv);
 			} else {

@@ -58,6 +58,26 @@ class SymbolTable
         return null;
     }
 
+    public function getBranchVariables($branchId)
+    {
+        if (isset($this->branchVariables[$branchId])) {
+            return $this->branchVariables[$branchId];
+        }
+        return array();
+    }
+
+    public function destroyTrackedVariables($branch)
+    {
+        $compilationContext = $this->compilationContext;
+        /* Destroy used variables in branch */
+        $branchId = $branch->getUniqueId();
+        foreach ($compilationContext->symbolTable->getBranchVariables($branchId) as $var) {
+            if ($var->isTrackedAtCompileTime()) {
+                $compilationContext->codePrinter->output('zephir_ptr_dtor(' . $compilationContext->backend->getVariableCodePointer($var) . ');');
+            }
+        }
+    }
+
     /**
      * SymbolTable
      *

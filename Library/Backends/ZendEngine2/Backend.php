@@ -474,7 +474,11 @@ class Backend extends BaseBackend
 
     public function initVar(Variable $variable, CompilationContext $context, $useCodePrinter = true, $second = false)
     {
-        $macro = !$second ? 'ZEPHIR_INIT_VAR' : 'ZEPHIR_INIT_NVAR';
+        $macro = 'ZEPHIR_INIT_NVAR';
+        if (!$second) {
+            $macro = 'ZEPHIR_INIT_VAR';
+            $variable->enableCompileTimeTracking();
+        }
         $code = $macro . '(' . $this->getVariableCode($variable) . ');';
         if ($useCodePrinter) {
             $context->codePrinter->output($code);

@@ -57,7 +57,7 @@ void ZEPHIR_FASTCALL zephir_memory_alloc(zval *var);
 
 int ZEPHIR_FASTCALL zephir_clean_restore_stack(TSRMLS_D);
 
-#define ZEPHIR_INIT_VAR(z) zephir_memory_alloc(z);
+#define ZEPHIR_INIT_VAR(z) ZVAL_NULL(z);
 
 #define ZEPHIR_SINIT_VAR(z) ZVAL_NULL(&z);
 

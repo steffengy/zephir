@@ -2025,6 +2025,7 @@ class ClassMethod
             if ($lastType != 'return' && $lastType != 'throw' && !$this->hasChildReturnStatementType($this->statements->getLastStatement())) {
                 if ($symbolTable->getMustGrownStack()) {
                     $compilationContext->headersManager->add('kernel/memory');
+                    $compilationContext->symbolTable->destroyTrackedVariables($compilationContext->branchManager->getCurrentBranch());
                     $codePrinter->output("\t" . 'ZEPHIR_MM_RESTORE();');
                 }
 

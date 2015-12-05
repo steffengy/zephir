@@ -106,6 +106,8 @@ class Variable
 
     protected $defaultInitValue;
 
+    protected $trackAtCompileTime = false;
+
     /**
      * Class types
      */
@@ -871,6 +873,16 @@ class Variable
 
             $this->variantInits++;
         }
+    }
+
+    public function enableCompileTimeTracking()
+    {
+        $this->trackAtCompileTime = true;
+    }
+
+    public function isTrackedAtCompileTime()
+    {
+        return $this->trackAtCompileTime;
     }
 
     /**

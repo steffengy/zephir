@@ -592,8 +592,6 @@ int zephir_update_property_array(zval *object, const char *property, zend_uint p
 					separated = 1;
 				}
 			}
-		} else {
-			separated = 1;
 		}
 
 		/** Convert the value to array if not is an array */

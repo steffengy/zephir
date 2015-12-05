@@ -91,8 +91,7 @@ void zephir_deinitialize_memory(TSRMLS_D);
 	Z_SET_REFCOUNT_P(z, 0); \
 	Z_UNSET_ISREF_P(z);
 
-#define ZEPHIR_INIT_VAR(z) \
-	zephir_memory_alloc(&z TSRMLS_CC)
+#define ZEPHIR_INIT_VAR(z) ALLOC_INIT_ZVAL(z)
 
 #define ZEPHIR_INIT_NVAR(z)\
 	if (z) { \
