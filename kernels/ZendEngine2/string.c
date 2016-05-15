@@ -291,7 +291,7 @@ void zephir_camelize(zval *return_value, const zval *str, const zval *delimiter)
 			smart_str_appendc(&camelize_str, toupper(ch));
 			pre_del = 0;
 		} else {
-			smart_str_appendc(&camelize_str, tolower(ch));
+			smart_str_appendc(&camelize_str, ch);
 		}
 	}
 
